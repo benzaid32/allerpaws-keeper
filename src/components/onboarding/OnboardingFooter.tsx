@@ -8,12 +8,14 @@ interface OnboardingFooterProps {
   currentStep: number;
   canProceed: boolean;
   onNext: () => void;
+  isLoading?: boolean;
 }
 
 const OnboardingFooter: React.FC<OnboardingFooterProps> = ({ 
   currentStep, 
   canProceed, 
-  onNext 
+  onNext,
+  isLoading = false
 }) => {
   const isLastStep = currentStep === ONBOARDING_STEPS.length - 1;
   
@@ -21,11 +23,20 @@ const OnboardingFooter: React.FC<OnboardingFooterProps> = ({
     <div className="flex justify-end pt-2">
       <Button
         onClick={onNext}
-        disabled={!canProceed}
+        disabled={!canProceed || isLoading}
         className="group"
       >
-        {isLastStep ? "Get Started" : "Continue"}
-        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+        {isLoading ? (
+          <>
+            <span className="mr-2">Saving...</span>
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-r-transparent" />
+          </>
+        ) : (
+          <>
+            {isLastStep ? "Get Started" : "Continue"}
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </>
+        )}
       </Button>
     </div>
   );
