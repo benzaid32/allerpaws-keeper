@@ -18,16 +18,47 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchPets = async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch pets
+        const { data: petsData, error: petsError } = await supabase
           .from("pets")
           .select("*")
           .order("created_at", { ascending: false });
 
-        if (error) {
-          throw error;
+        if (petsError) {
+          throw petsError;
         }
 
-        setPets(data || []);
+        // For each pet, fetch its allergies
+        const petsWithAllergies = await Promise.all(
+          (petsData || []).map(async (pet) => {
+            const { data: allergiesData, error: allergiesError } = await supabase
+              .from("allergies")
+              .select("name")
+              .eq("pet_id", pet.id);
+              
+            if (allergiesError) {
+              console.error("Error fetching allergies:", allergiesError);
+              return {
+                ...pet,
+                knownAllergies: [],
+              } as Pet;
+            }
+
+            // Transform the pet data to match our Pet type
+            return {
+              id: pet.id,
+              name: pet.name,
+              species: pet.species as "dog" | "cat" | "other",
+              breed: pet.breed || undefined,
+              age: pet.age || undefined,
+              weight: pet.weight || undefined,
+              knownAllergies: allergiesData?.map((allergy) => allergy.name) || [],
+              imageUrl: pet.image_url || undefined,
+            } as Pet;
+          })
+        );
+
+        setPets(petsWithAllergies);
       } catch (error: any) {
         console.error("Error fetching pets:", error.message);
         toast({
