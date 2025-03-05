@@ -12,7 +12,7 @@ import { ONBOARDING_STEPS, COMMON_ALLERGENS } from "@/lib/constants";
 import { generateId, setLocalStorage } from "@/lib/helpers";
 import { Pet } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { ArrowRight, Paw, Dog, Cat, X } from "lucide-react";
+import { ArrowRight, Rabbit, Dog, Cat, X } from "lucide-react";
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
@@ -100,7 +100,7 @@ const Onboarding: React.FC = () => {
         {/* Logo and App Name */}
         <div className="text-center mb-8 animate-fade-in">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-            <Paw className="w-8 h-8 text-primary" />
+            <Rabbit className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">AllerPaws</h1>
           <p className="text-muted-foreground mt-2">
@@ -138,7 +138,7 @@ const Onboarding: React.FC = () => {
                       <div className="absolute inset-0 bg-primary/10 rounded-full animate-pulse-gentle"></div>
                       <div className="absolute inset-4 bg-primary/20 rounded-full"></div>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <Paw className="w-20 h-20 text-primary" />
+                        <Rabbit className="w-20 h-20 text-primary" />
                       </div>
                     </div>
                   </div>
@@ -198,7 +198,7 @@ const Onboarding: React.FC = () => {
                             htmlFor="other"
                             className="flex flex-1 flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                           >
-                            <Paw className="mb-2 h-6 w-6" />
+                            <Rabbit className="mb-2 h-6 w-6" />
                             <span>Other</span>
                           </Label>
                         </div>

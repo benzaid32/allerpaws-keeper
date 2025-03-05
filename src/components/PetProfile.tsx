@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Pet } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Edit, Dog, Cat, Paw } from "lucide-react";
+import { Edit, Dog, Cat, Rabbit } from "lucide-react";
 
 interface PetProfileProps {
   pet: Pet;
@@ -15,7 +15,7 @@ interface PetProfileProps {
 
 const PetProfile: React.FC<PetProfileProps> = ({ pet, onEdit, className }) => {
   // Get the appropriate icon based on pet species
-  const PetIcon = pet.species === "dog" ? Dog : pet.species === "cat" ? Cat : Paw;
+  const PetIcon = pet.species === "dog" ? Dog : pet.species === "cat" ? Cat : Rabbit;
 
   return (
     <Card className={cn("overflow-hidden", className)}>
