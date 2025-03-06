@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -397,72 +398,6 @@ const FoodAnalyzer: React.FC<FoodAnalyzerProps> = ({ petId, petName, initialIngr
       )}
     </Card>
   );
-
-  function handleDetailedAnalyze() {
-    if (!ingredients.trim()) {
-      toast({
-        title: "No ingredients provided",
-        description: "Please enter the food ingredients to analyze",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setAnalyzing(true);
-      setActiveTab("detailed");
-      
-      // Parse ingredients from text area (split by commas or new lines)
-      const ingredientsList = ingredients
-        .split(/[,\n]/)
-        .map(i => i.trim())
-        .filter(i => i !== "");
-      
-      // Call the GPT-powered edge function to analyze the ingredients
-      supabase.functions.invoke("analyze-food", {
-        body: {
-          ingredients: ingredientsList,
-          petAllergies,
-        },
-      }).then(({ data, error }) => {
-        if (error) throw error;
-        
-        const response = data as AnalysisResponse;
-        setDetailedResult(response.analysis);
-        
-        // Also do a simple analysis for comparison
-        supabase.functions.invoke("analyze-ingredients", {
-          body: {
-            ingredients: ingredientsList,
-            petId,
-          },
-        }).then(({ data: simpleData, error: simpleError }) => {
-          if (!simpleError) {
-            setSimpleResult(simpleData as SimpleAnalysisResult);
-          }
-        }).catch(console.error);
-      }).catch(error => {
-        console.error("Error in detailed analysis:", error.message);
-        toast({
-          title: "Advanced analysis failed",
-          description: error.message || "Could not perform detailed analysis",
-          variant: "destructive",
-        });
-        setDetailedResult(null);
-      }).finally(() => {
-        setAnalyzing(false);
-      });
-    } catch (error: any) {
-      console.error("Error setting up detailed analysis:", error.message);
-      toast({
-        title: "Advanced analysis failed",
-        description: error.message || "Could not set up detailed analysis",
-        variant: "destructive",
-      });
-      setDetailedResult(null);
-      setAnalyzing(false);
-    }
-  }
 };
 
 export default FoodAnalyzer;
