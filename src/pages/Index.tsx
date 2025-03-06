@@ -11,6 +11,7 @@ import QuickLogButton from "@/components/home/QuickLogButton";
 import RecentLogsCard from "@/components/home/RecentLogsCard";
 import RemindersCard from "@/components/home/RemindersCard";
 import WelcomeScreen from "@/components/home/WelcomeScreen";
+import AddPetButton from "@/components/home/AddPetButton";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -45,12 +46,18 @@ const Index = () => {
     );
   }
 
+  // Determine if user has pets by checking if recentLogs could have been populated
+  const hasPets = recentLogs && recentLogs.length > 0;
+
   // Show the dashboard for authenticated users with a stylish background
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-blue-50 dark:from-background dark:to-blue-950/20">
       <div className="absolute top-0 right-0 w-full h-64 bg-[url('https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?auto=format&fit=crop&w=800&q=80')] bg-no-repeat bg-right-top bg-contain opacity-30 dark:opacity-15"></div>
       <div className="container relative pb-20">
         <HomeHeader />
+        
+        {!hasPets && <AddPetButton />}
+        
         <div className="space-y-6">
           <RecentLogsCard recentLogs={recentLogs || []} onAddFirstLog={handleQuickLog} />
           <RemindersCard reminders={reminders || []} />

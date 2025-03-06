@@ -1,14 +1,19 @@
 
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const HomeHeader = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const userName = user?.user_metadata?.full_name || "Pet Parent";
   
   // Get the first name only
   const firstName = userName.split(' ')[0];
+  
+  const handleProfileClick = () => {
+    navigate("/profile");
+  };
   
   return (
     <div className="pt-6 pb-6">
@@ -21,7 +26,10 @@ const HomeHeader = () => {
         </div>
         
         {user?.user_metadata?.avatar_url ? (
-          <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-primary/20">
+          <div 
+            className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-primary/20 cursor-pointer hover:ring-primary transition-all"
+            onClick={handleProfileClick}
+          >
             <img 
               src={user.user_metadata.avatar_url} 
               alt="Profile" 
@@ -29,7 +37,10 @@ const HomeHeader = () => {
             />
           </div>
         ) : (
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center ring-2 ring-primary/20">
+          <div 
+            className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center ring-2 ring-primary/20 cursor-pointer hover:ring-primary transition-all"
+            onClick={handleProfileClick}
+          >
             <span className="text-primary font-semibold text-sm">
               {firstName.charAt(0)}
             </span>
