@@ -11,16 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { ArrowLeft, Plus, Clock, Bell } from "lucide-react";
+import { Reminder } from "@/lib/types";
 
 const Reminders = () => {
   const navigate = useNavigate();
   const { reminders, loading } = useRemindersData();
   const { handleDelete, handleToggleActive } = useReminderOperations();
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingReminder, setEditingReminder] = useState(null);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   
   // Handle opening form for editing
-  const handleEditReminder = (reminder) => {
+  const handleEditReminder = (reminder: Reminder) => {
     setEditingReminder(reminder);
     setIsFormOpen(true);
   };

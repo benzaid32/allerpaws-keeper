@@ -1,3 +1,4 @@
+
 export const APP_NAME = "AllerPaws";
 export const APP_DESCRIPTION = "Track, manage and prevent pet food allergies";
 
@@ -146,13 +147,13 @@ export const NAVIGATION_ITEMS = [
   { name: "Settings", path: "/settings", icon: "settings" }
 ];
 
-// Update to include severity property
+// Update to include severity property with the correct type
 export const COMMON_SYMPTOMS = [
-  { id: "1", name: "Itching", description: "Excessive scratching or licking", severity: "moderate", icon: "paw" },
-  { id: "2", name: "Ear Infection", description: "Redness, swelling, or discharge", severity: "moderate", icon: "ear" },
-  { id: "3", name: "Digestive Issues", description: "Vomiting, diarrhea, or flatulence", severity: "moderate", icon: "stomach" },
-  { id: "4", name: "Skin Rash", description: "Red, inflamed, or irritated skin", severity: "moderate", icon: "rash" },
-  { id: "5", name: "Hair Loss", description: "Patchy or general hair loss", severity: "moderate", icon: "hair" }
+  { id: "1", name: "Itching", description: "Excessive scratching or licking", severity: "moderate" as const, icon: "paw" },
+  { id: "2", name: "Ear Infection", description: "Redness, swelling, or discharge", severity: "moderate" as const, icon: "ear" },
+  { id: "3", name: "Digestive Issues", description: "Vomiting, diarrhea, or flatulence", severity: "moderate" as const, icon: "stomach" },
+  { id: "4", name: "Skin Rash", description: "Red, inflamed, or irritated skin", severity: "moderate" as const, icon: "rash" },
+  { id: "5", name: "Hair Loss", description: "Patchy or general hair loss", severity: "moderate" as const, icon: "hair" }
 ];
 
 // Fix allergens to be strings instead of objects
