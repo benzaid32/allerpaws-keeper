@@ -1,11 +1,14 @@
 
 import { useState, useEffect } from "react";
-import { LocalNotifications, PermissionStatus } from '@capacitor/local-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { useToast } from "./use-toast";
 import { isPlatform } from "@/lib/utils";
 
+// Define our own type that combines both web and Capacitor permission states
+type CombinedPermissionState = "denied" | "granted" | "default" | "prompt";
+
 export const useNotifications = () => {
-  const [permissionState, setPermissionState] = useState<PermissionStatus | "denied" | "granted" | "default">("default");
+  const [permissionState, setPermissionState] = useState<CombinedPermissionState>("default");
   const [isNotificationsSupported, setIsNotificationsSupported] = useState(false);
   const { toast } = useToast();
 
@@ -18,7 +21,7 @@ export const useNotifications = () => {
         try {
           // Check permission state
           const { display } = await LocalNotifications.checkPermissions();
-          setPermissionState(display);
+          setPermissionState(display as CombinedPermissionState);
         } catch (error) {
           console.error("Error checking notification permissions:", error);
         }
@@ -27,7 +30,7 @@ export const useNotifications = () => {
         setIsNotificationsSupported('Notification' in window);
         
         if ('Notification' in window) {
-          setPermissionState(Notification.permission);
+          setPermissionState(Notification.permission as CombinedPermissionState);
         }
       }
     };
@@ -40,13 +43,13 @@ export const useNotifications = () => {
       if (isPlatform('capacitor')) {
         // Capacitor API
         const { display } = await LocalNotifications.requestPermissions();
-        setPermissionState(display);
+        setPermissionState(display as CombinedPermissionState);
         return display === 'granted';
       } else {
         // Web fallback
         if ('Notification' in window) {
           const permission = await Notification.requestPermission();
-          setPermissionState(permission);
+          setPermissionState(permission as CombinedPermissionState);
           return permission === 'granted';
         }
       }
