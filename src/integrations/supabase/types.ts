@@ -41,6 +41,196 @@ export type Database = {
           },
         ]
       }
+      elimination_phases: {
+        Row: {
+          created_at: string
+          description: string
+          duration: number
+          id: string
+          name: string
+          recommended_foods: string[] | null
+          tips: string[]
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          duration: number
+          id?: string
+          name: string
+          recommended_foods?: string[] | null
+          tips?: string[]
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration?: number
+          id?: string
+          name?: string
+          recommended_foods?: string[] | null
+          tips?: string[]
+        }
+        Relationships: []
+      }
+      elimination_progress: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          notes: string | null
+          pet_id: string
+          phase_id: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pet_id: string
+          phase_id: string
+          start_date?: string
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pet_id?: string
+          phase_id?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "elimination_progress_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "elimination_progress_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "elimination_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_entries: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          pet_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          pet_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          pet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_entries_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_items: {
+        Row: {
+          amount: string | null
+          created_at: string
+          entry_id: string
+          id: string
+          ingredients: string[] | null
+          name: string
+          notes: string | null
+          type: string
+        }
+        Insert: {
+          amount?: string | null
+          created_at?: string
+          entry_id: string
+          id?: string
+          ingredients?: string[] | null
+          name: string
+          notes?: string | null
+          type?: string
+        }
+        Update: {
+          amount?: string | null
+          created_at?: string
+          entry_id?: string
+          id?: string
+          ingredients?: string[] | null
+          name?: string
+          notes?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_items_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "food_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_products: {
+        Row: {
+          allergens: string[]
+          brand: string
+          created_at: string
+          id: string
+          image_url: string | null
+          ingredients: string[]
+          name: string
+          species: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          allergens?: string[]
+          brand: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          ingredients: string[]
+          name: string
+          species: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          allergens?: string[]
+          brand?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          ingredients?: string[]
+          name?: string
+          species?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pets: {
         Row: {
           age: number | null
@@ -112,6 +302,148 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      reminders: {
+        Row: {
+          active: boolean
+          created_at: string
+          days: string[]
+          description: string | null
+          id: string
+          pet_id: string | null
+          time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          days?: string[]
+          description?: string | null
+          id?: string
+          pet_id?: string | null
+          time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          days?: string[]
+          description?: string | null
+          id?: string
+          pet_id?: string | null
+          time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      symptom_details: {
+        Row: {
+          created_at: string
+          entry_id: string
+          id: string
+          notes: string | null
+          severity: string
+          symptom_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry_id: string
+          id?: string
+          notes?: string | null
+          severity: string
+          symptom_id: string
+        }
+        Update: {
+          created_at?: string
+          entry_id?: string
+          id?: string
+          notes?: string | null
+          severity?: string
+          symptom_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "symptom_details_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "symptom_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "symptom_details_symptom_id_fkey"
+            columns: ["symptom_id"]
+            isOneToOne: false
+            referencedRelation: "symptoms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      symptom_entries: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          pet_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          pet_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          pet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "symptom_entries_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      symptoms: {
+        Row: {
+          description: string | null
+          id: string
+          name: string
+          severity_options: string[]
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          name: string
+          severity_options?: string[]
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          name?: string
+          severity_options?: string[]
         }
         Relationships: []
       }

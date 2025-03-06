@@ -24,6 +24,7 @@ export type SymptomEntry = {
   date: string;
   symptoms: {
     symptomId: string;
+    name?: string;
     severity: "mild" | "moderate" | "severe";
     notes?: string;
   }[];
