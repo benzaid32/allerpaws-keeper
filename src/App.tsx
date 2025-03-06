@@ -20,9 +20,37 @@ import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import Pricing from './pages/Pricing';
 import Reminders from './pages/Reminders';
-import Landing from './pages/Landing';
 import { LoadingSpinner } from './components/ui/loading-spinner';
 import { useToast } from './hooks/use-toast';
+import { APP_NAME } from './lib/constants';
+import HeroSection from './components/home/welcome/HeroSection';
+import FeaturesSection from './components/home/welcome/FeaturesSection';
+import TestimonialsSection from './components/home/welcome/TestimonialsSection';
+import LandingFooter from './components/home/welcome/LandingFooter';
+
+// Create a simplified landing page using the original components
+const OriginalLanding = () => {
+  return (
+    <div className="flex flex-col min-h-screen bg-background">
+      <div className="flex justify-center items-center py-4 border-b">
+        <div className="flex items-center gap-2">
+          <img 
+            src="/icons/icon-144x144.png" 
+            alt={APP_NAME} 
+            className="w-10 h-10"
+          />
+          <span className="font-bold text-2xl">{APP_NAME}</span>
+        </div>
+      </div>
+      <main className="flex-1">
+        <HeroSection />
+        <FeaturesSection />
+        <TestimonialsSection />
+      </main>
+      <LandingFooter />
+    </div>
+  );
+};
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -89,7 +117,7 @@ function App() {
               <Toaster />
               <Routes>
                 <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/landing" element={<Landing />} />
+                <Route path="/landing" element={<OriginalLanding />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<Navigate to="/" replace />} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
