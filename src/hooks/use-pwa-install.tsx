@@ -14,7 +14,9 @@ export const usePwaInstall = () => {
 
   useEffect(() => {
     // Check if app is already installed
+    // The standalone property exists on navigator in Safari but TypeScript doesn't know about it
     if (window.matchMedia('(display-mode: standalone)').matches || 
+        // @ts-ignore - Safari-specific property
         window.navigator.standalone === true) {
       setIsInstalled(true);
       return;
