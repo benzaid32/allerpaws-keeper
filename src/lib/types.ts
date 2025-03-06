@@ -1,4 +1,3 @@
-
 export type Pet = {
   id: string;
   name: string;
@@ -87,4 +86,10 @@ export type NavigationItem = {
   name: string;
   path: string;
   icon: string;
+};
+
+// New type for notification settings
+export type NotificationSettings = {
+  enabled: boolean;
+  lastUpdated: Date;
 };

@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Bell, Download, LogOut, ChevronRight } from "lucide-react";
+import { Bell, Download, LogOut, ChevronRight, BellOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useSettings } from "@/hooks/use-settings";
+import { useNotifications } from "@/hooks/use-notifications";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -16,6 +18,13 @@ const Settings = () => {
   const { toast } = useToast();
   const { reminderSettings, loading, toggleReminderSetting, exportData } = useSettings();
   const [exporting, setExporting] = useState(false);
+  const { 
+    isNotificationsSupported, 
+    permissionState, 
+    requestPermission, 
+    sendTestNotification,
+    notificationSettings
+  } = useNotifications();
 
   const handleSignOut = async () => {
     try {
@@ -45,6 +54,62 @@ const Settings = () => {
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-muted-foreground">Customize your experience</p>
       </div>
+
+      <Card className="mb-6">
+        <CardHeader className="pb-2">
+          <div className="flex items-center">
+            <Bell className="h-5 w-5 mr-2" />
+            <CardTitle className="text-lg">Notification Settings</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isNotificationsSupported ? (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-medium">Push Notifications</p>
+                  <p className="text-sm text-muted-foreground">Receive notifications for reminders</p>
+                </div>
+                <Switch 
+                  checked={permissionState === "granted"} 
+                  onCheckedChange={() => {
+                    if (permissionState !== "granted") {
+                      requestPermission();
+                    } else {
+                      toast({
+                        title: "Cannot disable notifications",
+                        description: "To disable notifications, use your browser settings",
+                        variant: "default",
+                      });
+                    }
+                  }}
+                />
+              </div>
+
+              {permissionState === "granted" && (
+                <Button variant="outline" size="sm" onClick={sendTestNotification} className="w-full">
+                  Send Test Notification
+                </Button>
+              )}
+
+              {permissionState !== "granted" && (
+                <Alert variant={permissionState === "denied" ? "destructive" : "default"}>
+                  <AlertDescription>
+                    {permissionState === "denied" 
+                      ? "Notifications are blocked. Please enable them in your browser settings."
+                      : "Enable notifications to get reminders even when the app is closed."}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          ) : (
+            <div className="py-2 text-center text-muted-foreground">
+              <BellOff className="h-5 w-5 mx-auto mb-2" />
+              <p>Your browser doesn't support notifications</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="mb-6">
         <CardHeader className="pb-2">
