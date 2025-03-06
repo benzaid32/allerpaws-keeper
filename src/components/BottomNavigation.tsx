@@ -1,72 +1,56 @@
 
-import React from "react";
-import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
-import NavigationItem from "./navigation/NavigationItem";
-import NavigationPageIndicator from "./navigation/NavigationPageIndicator";
-import NavigationPageControls from "./navigation/NavigationPageControls";
-import { useNavigation } from "@/hooks/use-navigation";
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { navItems } from "@/components/navigation/navigationData";
+import NavigationItem from "@/components/navigation/NavigationItem";
+import NavigationPageIndicator from "@/components/navigation/NavigationPageIndicator";
+import NavigationPageControls from "@/components/navigation/NavigationPageControls";
 
 const BottomNavigation = () => {
-  const {
-    currentPage,
-    totalPages,
-    visibleItems,
-    handlePageChange,
-    handleNavigation,
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-    location
-  } = useNavigation();
+  const [currentPage, setCurrentPage] = useState(0);
+  const location = useLocation();
+  const navigate = useNavigate();
   
+  // Find the active index based on the current location
+  const activeIndex = navItems.findIndex(item => item.path === location.pathname);
+  
+  const handleNavigation = (path: string) => {
+    console.log("Navigation to:", path);
+    navigate(path);
+  };
+  
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    handleNavigation(navItems[newPage].path);
+  };
+
   return (
-    <motion.div 
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3, delay: 0.3 }}
-      className="fixed bottom-0 left-0 right-0 border-t bg-card/90 backdrop-blur-md z-50 shadow-lg"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      <div className="relative flex justify-between items-center h-16 safe-bottom">
-        <NavigationPageControls 
-          currentPage={currentPage}
-          totalPages={totalPages}
+    <div className="fixed bottom-0 inset-x-0 bg-background z-50 border-t">
+      <div className="container max-w-md mx-auto relative pb-1">
+        <NavigationPageControls
+          totalPages={navItems.length}
+          currentPage={activeIndex !== -1 ? activeIndex : currentPage}
           onPageChange={handlePageChange}
         />
         
-        <div className="flex-1 flex justify-around items-center">
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={`page-${currentPage}`}
-              className="flex-1 flex justify-around items-center"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {visibleItems.map((item) => (
-                <NavigationItem
-                  key={item.path}
-                  path={item.path}
-                  label={item.label}
-                  icon={item.icon}
-                  isActive={location.pathname === item.path}
-                  onClick={handleNavigation}
-                />
-              ))}
-            </motion.div>
-          </AnimatePresence>
+        <div className="flex justify-around items-center h-14">
+          {navItems.map((item, index) => (
+            <NavigationItem
+              key={item.path}
+              icon={item.icon}
+              label={item.label}
+              isActive={location.pathname === item.path}
+              onClick={() => handleNavigation(item.path)}
+            />
+          ))}
         </div>
         
-        <NavigationPageIndicator 
-          currentPage={currentPage}
-          totalPages={totalPages}
+        <NavigationPageIndicator
+          totalPages={navItems.length}
+          currentPage={activeIndex !== -1 ? activeIndex : currentPage}
         />
       </div>
-    </motion.div>
+    </div>
   );
 };
 

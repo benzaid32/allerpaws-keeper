@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useSubscription } from '@/hooks/use-subscription.ts';
+import { useSubscription } from '@/hooks/use-subscription';
 import { SubscriptionContextType } from '@/types/subscription-context';
 
 // Create the context with a default value

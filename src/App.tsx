@@ -19,6 +19,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import Pricing from './pages/Pricing';
+import Reminders from './pages/Reminders';
 
 function App() {
   useEffect(() => {
@@ -55,6 +56,7 @@ function App() {
                 <Route path="/pet/:id" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
                 <Route path="/symptom-diary" element={<ProtectedRoute><SymptomDiary /></ProtectedRoute>} />
+                <Route path="/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />
                 <Route path="/add-symptom" element={<ProtectedRoute><AddSymptomEntry /></ProtectedRoute>} />
                 <Route path="/edit-symptom/:id" element={<ProtectedRoute><EditSymptomEntry /></ProtectedRoute>} />
                 <Route path="/elimination-diet" element={<ProtectedRoute><EliminationDiet /></ProtectedRoute>} />
