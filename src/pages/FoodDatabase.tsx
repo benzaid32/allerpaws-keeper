@@ -95,13 +95,26 @@ const FoodDatabase = () => {
     try {
       setIsLoading(true);
       
+      // Check if this is a category search
+      const isCategory = ["dry", "wet", "treat", "supplement"].includes(searchQuery.toLowerCase());
+      
+      let queryParams = { 
+        query: searchQuery,
+        petId: selectedPetId,
+        allergens: true
+      };
+      
+      // If it's a category search, set the type parameter instead
+      if (isCategory) {
+        queryParams = {
+          ...queryParams,
+          type: searchQuery.toLowerCase()
+        };
+      }
+      
       // Use the Supabase Edge Function for searching
       const { data, error } = await supabase.functions.invoke('search-food', {
-        body: { 
-          query: searchQuery,
-          petId: selectedPetId,
-          allergens: true
-        }
+        body: queryParams
       });
 
       if (error) throw error;
@@ -130,6 +143,16 @@ const FoodDatabase = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCategoryClick = (category: string) => {
+    setSearchQuery(category);
+    setIsLoading(true);
+    
+    // Use a small timeout to ensure the UI updates before the search
+    setTimeout(() => {
+      handleSearch();
+    }, 100);
   };
 
   const viewProductDetails = (product: FoodProduct) => {
@@ -253,37 +276,25 @@ const FoodDatabase = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div 
                   className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer"
-                  onClick={() => {
-                    setSearchQuery("dry");
-                    handleSearch();
-                  }}
+                  onClick={() => handleCategoryClick("dry")}
                 >
                   <h3 className="font-medium">Dry Food</h3>
                 </div>
                 <div 
                   className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer"
-                  onClick={() => {
-                    setSearchQuery("wet");
-                    handleSearch();
-                  }}
+                  onClick={() => handleCategoryClick("wet")}
                 >
                   <h3 className="font-medium">Wet Food</h3>
                 </div>
                 <div 
                   className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer"
-                  onClick={() => {
-                    setSearchQuery("treat");
-                    handleSearch();
-                  }}
+                  onClick={() => handleCategoryClick("treat")}
                 >
                   <h3 className="font-medium">Treats</h3>
                 </div>
                 <div 
                   className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer"
-                  onClick={() => {
-                    setSearchQuery("supplement");
-                    handleSearch();
-                  }}
+                  onClick={() => handleCategoryClick("supplement")}
                 >
                   <h3 className="font-medium">Supplements</h3>
                 </div>

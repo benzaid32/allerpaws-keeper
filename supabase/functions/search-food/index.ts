@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -17,12 +16,12 @@ serve(async (req) => {
   }
 
   try {
-    const { query, petId, allergens } = await req.json();
+    const { query, petId, allergens, type } = await req.json();
     
-    if (!query) {
+    if (!query && !type) {
       return new Response(
         JSON.stringify({ 
-          error: "Missing 'query' parameter" 
+          error: "Missing 'query' or 'type' parameter" 
         }),
         { 
           status: 400, 
@@ -35,10 +34,16 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     
     // Build the query
-    let foodQuery = supabase
-      .from('food_products')
-      .select('*')
-      .or(`name.ilike.%${query}%,brand.ilike.%${query}%,ingredients.cs.{${query}}`);
+    let foodQuery = supabase.from('food_products').select('*');
+    
+    // If type is specified, use that for filtering
+    if (type) {
+      foodQuery = foodQuery.eq('type', type);
+    } 
+    // Otherwise use the general search query
+    else if (query) {
+      foodQuery = foodQuery.or(`name.ilike.%${query}%,brand.ilike.%${query}%,ingredients.cs.{${query}}`);
+    }
     
     // If we have a pet ID and want to filter by allergens
     if (petId && allergens) {
