@@ -8,12 +8,13 @@ import { useSettings } from "@/hooks/use-settings";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import BottomNavigation from "@/components/BottomNavigation";
-import { ArrowLeft, PawPrint, Bell } from "lucide-react";
+import { ArrowLeft, PawPrint, Bell, Sun, Moon } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { notifications, updateNotifications } = useSettings();
+  const { theme, notifications, updateTheme, updateNotifications } = useSettings();
 
   const handleSignOut = async () => {
     try {
@@ -34,6 +35,35 @@ const Settings = () => {
       </div>
 
       <div className="space-y-6">
+        {/* Theme Settings Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Display</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Theme</Label>
+                <ToggleGroup 
+                  type="single" 
+                  value={theme} 
+                  onValueChange={(value) => value && updateTheme(value as "light" | "dark")}
+                  className="justify-start"
+                >
+                  <ToggleGroupItem value="light" aria-label="Light mode">
+                    <Sun className="h-4 w-4 mr-2" />
+                    Light
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="dark" aria-label="Dark mode">
+                    <Moon className="h-4 w-4 mr-2" />
+                    Dark
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Pet Management Card */}
         <Card>
           <CardHeader>
