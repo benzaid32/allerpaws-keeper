@@ -1,19 +1,23 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/hooks/use-settings";
+import { useUserSubscription } from "@/hooks/use-user-subscription";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import BottomNavigation from "@/components/BottomNavigation";
-import { ArrowLeft, PawPrint, Bell, Sun, Moon } from "lucide-react";
+import CurrentPlan from "@/components/subscription/CurrentPlan";
+import { ArrowLeft, PawPrint, Bell, Sun, Moon, Crown } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { theme, notifications, updateTheme, updateNotifications } = useSettings();
+  const { subscription, loading } = useUserSubscription();
 
   const handleSignOut = async () => {
     try {
@@ -35,6 +39,28 @@ const Settings = () => {
       </div>
 
       <div className="space-y-6">
+        {/* Subscription Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center">
+              <Crown className="mr-2 h-5 w-5" />
+              Your Subscription
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CurrentPlan subscription={subscription} isLoading={loading} />
+            <div className="mt-4">
+              <Button 
+                onClick={() => navigate("/pricing")} 
+                className="w-full"
+                variant="outline"
+              >
+                View All Plans
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Theme Settings Card */}
         <Card>
           <CardHeader>

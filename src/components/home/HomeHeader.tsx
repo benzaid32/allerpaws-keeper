@@ -3,6 +3,7 @@ import React, { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useUserSubscription } from "@/hooks/use-user-subscription";
 import { 
   DropdownMenu, 
   DropdownMenuTrigger, 
@@ -10,12 +11,14 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Settings } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { LogOut, User, Settings, Crown } from "lucide-react";
 
 const HomeHeader = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { hasPremiumAccess } = useUserSubscription();
   const userName = user?.user_metadata?.full_name || "Pet Parent";
   
   // Get the first name only
@@ -44,12 +47,20 @@ const HomeHeader = () => {
     }
   };
   
+  const isPremium = hasPremiumAccess();
+  
   return (
     <div className="pt-6 pb-6">
       <div className="flex items-center space-x-2">
         <div className="flex-1">
           <h1 className="text-2xl font-bold">
             Hello, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{firstName}!</span>
+            {isPremium && (
+              <Badge className="ml-2 bg-gradient-to-r from-amber-500 to-yellow-300">
+                <Crown className="h-3 w-3 mr-1" />
+                Premium
+              </Badge>
+            )}
           </h1>
           <p className="text-muted-foreground">Track and manage your pet's food allergies</p>
         </div>
@@ -81,6 +92,12 @@ const HomeHeader = () => {
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
+            {!isPremium && (
+              <DropdownMenuItem onClick={() => navigate("/pricing")} className="cursor-pointer text-amber-600 font-medium">
+                <Crown className="mr-2 h-4 w-4" />
+                <span>Upgrade to Premium</span>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
