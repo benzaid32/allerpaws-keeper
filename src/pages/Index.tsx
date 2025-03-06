@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -84,7 +83,8 @@ const Index = () => {
       <div className="container relative pb-20">
         <HomeHeader />
         
-        {!hasPets && <AddPetButton />}
+        {/* Always show the pet management button, but with different text based on whether user has pets */}
+        <AddPetButton hasPets={hasPets} />
         
         <div className="space-y-6">
           <RecentLogsCard recentLogs={recentLogs || []} onAddFirstLog={handleQuickLog} />
