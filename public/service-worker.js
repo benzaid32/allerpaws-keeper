@@ -1,7 +1,7 @@
 // Service Worker for AllerPaws Keeper PWA
 
 // Version for cache busting
-const CACHE_VERSION = 'v2-no-cache-' + new Date().getTime();
+const CACHE_VERSION = 'v3-no-cache-' + new Date().getTime();
 
 // Skip caching - this service worker will bypass caches
 self.addEventListener('install', (event) => {
@@ -27,28 +27,34 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Network-only strategy - always fetch from network, bypass cache
+// Network-only strategy with properly handled CORS - avoid fetch() for external domains
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    fetch(event.request, { 
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    })
-    .catch((error) => {
-      console.error('Fetch failed:', error);
-      // Return a simple offline response if network is unavailable
-      if (event.request.mode === 'navigate') {
-        return new Response('<html><body><h1>You are offline</h1></body></html>', {
-          headers: { 'Content-Type': 'text/html' }
-        });
-      }
-      return new Response('Offline');
-    })
-  );
+  const url = new URL(event.request.url);
+  
+  // Only intercept same-origin requests to avoid CORS issues
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      fetch(event.request, { 
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      })
+      .catch((error) => {
+        console.error('Fetch failed:', error);
+        // Return a simple offline response if network is unavailable
+        if (event.request.mode === 'navigate') {
+          return new Response('<html><body><h1>You are offline</h1></body></html>', {
+            headers: { 'Content-Type': 'text/html' }
+          });
+        }
+        return new Response('Offline');
+      })
+    );
+  }
+  // For cross-origin requests, use default browser behavior (don't intercept)
 });
 
 // Force clients to update
