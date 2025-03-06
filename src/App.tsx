@@ -16,6 +16,11 @@ import EliminationDiet from "./pages/EliminationDiet";
 import FoodDatabase from "./pages/FoodDatabase";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import ViewSymptomEntry from "./pages/ViewSymptomEntry";
+import EditPet from "./pages/EditPet";
+import AddPet from "./pages/AddPet";
+import FoodEntry from "./pages/FoodEntry";
+import Reminders from "./pages/Reminders";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +51,22 @@ const App = () => (
               }
             />
             <Route
+              path="/pet/add"
+              element={
+                <ProtectedRoute>
+                  <AddPet />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pet/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditPet />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/symptom-diary"
               element={
                 <ProtectedRoute>
@@ -62,6 +83,22 @@ const App = () => (
               }
             />
             <Route
+              path="/symptom-diary/:id"
+              element={
+                <ProtectedRoute>
+                  <ViewSymptomEntry />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/food-entry/:petId"
+              element={
+                <ProtectedRoute>
+                  <FoodEntry />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/elimination-diet"
               element={
                 <ProtectedRoute>
@@ -74,6 +111,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <FoodDatabase />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reminders"
+              element={
+                <ProtectedRoute>
+                  <Reminders />
                 </ProtectedRoute>
               }
             />
