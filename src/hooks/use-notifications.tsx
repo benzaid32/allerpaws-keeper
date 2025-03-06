@@ -1,11 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { LocalNotifications, PermissionState } from '@capacitor/local-notifications';
+import { LocalNotifications, PermissionStatus } from '@capacitor/local-notifications';
 import { useToast } from "./use-toast";
 import { isPlatform } from "@/lib/utils";
 
 export const useNotifications = () => {
-  const [permissionState, setPermissionState] = useState<PermissionState | "denied" | "granted" | "default">("default");
+  const [permissionState, setPermissionState] = useState<PermissionStatus | "denied" | "granted" | "default">("default");
   const [isNotificationsSupported, setIsNotificationsSupported] = useState(false);
   const { toast } = useToast();
 

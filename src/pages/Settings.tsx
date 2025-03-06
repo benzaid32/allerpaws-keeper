@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Bell, Download, LogOut, ChevronRight, BellOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,8 +21,7 @@ const Settings = () => {
     isNotificationsSupported, 
     permissionState, 
     requestPermission, 
-    sendTestNotification,
-    notificationSettings
+    sendTestNotification
   } = useNotifications();
 
   const handleSignOut = async () => {

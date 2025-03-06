@@ -9,7 +9,10 @@ export function cn(...inputs: ClassValue[]) {
 export function isPlatform(platform: 'capacitor' | 'web'): boolean {
   // Check if we're running in Capacitor
   if (platform === 'capacitor') {
-    return window.Capacitor !== undefined && window.Capacitor.isNativePlatform();
+    return typeof window !== 'undefined' && 
+           'Capacitor' in window && 
+           (window as any).Capacitor && 
+           (window as any).Capacitor.isNativePlatform();
   }
   
   // Default to web platform

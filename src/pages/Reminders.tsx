@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Plus, Bell, BellOff } from "lucide-react";
@@ -101,7 +100,7 @@ const Reminders = () => {
               reminder={reminder}
               onEdit={openEditReminder}
               onToggleActive={handleToggleActive}
-              onDelete={handleDelete}
+              onDelete={(id) => handleDelete(reminders.find(r => r.id === id)!)}
             />
           ))}
         </div>
