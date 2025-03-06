@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertTriangle, CheckCircle, Info, Star, StarHalf, StarOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isQueryError } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -57,7 +57,9 @@ const FoodAnalyzer: React.FC<FoodAnalyzerProps> = ({ petId, petName, initialIngr
             
           if (error) throw error;
           
-          setPetAllergies(data.map(a => a.name));
+          // Safely extract allergy names
+          const allergyNames = data ? data.map(item => item.name || '') : [];
+          setPetAllergies(allergyNames);
         } catch (error: any) {
           console.error("Error fetching pet allergies:", error.message);
         }
@@ -395,6 +397,72 @@ const FoodAnalyzer: React.FC<FoodAnalyzerProps> = ({ petId, petName, initialIngr
       )}
     </Card>
   );
+
+  function handleDetailedAnalyze() {
+    if (!ingredients.trim()) {
+      toast({
+        title: "No ingredients provided",
+        description: "Please enter the food ingredients to analyze",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setAnalyzing(true);
+      setActiveTab("detailed");
+      
+      // Parse ingredients from text area (split by commas or new lines)
+      const ingredientsList = ingredients
+        .split(/[,\n]/)
+        .map(i => i.trim())
+        .filter(i => i !== "");
+      
+      // Call the GPT-powered edge function to analyze the ingredients
+      supabase.functions.invoke("analyze-food", {
+        body: {
+          ingredients: ingredientsList,
+          petAllergies,
+        },
+      }).then(({ data, error }) => {
+        if (error) throw error;
+        
+        const response = data as AnalysisResponse;
+        setDetailedResult(response.analysis);
+        
+        // Also do a simple analysis for comparison
+        supabase.functions.invoke("analyze-ingredients", {
+          body: {
+            ingredients: ingredientsList,
+            petId,
+          },
+        }).then(({ data: simpleData, error: simpleError }) => {
+          if (!simpleError) {
+            setSimpleResult(simpleData as SimpleAnalysisResult);
+          }
+        }).catch(console.error);
+      }).catch(error => {
+        console.error("Error in detailed analysis:", error.message);
+        toast({
+          title: "Advanced analysis failed",
+          description: error.message || "Could not perform detailed analysis",
+          variant: "destructive",
+        });
+        setDetailedResult(null);
+      }).finally(() => {
+        setAnalyzing(false);
+      });
+    } catch (error: any) {
+      console.error("Error setting up detailed analysis:", error.message);
+      toast({
+        title: "Advanced analysis failed",
+        description: error.message || "Could not set up detailed analysis",
+        variant: "destructive",
+      });
+      setDetailedResult(null);
+      setAnalyzing(false);
+    }
+  }
 };
 
 export default FoodAnalyzer;

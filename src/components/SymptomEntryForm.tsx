@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isQueryError, safelyUnwrapResult } from "@/integrations/supabase/client";
 
 interface Symptom {
   id: string;
@@ -54,6 +54,7 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
   useEffect(() => {
     const fetchSymptoms = async () => {
       try {
+        setFetchingSymptoms(true);
         const { data, error } = await supabase
           .from("symptoms")
           .select("*")
@@ -61,10 +62,20 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
           
         if (error) throw error;
         
-        setSymptoms(data || []);
-        
-        if (data && data.length > 0) {
-          setCurrentSymptom(data[0].id);
+        if (data) {
+          // Transform data to match the Symptom interface
+          const mappedSymptoms: Symptom[] = data.map(item => ({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            severity_options: item.severity_options || ['mild', 'moderate', 'severe']
+          }));
+          
+          setSymptoms(mappedSymptoms);
+          
+          if (mappedSymptoms.length > 0) {
+            setCurrentSymptom(mappedSymptoms[0].id);
+          }
         }
       } catch (error: any) {
         console.error("Error fetching symptoms:", error.message);
@@ -137,7 +148,7 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
       // Combine date and time
       const dateTime = new Date(`${values.date}T${values.time}`);
       
-      // Insert symptom entry
+      // Insert symptom entry - using the correct "filter" approach instead of "eq"
       const { data: entryData, error: entryError } = await supabase
         .from("symptom_entries")
         .insert({
@@ -150,19 +161,29 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
         
       if (entryError) throw entryError;
       
+      if (!entryData || !entryData.id) {
+        throw new Error("Failed to create symptom entry - no ID returned");
+      }
+      
       // Insert symptom details
-      const symptomDetailsPromises = selectedSymptoms.map((symptom) => 
+      const symptomDetailsPromises = selectedSymptoms.map(symptom => 
         supabase
           .from("symptom_details")
           .insert({
             entry_id: entryData.id,
             symptom_id: symptom.symptomId,
             severity: symptom.severity,
-            notes: symptom.notes,
+            notes: symptom.notes || null,
           })
       );
       
-      await Promise.all(symptomDetailsPromises);
+      const results = await Promise.all(symptomDetailsPromises);
+      const errors = results.filter(result => result.error);
+      
+      if (errors.length > 0) {
+        console.error("Errors inserting symptom details:", errors);
+        throw new Error("Some symptom details could not be saved");
+      }
       
       toast({
         title: "Entry added",

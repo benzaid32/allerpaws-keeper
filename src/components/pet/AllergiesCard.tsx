@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Trash } from "lucide-react";
 import { Pet } from "@/lib/types";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isQueryError } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface AllergiesCardProps {
@@ -27,7 +27,8 @@ const AllergiesCard: React.FC<AllergiesCardProps> = ({ pet, setPet }) => {
         .from("allergies")
         .insert({
           pet_id: pet.id,
-          name: newAllergen.trim()
+          name: newAllergen.trim(),
+          severity: "unknown" // Adding required severity field
         });
         
       if (error) throw error;
@@ -59,8 +60,8 @@ const AllergiesCard: React.FC<AllergiesCardProps> = ({ pet, setPet }) => {
       const { error } = await supabase
         .from("allergies")
         .delete()
-        .eq("pet_id", pet.id)
-        .eq("name", allergen);
+        .filter("pet_id", "eq", pet.id)
+        .filter("name", "eq", allergen);
         
       if (error) throw error;
       

@@ -17,9 +17,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     headers: {
       'X-Client-Info': 'allerpaws-app'
     }
-  },
-  // Add debug mode to log all requests in development
-  debug: process.env.NODE_ENV === 'development'
+  }
 });
 
 // Add a helper function to check if an error is a Row Level Security error
@@ -28,3 +26,32 @@ export const isRLSError = (error: any): boolean => {
          error?.code === 'PGRST301' || 
          error?.code === '42501';
 };
+
+// Helper function to safely access properties from potentially error objects
+export function safelyUnwrapResult<T>(result: T | { error: true } & Error): T | null {
+  if (result && typeof result === 'object' && 'error' in result && result.error === true) {
+    console.error('Error in Supabase result:', result);
+    return null;
+  }
+  return result as T;
+}
+
+// Helper function to map database rows to application types
+export function mapDbRowsToAppTypes<T>(data: any, mapper: (row: any) => T): T[] {
+  if (!data || !Array.isArray(data)) return [];
+  return data.map(mapper);
+}
+
+// Helper function to safely unwrap a single result
+export function unwrapSingleResult<T>(result: T | { error: true } & Error): T | null {
+  if (result && typeof result === 'object' && 'error' in result && result.error === true) {
+    console.error('Error in Supabase single result:', result);
+    return null;
+  }
+  return result as T;
+}
+
+// Type guard to check if a result is an error
+export function isQueryError(result: any): result is { error: true } & Error {
+  return result && typeof result === 'object' && 'error' in result && result.error === true;
+}

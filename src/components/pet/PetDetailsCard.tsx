@@ -42,16 +42,25 @@ const PetDetailsCard: React.FC<PetDetailsCardProps> = ({ pet, setPet }) => {
     try {
       setSaving(true);
       
+      // Build the update object with type safety
+      const updateData: {
+        name: string;
+        species: "dog" | "cat" | "other";
+        breed?: string | null;
+        age?: number | null;
+        weight?: number | null;
+      } = {
+        name: formData.name,
+        species: formData.species,
+        breed: formData.breed || null,
+        age: formData.age ? parseInt(formData.age, 10) : null,
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+      };
+      
       const { error } = await supabase
         .from("pets")
-        .update({
-          name: formData.name,
-          species: formData.species,
-          breed: formData.breed || null,
-          age: formData.age ? parseInt(formData.age, 10) : null,
-          weight: formData.weight ? parseFloat(formData.weight) : null,
-        })
-        .eq("id", pet.id);
+        .update(updateData)
+        .filter("id", "eq", pet.id);
         
       if (error) throw error;
       
