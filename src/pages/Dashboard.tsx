@@ -89,7 +89,7 @@ const Dashboard = () => {
   };
 
   const handleAddPet = () => {
-    // Navigate to the add pet page
+    console.log("Navigating to add pet page");
     navigate("/pet/add");
   };
 
