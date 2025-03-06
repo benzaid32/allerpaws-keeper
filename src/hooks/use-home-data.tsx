@@ -32,40 +32,67 @@ export const useHomeData = () => {
     try {
       setLoading(true);
       
-      // Fetch recent symptom logs with pet names
+      // First, get the user's pets
+      const { data: petsData, error: petsError } = await supabase
+        .from("pets")
+        .select("id")
+        .eq("user_id", user.id);
+        
+      if (petsError) throw petsError;
+      
+      // If user has no pets, return empty logs
+      if (!petsData || petsData.length === 0) {
+        setRecentLogs([]);
+        setLoading(false);
+        return;
+      }
+      
+      const petIds = petsData.map(pet => pet.id);
+      
+      // Fetch recent symptom logs for user's pets
       const { data: logsData, error: logsError } = await supabase
         .from("symptom_entries")
         .select(`
           id,
           date,
-          pets:pet_id (name),
-          symptom_details (
-            symptoms:symptom_id (name)
-          )
+          pet_id,
+          pets(name)
         `)
-        .eq("symptom_entries.pet_id.user_id", user.id)
+        .in("pet_id", petIds)
         .order("date", { ascending: false })
         .limit(3);
         
       if (logsError) throw logsError;
       
-      // Format logs data
-      const formattedLogs: HomeLog[] = (logsData || []).map(log => {
-        const symptomNames = log.symptom_details
-          ? log.symptom_details
-              .filter(detail => detail.symptoms)
-              .map(detail => detail.symptoms.name)
-          : [];
+      // Get details for each symptom entry
+      const logs: HomeLog[] = [];
+      
+      for (const log of logsData || []) {
+        // Fetch symptoms for this entry
+        const { data: symptomDetails, error: symptomError } = await supabase
+          .from("symptom_details")
+          .select(`
+            symptom_id,
+            symptoms(name)
+          `)
+          .eq("entry_id", log.id);
+          
+        if (symptomError) throw symptomError;
         
-        return {
+        // Format log data
+        const symptomNames = (symptomDetails || [])
+          .filter(detail => detail.symptoms)
+          .map(detail => detail.symptoms.name);
+        
+        logs.push({
           id: log.id,
           date: formatDate(log.date),
           petName: log.pets?.name || "Unknown Pet",
           symptoms: symptomNames
-        };
-      });
+        });
+      }
       
-      setRecentLogs(formattedLogs);
+      setRecentLogs(logs);
       
       // Fetch active reminders
       const { data: remindersData, error: remindersError } = await supabase
