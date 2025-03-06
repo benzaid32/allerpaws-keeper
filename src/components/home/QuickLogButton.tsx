@@ -19,7 +19,11 @@ const QuickLogButton = () => {
 
   return (
     <div className="fixed bottom-20 right-4 z-40">
-      <Button onClick={handleQuickLog} size="lg" className="rounded-full h-14 w-14 p-0">
+      <Button 
+        onClick={handleQuickLog} 
+        size="lg" 
+        className="rounded-full h-14 w-14 p-0 shadow-lg bg-gradient-to-r from-primary to-accent hover:shadow-xl transition-all duration-300"
+      >
         <Plus className="h-6 w-6" />
       </Button>
     </div>

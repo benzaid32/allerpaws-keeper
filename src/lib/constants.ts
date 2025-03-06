@@ -8,11 +8,48 @@ export const APP_DESCRIPTION = "Track and manage your pet's food allergies";
 
 // Navigation
 export const NAVIGATION_ITEMS = [
-  { name: "Dashboard", href: "/dashboard" },
-  { name: "Pets", href: "/pets" },
-  { name: "Food Diary", href: "/food-diary" },
-  { name: "Progress", href: "/progress" },
-  { name: "Settings", href: "/settings" },
+  { name: "Dashboard", href: "/dashboard", path: "/dashboard", icon: "dashboard" },
+  { name: "Pets", href: "/pets", path: "/pets", icon: "pets" },
+  { name: "Food Diary", href: "/food-diary", path: "/food-diary", icon: "food_diary" },
+  { name: "Progress", href: "/progress", path: "/progress", icon: "progress" },
+  { name: "Settings", href: "/settings", path: "/settings", icon: "settings" },
+];
+
+// Onboarding steps
+export const ONBOARDING_STEPS = [
+  { id: "welcome", title: "Welcome" },
+  { id: "register", title: "Create Account" },
+  { id: "symptoms", title: "Symptoms" },
+  { id: "allergies", title: "Allergies" },
+  { id: "food-database", title: "Food Database" },
+];
+
+// Elimination diet phases
+export const ELIMINATION_PHASES = [
+  { 
+    id: "planning", 
+    name: "Planning", 
+    description: "Select novel protein and carbohydrate sources your pet hasn't been exposed to.",
+    duration: "1-2 weeks"
+  },
+  { 
+    id: "elimination", 
+    name: "Elimination", 
+    description: "Feed only the selected novel ingredients, avoiding all other foods and treats.",
+    duration: "8-12 weeks"
+  },
+  { 
+    id: "challenge", 
+    name: "Challenge", 
+    description: "Reintroduce potential allergens one at a time to identify reactions.",
+    duration: "4-8 weeks"
+  },
+  { 
+    id: "maintenance", 
+    name: "Maintenance", 
+    description: "Build a long-term diet plan avoiding identified allergens.",
+    duration: "Ongoing"
+  }
 ];
 
 // Pet species options
@@ -24,12 +61,12 @@ export const PET_SPECIES = [
 
 // Common symptoms for pets
 export const COMMON_SYMPTOMS = [
-  { id: "itching", name: "Itching/Scratching", description: "Excessive scratching or licking" },
-  { id: "redness", name: "Skin Redness", description: "Red, inflamed skin" },
-  { id: "vomiting", name: "Vomiting", description: "Throwing up food" },
-  { id: "diarrhea", name: "Diarrhea", description: "Loose or watery stool" },
-  { id: "ear_infection", name: "Ear Infection", description: "Inflammation of the ear" },
-  { id: "gas", name: "Excessive Gas", description: "Flatulence or bloating" },
+  { id: "itching", name: "Itching/Scratching", description: "Excessive scratching or licking", severity: "moderate" },
+  { id: "redness", name: "Skin Redness", description: "Red, inflamed skin", severity: "moderate" },
+  { id: "vomiting", name: "Vomiting", description: "Throwing up food", severity: "severe" },
+  { id: "diarrhea", name: "Diarrhea", description: "Loose or watery stool", severity: "severe" },
+  { id: "ear_infection", name: "Ear Infection", description: "Inflammation of the ear", severity: "moderate" },
+  { id: "gas", name: "Excessive Gas", description: "Flatulence or bloating", severity: "mild" },
 ];
 
 // Severity levels for symptoms
