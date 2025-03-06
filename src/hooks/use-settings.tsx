@@ -24,7 +24,7 @@ export const useSettings = () => {
     try {
       setLoading(true);
       
-      // Explicitly type the query result to avoid deep type instantiation
+      // Use a more direct query approach with explicit typing to avoid deep type instantiation
       const { data, error } = await supabase
         .from("reminders")
         .select("id, title, time, active")
@@ -34,8 +34,16 @@ export const useSettings = () => {
         
       if (error) throw error;
       
-      // Transform the data with explicit typing to avoid circular references
-      const settings: ReminderSetting[] = data ? data.map((item: any) => ({
+      // Use type assertion to avoid circular reference issues
+      const remindersData = data as Array<{
+        id: string;
+        title: string;
+        time: string;
+        active: boolean;
+      }> | null;
+      
+      // Transform the data with simplified typing
+      const settings: ReminderSetting[] = remindersData ? remindersData.map(item => ({
         id: item.id,
         name: item.title,
         time: format(new Date(`2000-01-01T${item.time}`), 'h:mm a'),
