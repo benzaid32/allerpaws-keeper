@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -113,10 +112,7 @@ const Onboarding: React.FC = () => {
       }
       
       // Sign in immediately after registration to get a valid session
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const { error: signInError } = await signIn(email, password);
       
       if (signInError) {
         console.error("Error signing in after registration:", signInError);

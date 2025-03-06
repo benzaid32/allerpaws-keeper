@@ -8,6 +8,10 @@ type AuthContextType = {
   session: Session | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{
+    error: any | null;
+    data: { user: User | null; session: Session | null } | null;
+  }>;
   authError: string | null;
 };
 
@@ -16,6 +20,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   isLoading: true,
   signOut: async () => {},
+  signIn: async () => ({ error: null, data: { user: null, session: null } }),
   authError: null
 });
 
@@ -94,8 +99,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signIn = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      setAuthError(null);
+      const result = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      setIsLoading(false);
+      
+      if (result.error) {
+        setAuthError(result.error.message);
+      }
+      
+      return result;
+    } catch (error: any) {
+      console.error("Error during sign in:", error);
+      setAuthError(error.message);
+      setIsLoading(false);
+      return { error, data: null };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signOut, authError }}>
+    <AuthContext.Provider value={{ user, session, isLoading, signOut, signIn, authError }}>
       {children}
     </AuthContext.Provider>
   );
