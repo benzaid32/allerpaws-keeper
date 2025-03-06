@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Search, ChevronRight, Loader2, AlertTriangle, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -36,6 +37,13 @@ interface SearchParams {
   type?: string;
 }
 
+// Define pet type for species filtering
+interface UserPet {
+  id: string;
+  name: string;
+  species: "dog" | "cat" | "other";
+}
+
 const FoodDatabase = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -46,22 +54,30 @@ const FoodDatabase = () => {
   const [selectedProduct, setSelectedProduct] = useState<FoodProduct | null>(null);
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
-  const [pets, setPets] = useState<{ id: string; name: string }[]>([]);
+  const [pets, setPets] = useState<UserPet[]>([]);
   const [activeTab, setActiveTab] = useState<string>("search");
   const [analyzerIngredients, setAnalyzerIngredients] = useState<string>("");
+  const [userPetSpecies, setUserPetSpecies] = useState<Set<string>>(new Set());
+  const [isFetchingPets, setIsFetchingPets] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchPets();
-      fetchRecommendedFoods();
     }
   }, [user]);
 
+  useEffect(() => {
+    if (userPetSpecies.size > 0) {
+      fetchRecommendedFoods();
+    }
+  }, [userPetSpecies]);
+
   const fetchPets = async () => {
     try {
+      setIsFetchingPets(true);
       const { data, error } = await supabase
         .from("pets")
-        .select("id, name")
+        .select("id, name, species")
         .eq("user_id", user?.id)
         .order("name");
 
@@ -70,19 +86,44 @@ const FoodDatabase = () => {
       setPets(data || []);
       if (data && data.length > 0) {
         setSelectedPetId(data[0].id);
+        
+        // Extract unique species from pets
+        const species = new Set<string>();
+        data.forEach(pet => {
+          if (pet.species === "dog" || pet.species === "cat") {
+            species.add(pet.species);
+          }
+        });
+        setUserPetSpecies(species);
       }
     } catch (error: any) {
       console.error("Error fetching pets:", error.message);
+    } finally {
+      setIsFetchingPets(false);
     }
   };
 
   const fetchRecommendedFoods = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      
+      // Create query to fetch foods compatible with user's pets
+      let query = supabase
         .from("food_products")
         .select("*")
-        .limit(4);
+        .limit(8);
+      
+      // Filter foods by species based on user's pets
+      if (userPetSpecies.size === 1) {
+        // If user has only dogs or only cats
+        const species = userPetSpecies.has("dog") ? "dog" : "cat";
+        query = query.or(`species.eq.${species},species.eq.both`);
+      } else if (userPetSpecies.size > 1) {
+        // If user has both, prioritize "both" first, then include some dog and cat specific
+        query = query.or(`species.eq.both,species.eq.dog,species.eq.cat`).limit(8);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       
@@ -180,6 +221,33 @@ const FoodDatabase = () => {
     setAnalyzerIngredients(ingredients.join(", "));
   };
 
+  // Check if food is compatible with user's pets
+  const getFoodCompatibility = (product: FoodProduct) => {
+    if (product.species === "both") {
+      return { compatible: true, message: "Suitable for all pets" };
+    }
+    
+    // If user has only dogs
+    if (userPetSpecies.size === 1 && userPetSpecies.has("dog") && product.species === "dog") {
+      return { compatible: true, message: "Great for dogs" };
+    }
+    
+    // If user has only cats
+    if (userPetSpecies.size === 1 && userPetSpecies.has("cat") && product.species === "cat") {
+      return { compatible: true, message: "Perfect for cats" };
+    }
+    
+    // If user has both dogs and cats but food is species-specific
+    if (userPetSpecies.size > 1 && product.species !== "both") {
+      return { 
+        compatible: true, 
+        message: `Only for ${product.species === "dog" ? "dogs" : "cats"}` 
+      };
+    }
+    
+    return { compatible: false, message: "Not suitable for your pets" };
+  };
+
   return (
     <div className="container pb-20">
       <div className="pt-6 pb-4">
@@ -245,30 +313,47 @@ const FoodDatabase = () => {
           <Card className="mb-6">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Recommended Foods</CardTitle>
+              {userPetSpecies.size > 0 && (
+                <CardDescription>
+                  Based on your {Array.from(userPetSpecies).join(' and ')}
+                </CardDescription>
+              )}
             </CardHeader>
             <CardContent>
-              {isLoading ? (
+              {isLoading || isFetchingPets ? (
                 <div className="flex justify-center py-6">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-              ) : (
+              ) : recommendedFoods.length > 0 ? (
                 <div className="space-y-3">
-                  {recommendedFoods.map((product) => (
-                    <div 
-                      key={product.id} 
-                      className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer"
-                      onClick={() => viewProductDetails(product)}
-                    >
-                      <div className="h-12 w-12 bg-primary/10 rounded-md flex items-center justify-center">
-                        <span className="text-primary font-medium">{getProductInitials(product.brand)}</span>
+                  {recommendedFoods.map((product) => {
+                    const compatibility = getFoodCompatibility(product);
+                    return (
+                      <div 
+                        key={product.id} 
+                        className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer"
+                        onClick={() => viewProductDetails(product)}
+                      >
+                        <div className="h-12 w-12 bg-primary/10 rounded-md flex items-center justify-center">
+                          <span className="text-primary font-medium">{getProductInitials(product.brand)}</span>
+                        </div>
+                        <div className="flex-grow">
+                          <h3 className="font-medium">{product.name}</h3>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-muted-foreground">{product.brand}</p>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
+                              {compatibility.message}
+                            </span>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
                       </div>
-                      <div className="flex-grow">
-                        <h3 className="font-medium">{product.name}</h3>
-                        <p className="text-sm text-muted-foreground">{product.brand}</p>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                  ))}
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">Add pets to see personalized recommendations</p>
                 </div>
               )}
             </CardContent>
@@ -373,6 +458,18 @@ const FoodDatabase = () => {
                     For {selectedProduct.species === "both" ? "Dogs & Cats" : selectedProduct.species === "dog" ? "Dogs" : "Cats"}
                   </Badge>
                 </div>
+                
+                {userPetSpecies.size > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Compatibility:</h4>
+                    <p className="text-sm">
+                      {(() => {
+                        const { message } = getFoodCompatibility(selectedProduct);
+                        return message;
+                      })()}
+                    </p>
+                  </div>
+                )}
                 
                 <div>
                   <h4 className="text-sm font-medium mb-1">Ingredients:</h4>
