@@ -101,8 +101,8 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
     const symptomObj = symptoms.find((s) => s.id === currentSymptom);
     
     if (symptomObj) {
-      setSelectedSymptoms([
-        ...selectedSymptoms,
+      setSelectedSymptoms((prev) => [
+        ...prev,
         {
           symptomId: currentSymptom,
           severity: currentSeverity,
@@ -257,7 +257,12 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
                 </Select>
               </div>
               
-              <Button type="button" size="sm" onClick={addSymptom}>
+              <Button 
+                type="button" 
+                size="sm" 
+                onClick={addSymptom} 
+                aria-label="Add symptom"
+              >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
@@ -318,7 +323,11 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
         />
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading || selectedSymptoms.length === 0}>
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={loading || selectedSymptoms.length === 0}
+      >
         {loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

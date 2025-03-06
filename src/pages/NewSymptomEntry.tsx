@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import SymptomEntryForm from "@/components/SymptomEntryForm";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNavigation from "@/components/BottomNavigation";
+import { useToast } from "@/hooks/use-toast";
 
 const NewSymptomEntry = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const NewSymptomEntry = () => {
   const [loading, setLoading] = useState(true);
   const [pets, setPets] = useState<{ id: string; name: string }[]>([]);
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -36,13 +38,18 @@ const NewSymptomEntry = () => {
         }
       } catch (error: any) {
         console.error("Error fetching pets:", error.message);
+        toast({
+          title: "Error",
+          description: "Could not load your pets. Please try again.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchPets();
-  }, [user]);
+  }, [user, toast]);
 
   const handleSuccess = () => {
     navigate("/symptom-diary");
