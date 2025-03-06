@@ -15,6 +15,20 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { FoodProduct } from "@/lib/types";
 
+// Type helper for converting db response to our FoodProduct type
+const mapToFoodProduct = (dbProduct: any): FoodProduct => {
+  return {
+    id: dbProduct.id,
+    name: dbProduct.name,
+    brand: dbProduct.brand,
+    type: dbProduct.type as "dry" | "wet" | "treat" | "supplement",
+    species: dbProduct.species as "dog" | "cat" | "both",
+    ingredients: dbProduct.ingredients || [],
+    allergens: dbProduct.allergens || [],
+    imageUrl: dbProduct.image_url
+  };
+};
+
 const FoodDatabase = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -65,7 +79,9 @@ const FoodDatabase = () => {
 
       if (error) throw error;
       
-      setRecommendedFoods(data || []);
+      // Convert the data to our FoodProduct type
+      const mappedData = data?.map(mapToFoodProduct) || [];
+      setRecommendedFoods(mappedData);
     } catch (error: any) {
       console.error("Error fetching recommended foods:", error.message);
     } finally {
@@ -91,9 +107,11 @@ const FoodDatabase = () => {
       if (error) throw error;
       
       if (data && data.success) {
-        setSearchResults(data.data || []);
+        // Convert the data to our FoodProduct type
+        const mappedData = data.data?.map(mapToFoodProduct) || [];
+        setSearchResults(mappedData);
         
-        if (data.data.length === 0) {
+        if (mappedData.length === 0) {
           toast({
             title: "No results found",
             description: "Try a different search term or check our recommended foods.",

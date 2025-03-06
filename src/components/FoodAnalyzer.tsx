@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface FoodAnalyzerProps {
   petId: string;
   petName: string;
+  initialIngredients?: string; // Add the optional initialIngredients prop
 }
 
 interface SimpleAnalysisResult {
@@ -37,8 +37,8 @@ interface AnalysisResponse {
   timestamp: string;
 }
 
-const FoodAnalyzer: React.FC<FoodAnalyzerProps> = ({ petId, petName }) => {
-  const [ingredients, setIngredients] = useState("");
+const FoodAnalyzer: React.FC<FoodAnalyzerProps> = ({ petId, petName, initialIngredients = "" }) => {
+  const [ingredients, setIngredients] = useState(initialIngredients);
   const [analyzing, setAnalyzing] = useState(false);
   const [simpleResult, setSimpleResult] = useState<SimpleAnalysisResult | null>(null);
   const [detailedResult, setDetailedResult] = useState<DetailedAnalysisResult | null>(null);
