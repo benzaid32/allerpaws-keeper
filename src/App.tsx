@@ -58,6 +58,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            {/* Place the add route before the dynamic id route to prevent conflicts */}
             <Route
               path="/pet/:id/edit"
               element={
