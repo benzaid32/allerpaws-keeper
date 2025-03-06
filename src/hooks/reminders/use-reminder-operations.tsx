@@ -60,7 +60,7 @@ export const useReminderOperations = ({
         description: formData.description.trim() || null,
         time: formData.time,
         days: formData.days,
-        pet_id: formData.petId || null,
+        pet_id: formData.petId === "none" ? null : formData.petId || null,
         active: formData.active,
       };
       

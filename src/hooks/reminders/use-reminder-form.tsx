@@ -19,7 +19,7 @@ export const useReminderForm = () => {
     description: "",
     time: "08:00",
     days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-    petId: "",
+    petId: "none",
     active: true,
   });
   const [open, setOpen] = useState(false);
@@ -33,7 +33,7 @@ export const useReminderForm = () => {
       description: "",
       time: "08:00",
       days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-      petId: "",
+      petId: "none",
       active: true,
     });
     setIsEditing(false);
@@ -47,7 +47,7 @@ export const useReminderForm = () => {
       description: reminder.description || "",
       time: reminder.time,
       days: reminder.days,
-      petId: reminder.petId || "",
+      petId: reminder.petId || "none",
       active: reminder.active,
     });
     setIsEditing(true);

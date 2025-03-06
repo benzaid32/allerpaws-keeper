@@ -125,7 +125,7 @@ const ReminderFormDialog: React.FC<ReminderFormDialogProps> = ({
                     <SelectValue placeholder="Select pet" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All pets</SelectItem>
+                    <SelectItem value="none">All pets</SelectItem>
                     {pets && pets.length > 0 && pets.map((pet) => (
                       <SelectItem key={pet.id} value={pet.id}>
                         {pet.name}
