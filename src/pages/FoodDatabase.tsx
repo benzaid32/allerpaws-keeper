@@ -1,518 +1,193 @@
 
-import React, { useState, useEffect } from "react";
-import { Search, ChevronRight, Loader2, AlertTriangle, Info } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BottomNavigation from "@/components/BottomNavigation";
-import FoodAnalyzer from "@/components/FoodAnalyzer";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { FoodProduct, Pet } from "@/lib/types";
-
-// Type helper for converting db response to our FoodProduct type
-const mapToFoodProduct = (dbProduct: any): FoodProduct => {
-  return {
-    id: dbProduct.id,
-    name: dbProduct.name,
-    brand: dbProduct.brand,
-    type: dbProduct.type as "dry" | "wet" | "treat" | "supplement",
-    species: dbProduct.species as "dog" | "cat" | "both",
-    ingredients: dbProduct.ingredients || [],
-    allergens: dbProduct.allergens || [],
-    imageUrl: dbProduct.image_url
-  };
-};
-
-// Define the type for search parameters
-interface SearchParams {
-  query?: string;
-  petId?: string | null;
-  allergens?: boolean;
-  type?: string;
-}
-
-// Define pet type for species filtering
-interface UserPet {
-  id: string;
-  name: string;
-  species: "dog" | "cat" | "other";
-}
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Search, ArrowLeft, Filter, Star, AlertTriangle, CheckCircle, HelpCircle } from "lucide-react";
+import { motion } from "framer-motion";
 
 const FoodDatabase = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState<FoodProduct[]>([]);
-  const [recommendedFoods, setRecommendedFoods] = useState<FoodProduct[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<FoodProduct | null>(null);
-  const [productDialogOpen, setProductDialogOpen] = useState(false);
-  const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
-  const [pets, setPets] = useState<UserPet[]>([]);
-  const [activeTab, setActiveTab] = useState<string>("search");
-  const [analyzerIngredients, setAnalyzerIngredients] = useState<string>("");
-  const [userPetSpecies, setUserPetSpecies] = useState<Set<string>>(new Set());
-  const [isFetchingPets, setIsFetchingPets] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      fetchPets();
+  const foodItems = [
+    {
+      id: 1,
+      name: "Royal Canin Hydrolyzed Protein",
+      type: "Dog Food",
+      allergySafe: true,
+      ingredients: ["Hydrolyzed Soy Protein", "Rice", "Vegetable Oil"],
+      rating: 4.5,
+      image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&w=200&q=80"
+    },
+    {
+      id: 2,
+      name: "Hill's Science Diet Sensitive Skin",
+      type: "Dog Food",
+      allergySafe: true,
+      ingredients: ["Salmon", "Potatoes", "Peas"],
+      rating: 4.2,
+      image: "https://images.unsplash.com/photo-1535294435445-d7249524ef2e?auto=format&fit=crop&w=200&q=80"
+    },
+    {
+      id: 3,
+      name: "Blue Buffalo Basics Limited Ingredient",
+      type: "Cat Food",
+      allergySafe: true,
+      ingredients: ["Turkey", "Pumpkin", "Brown Rice"],
+      rating: 4.3,
+      image: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=200&q=80"
+    },
+    {
+      id: 4,
+      name: "Purina Pro Plan Sensitive Skin & Stomach",
+      type: "Dog Food",
+      allergySafe: false,
+      ingredients: ["Salmon", "Rice", "Barley", "Wheat"],
+      rating: 3.8,
+      image: "https://images.unsplash.com/photo-1575900501942-293412c164e4?auto=format&fit=crop&w=200&q=80"
+    },
+    {
+      id: 5,
+      name: "Merrick Limited Ingredient Diet",
+      type: "Cat Food",
+      allergySafe: true,
+      ingredients: ["Deboned Turkey", "Turkey Meal", "Potatoes"],
+      rating: 4.4,
+      image: "https://images.unsplash.com/photo-1560807707-8cc77767d783?auto=format&fit=crop&w=200&q=80"
     }
-  }, [user]);
+  ];
 
-  useEffect(() => {
-    if (userPetSpecies.size > 0) {
-      fetchRecommendedFoods();
-    }
-  }, [userPetSpecies]);
-
-  const fetchPets = async () => {
-    try {
-      setIsFetchingPets(true);
-      const { data, error } = await supabase
-        .from("pets")
-        .select("id, name, species")
-        .eq("user_id", user?.id)
-        .order("name");
-
-      if (error) throw error;
-      
-      // Cast the species property to the expected type
-      const typedPets: UserPet[] = data?.map(pet => ({
-        id: pet.id,
-        name: pet.name,
-        species: pet.species as "dog" | "cat" | "other"
-      })) || [];
-      
-      setPets(typedPets);
-      if (typedPets.length > 0) {
-        setSelectedPetId(typedPets[0].id);
-        
-        // Extract unique species from pets
-        const species = new Set<string>();
-        typedPets.forEach(pet => {
-          if (pet.species === "dog" || pet.species === "cat") {
-            species.add(pet.species);
-          }
-        });
-        setUserPetSpecies(species);
-      }
-    } catch (error: any) {
-      console.error("Error fetching pets:", error.message);
-    } finally {
-      setIsFetchingPets(false);
-    }
-  };
-
-  const fetchRecommendedFoods = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Create query to fetch foods compatible with user's pets
-      let query = supabase
-        .from("food_products")
-        .select("*")
-        .limit(8);
-      
-      // Filter foods by species based on user's pets
-      if (userPetSpecies.size === 1) {
-        // If user has only dogs or only cats
-        const species = userPetSpecies.has("dog") ? "dog" : "cat";
-        query = query.or(`species.eq.${species},species.eq.both`);
-      } else if (userPetSpecies.size > 1) {
-        // If user has both, prioritize "both" first, then include some dog and cat specific
-        query = query.or(`species.eq.both,species.eq.dog,species.eq.cat`).limit(8);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      
-      // Convert the data to our FoodProduct type
-      const mappedData = data?.map(mapToFoodProduct) || [];
-      setRecommendedFoods(mappedData);
-    } catch (error: any) {
-      console.error("Error fetching recommended foods:", error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    
-    try {
-      setIsLoading(true);
-      
-      // Check if this is a category search
-      const isCategory = ["dry", "wet", "treat", "supplement"].includes(searchQuery.toLowerCase());
-      
-      // Create the query parameters with the correct TypeScript interface
-      const queryParams: SearchParams = { 
-        petId: selectedPetId,
-        allergens: true
-      };
-      
-      // If it's a category search, set the type parameter, otherwise set the query parameter
-      if (isCategory) {
-        queryParams.type = searchQuery.toLowerCase();
-      } else {
-        queryParams.query = searchQuery;
-      }
-      
-      // Use the Supabase Edge Function for searching
-      const { data, error } = await supabase.functions.invoke('search-food', {
-        body: queryParams
-      });
-
-      if (error) throw error;
-      
-      if (data && data.success) {
-        // Convert the data to our FoodProduct type
-        const mappedData = data.data?.map(mapToFoodProduct) || [];
-        setSearchResults(mappedData);
-        
-        if (mappedData.length === 0) {
-          toast({
-            title: "No results found",
-            description: "Try a different search term or check our recommended foods.",
-          });
-        }
-      } else {
-        throw new Error(data?.error || "Failed to search food products");
-      }
-    } catch (error: any) {
-      console.error("Error searching foods:", error.message);
-      toast({
-        title: "Search error",
-        description: "There was a problem with your search. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCategoryClick = (category: string) => {
-    setSearchQuery(category);
-    setIsLoading(true);
-    
-    // Use a small timeout to ensure the UI updates before the search
-    setTimeout(() => {
-      handleSearch();
-    }, 100);
-  };
-
-  const viewProductDetails = (product: FoodProduct) => {
-    setSelectedProduct(product);
-    setProductDialogOpen(true);
-  };
-
-  const getProductInitials = (brand: string) => {
-    return brand.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase();
-  };
-
-  const handlePetChange = (petId: string) => {
-    setSelectedPetId(petId);
-  };
-
-  const sendToAnalyzer = (ingredients: string[]) => {
-    setActiveTab("analyzer");
-    setProductDialogOpen(false);
-    setAnalyzerIngredients(ingredients.join(", "));
-  };
-
-  // Check if food is compatible with user's pets
-  const getFoodCompatibility = (product: FoodProduct) => {
-    // For foods suitable for both species
-    if (product.species === "both") {
-      return { compatible: true, message: "Suitable for all pets" };
-    }
-    
-    // If user has only dogs
-    if (userPetSpecies.size === 1 && userPetSpecies.has("dog") && product.species === "dog") {
-      return { compatible: true, message: "Great for dogs" };
-    }
-    
-    // If user has only cats
-    if (userPetSpecies.size === 1 && userPetSpecies.has("cat") && product.species === "cat") {
-      return { compatible: true, message: "Perfect for cats" };
-    }
-    
-    // If user has both dogs and cats but food is species-specific
-    if (userPetSpecies.size > 1 && (product.species === "dog" || product.species === "cat")) {
-      return { 
-        compatible: true, 
-        message: `Only for ${product.species === "dog" ? "dogs" : "cats"}` 
-      };
-    }
-    
-    return { compatible: false, message: "Not suitable for your pets" };
-  };
+  const filteredFoodItems = foodItems.filter((item) => 
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.ingredients.some(ing => ing.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
-    <div className="container pb-20">
-      <div className="pt-6 pb-4">
-        <h1 className="text-2xl font-bold">Food Database</h1>
-        <p className="text-muted-foreground">Search for safe foods for your pet</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background to-blue-50 dark:from-background dark:to-blue-950/20">
+      <div className="absolute top-0 right-0 w-full h-64 bg-[url('https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80')] bg-no-repeat bg-right-top bg-contain opacity-10 dark:opacity-5 z-0"></div>
+      
+      <div className="container relative pb-20 pt-4">
+        <div className="flex items-center mb-6">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="mr-2" 
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold flex-1">Food Database</h1>
+        </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="search">Search Foods</TabsTrigger>
-          <TabsTrigger value="analyzer">Ingredient Analyzer</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="search" className="space-y-4 mt-4">
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input 
-              className="pl-10 pr-24" 
-              placeholder="Search foods, ingredients, brands..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyUp={(e) => e.key === 'Enter' && handleSearch()}
+        <motion.div 
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="mb-6"
+        >
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search foods or ingredients..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-card/80 backdrop-blur-sm"
             />
-            <Button 
-              className="absolute right-1 top-1 h-8" 
-              size="sm"
-              onClick={handleSearch}
-              disabled={isLoading || !searchQuery.trim()}
-            >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
-            </Button>
           </div>
+          <div className="flex justify-between mt-3">
+            <Button variant="outline" size="sm" className="text-xs">
+              <Filter className="h-3 w-3 mr-1" />
+              Filters
+            </Button>
+            <div className="space-x-2">
+              <Badge variant="outline" className="bg-primary/10 hover:bg-primary/20 cursor-pointer">Dog</Badge>
+              <Badge variant="outline" className="bg-primary/10 hover:bg-primary/20 cursor-pointer">Cat</Badge>
+              <Badge variant="outline" className="bg-primary/10 hover:bg-primary/20 cursor-pointer">Allergy-Safe</Badge>
+            </div>
+          </div>
+        </motion.div>
 
-          {searchResults.length > 0 && (
-            <Card className="mb-6">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Search Results</CardTitle>
-                <CardDescription>Found {searchResults.length} matching products</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {searchResults.map((product) => (
-                    <div 
-                      key={product.id} 
-                      className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer"
-                      onClick={() => viewProductDetails(product)}
-                    >
-                      <div className="h-12 w-12 bg-primary/10 rounded-md flex items-center justify-center">
-                        <span className="text-primary font-medium">{getProductInitials(product.brand)}</span>
+        <div className="space-y-4">
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : filteredFoodItems.length > 0 ? (
+            filteredFoodItems.map((food, index) => (
+              <motion.div 
+                key={food.id}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                <Card className="overflow-hidden border-none shadow-md bg-card/80 backdrop-blur-sm">
+                  <CardContent className="p-0">
+                    <div className="flex">
+                      <div className="w-24 h-24 overflow-hidden">
+                        <img 
+                          src={food.image} 
+                          alt={food.name} 
+                          className="h-full w-full object-cover" 
+                        />
                       </div>
-                      <div className="flex-grow">
-                        <h3 className="font-medium">{product.name}</h3>
-                        <p className="text-sm text-muted-foreground">{product.brand}</p>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card className="mb-6">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Recommended Foods</CardTitle>
-              {userPetSpecies.size > 0 && (
-                <CardDescription>
-                  Based on your {Array.from(userPetSpecies).join(' and ')}
-                </CardDescription>
-              )}
-            </CardHeader>
-            <CardContent>
-              {isLoading || isFetchingPets ? (
-                <div className="flex justify-center py-6">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : recommendedFoods.length > 0 ? (
-                <div className="space-y-3">
-                  {recommendedFoods.map((product) => {
-                    const compatibility = getFoodCompatibility(product);
-                    return (
-                      <div 
-                        key={product.id} 
-                        className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer"
-                        onClick={() => viewProductDetails(product)}
-                      >
-                        <div className="h-12 w-12 bg-primary/10 rounded-md flex items-center justify-center">
-                          <span className="text-primary font-medium">{getProductInitials(product.brand)}</span>
-                        </div>
-                        <div className="flex-grow">
-                          <h3 className="font-medium">{product.name}</h3>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm text-muted-foreground">{product.brand}</p>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
-                              {compatibility.message}
-                            </span>
+                      <div className="p-3 flex-1">
+                        <div className="flex justify-between">
+                          <h3 className="font-medium">{food.name}</h3>
+                          <div className="flex items-center text-yellow-500">
+                            <Star className="h-3 w-3 fill-current" />
+                            <span className="text-xs ml-1">{food.rating}</span>
                           </div>
                         </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground mb-2">{food.type}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {food.ingredients.slice(0, 3).map((ingredient, i) => (
+                            <span key={i} className="text-xs bg-muted/40 px-2 py-0.5 rounded-full">
+                              {ingredient}
+                            </span>
+                          ))}
+                          {food.ingredients.length > 3 && (
+                            <span className="text-xs bg-muted/40 px-2 py-0.5 rounded-full">
+                              +{food.ingredients.length - 3}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <p className="text-muted-foreground">Add pets to see personalized recommendations</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Browse Categories</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-3">
-                <div 
-                  className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer"
-                  onClick={() => handleCategoryClick("dry")}
-                >
-                  <h3 className="font-medium">Dry Food</h3>
-                </div>
-                <div 
-                  className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer"
-                  onClick={() => handleCategoryClick("wet")}
-                >
-                  <h3 className="font-medium">Wet Food</h3>
-                </div>
-                <div 
-                  className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer"
-                  onClick={() => handleCategoryClick("treat")}
-                >
-                  <h3 className="font-medium">Treats</h3>
-                </div>
-                <div 
-                  className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer"
-                  onClick={() => handleCategoryClick("supplement")}
-                >
-                  <h3 className="font-medium">Supplements</h3>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="analyzer" className="space-y-4 mt-4">
-          {pets.length > 0 && selectedPetId ? (
-            <>
-              {pets.length > 1 && (
-                <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-                  {pets.map((pet) => (
-                    <Button
-                      key={pet.id}
-                      variant={selectedPetId === pet.id ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handlePetChange(pet.id)}
-                    >
-                      {pet.name}
-                    </Button>
-                  ))}
-                </div>
-              )}
-              <Alert className="mb-4">
-                <Info className="h-4 w-4" />
-                <AlertTitle>Analyze Food Ingredients</AlertTitle>
-                <AlertDescription>
-                  Paste ingredients from pet food packaging to check if they're safe for your pet.
-                </AlertDescription>
-              </Alert>
-              <FoodAnalyzer 
-                petId={selectedPetId} 
-                petName={pets.find(p => p.id === selectedPetId)?.name || ""} 
-                initialIngredients={analyzerIngredients}
-              />
-            </>
-          ) : (
-            <Card>
-              <CardContent className="py-6 text-center">
-                <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-2" />
-                <h3 className="text-lg font-medium mb-2">No Pets Found</h3>
-                <p className="text-muted-foreground mb-4">
-                  You need to add a pet before using the food analyzer.
-                </p>
-                <Button onClick={() => window.location.href = "/dashboard"}>
-                  Go to Dashboard
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          {selectedProduct && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{selectedProduct.name}</DialogTitle>
-                <DialogDescription>{selectedProduct.brand}</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="flex items-center gap-2">
-                  <Badge variant={selectedProduct.type === "dry" ? "default" : "outline"}>
-                    {selectedProduct.type.charAt(0).toUpperCase() + selectedProduct.type.slice(1)}
-                  </Badge>
-                  <Badge variant="outline">
-                    For {selectedProduct.species === "both" ? "Dogs & Cats" : selectedProduct.species === "dog" ? "Dogs" : "Cats"}
-                  </Badge>
-                </div>
-                
-                {userPetSpecies.size > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Compatibility:</h4>
-                    <p className="text-sm">
-                      {(() => {
-                        const { message } = getFoodCompatibility(selectedProduct);
-                        return message;
-                      })()}
-                    </p>
-                  </div>
-                )}
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-1">Ingredients:</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedProduct.ingredients.join(", ")}
-                  </p>
-                </div>
-                
-                {selectedProduct.allergens && selectedProduct.allergens.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">Known Allergens:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedProduct.allergens.map((allergen, index) => (
-                        <Badge key={index} variant="destructive" className="capitalize">
-                          {allergen}
-                        </Badge>
-                      ))}
                     </div>
-                  </div>
-                )}
+                    <div className={`px-3 py-2 ${food.allergySafe ? 'bg-green-50 dark:bg-green-900/20' : 'bg-amber-50 dark:bg-amber-900/20'}`}>
+                      <div className="flex items-center">
+                        {food.allergySafe ? (
+                          <>
+                            <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                            <span className="text-xs text-green-700 dark:text-green-300">Safe for most pets with allergies</span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="h-4 w-4 text-amber-500 mr-2" />
+                            <span className="text-xs text-amber-700 dark:text-amber-300">Contains common allergens</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))
+          ) : (
+            <div className="text-center py-10 bg-muted/30 rounded-lg">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
+                <HelpCircle className="h-6 w-6 text-primary" />
               </div>
-              <CardFooter className="flex flex-col gap-2">
-                <Button 
-                  className="w-full" 
-                  variant="outline" 
-                  onClick={() => sendToAnalyzer(selectedProduct.ingredients)}
-                >
-                  Analyze Ingredients
-                </Button>
-              </CardFooter>
-            </>
+              <p className="text-muted-foreground mb-2">No food items found</p>
+              <p className="text-sm text-muted-foreground">Try adjusting your search term</p>
+            </div>
           )}
-        </DialogContent>
-      </Dialog>
-
+        </div>
+      </div>
       <BottomNavigation />
     </div>
   );

@@ -1,298 +1,249 @@
 
 import React, { useState } from "react";
-import { Check, ChevronRight, Info } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ELIMINATION_PHASES } from "@/lib/constants";
+import { useNavigate } from "react-router-dom";
 import BottomNavigation from "@/components/BottomNavigation";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import FoodAnalyzer from "@/components/FoodAnalyzer";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Calendar, Clipboard, Info, ArrowRight, ListChecks } from "lucide-react";
+import { motion } from "framer-motion";
+
+const ELIMINATION_PHASES = [
+  {
+    id: "1",
+    name: "Elimination Phase",
+    description: "Remove common allergens from your pet's diet",
+    duration: "4-6 weeks",
+    tips: [
+      "Feed your pet a simple diet with novel protein",
+      "Remove all treats and supplements temporarily",
+      "Keep a detailed food diary",
+      "Monitor symptoms closely"
+    ],
+    recommendedFoods: [
+      "Hydrolyzed protein diets",
+      "Limited ingredient foods",
+      "Novel protein sources (venison, duck, rabbit)"
+    ]
+  },
+  {
+    id: "2",
+    name: "Stabilization Phase",
+    description: "Continue with successful diet to ensure symptoms resolve",
+    duration: "2-4 weeks",
+    tips: [
+      "Continue with the elimination diet",
+      "Look for complete symptom resolution",
+      "Maintain consistent feeding",
+      "Start planning for challenges"
+    ],
+    recommendedFoods: [
+      "Continue with successful elimination diet",
+      "Maintain consistent protein source",
+      "Keep treats limited to same protein source"
+    ]
+  },
+  {
+    id: "3",
+    name: "Challenge Phase",
+    description: "Carefully reintroduce potential allergens",
+    duration: "6-8 weeks",
+    tips: [
+      "Introduce one new ingredient at a time",
+      "Wait 1-2 weeks between new foods",
+      "Document any reactions promptly",
+      "Stop if symptoms reappear"
+    ],
+    recommendedFoods: [
+      "Same base diet plus test ingredient",
+      "Single-ingredient treats for testing",
+      "Carefully selected commercial foods"
+    ]
+  },
+  {
+    id: "4",
+    name: "Maintenance Phase",
+    description: "Long-term diet planning based on results",
+    duration: "Ongoing",
+    tips: [
+      "Create a personalized safe food list",
+      "Establish a long-term feeding plan",
+      "Set up regular vet check-ups",
+      "Maintain a symptom journal"
+    ],
+    recommendedFoods: [
+      "Customized diet avoiding trigger ingredients",
+      "Balanced commercial foods without allergens",
+      "Rotation diet if tolerated"
+    ]
+  }
+];
 
 const EliminationDiet = () => {
-  const [activePhase, setActivePhase] = useState(0);
-  const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState<number>(0);
-  const [pets, setPets] = useState<Array<{ id: string, name: string }>>([]);
-  const [loading, setLoading] = useState(false);
-  const [ingredients, setIngredients] = useState("");
-  const { user } = useAuth();
-  const { toast } = useToast();
-
-  React.useEffect(() => {
-    if (user) {
-      fetchPets();
-    }
-  }, [user]);
-
-  const fetchPets = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("pets")
-        .select("id, name")
-        .order("name");
-
-      if (error) throw error;
-      setPets(data || []);
-    } catch (error: any) {
-      console.error("Error fetching pets:", error.message);
-      toast({
-        title: "Error",
-        description: "Failed to load your pets",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleNextStep = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const handlePreviousStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const selectPhase = (index: number) => {
-    setActivePhase(index);
-  };
-
-  const currentPhase = ELIMINATION_PHASES[activePhase];
+  const navigate = useNavigate();
+  const [activePhaseId, setActivePhaseId] = useState("1");
   
+  const activePhase = ELIMINATION_PHASES.find(phase => phase.id === activePhaseId);
+
   return (
-    <div className="container pb-20">
-      <div className="pt-6 pb-4">
-        <h1 className="text-2xl font-bold">Elimination Diet Guide</h1>
-        <p className="text-muted-foreground">A structured approach to identify food allergies in your pet</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background to-blue-50 dark:from-background dark:to-blue-950/20">
+      <div className="absolute top-0 right-0 w-full h-64 bg-[url('https://images.unsplash.com/photo-1594149937478-a8c7a34d9d4a?auto=format&fit=crop&w=800&q=80')] bg-no-repeat bg-right-top bg-contain opacity-10 dark:opacity-5 z-0"></div>
+      
+      <div className="container relative pb-20 pt-4">
+        <div className="flex items-center mb-6">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="mr-2" 
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold flex-1">Elimination Diet Guide</h1>
+        </div>
 
-      {!selectedPetId ? (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Select a Pet</CardTitle>
-            <CardDescription>Choose a pet to start or continue their elimination diet plan</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <p>Loading your pets...</p>
-            ) : pets.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {pets.map(pet => (
-                  <Button 
-                    key={pet.id} 
-                    variant="outline" 
-                    className="justify-start h-auto py-6 px-4"
-                    onClick={() => setSelectedPetId(pet.id)}
-                  >
-                    <div className="flex flex-col items-start">
-                      <span className="text-lg font-medium">{pet.name}</span>
-                      <span className="text-sm text-muted-foreground">View diet plan</span>
-                    </div>
-                    <ChevronRight className="ml-auto h-5 w-5 text-muted-foreground" />
-                  </Button>
-                ))}
+        <motion.div 
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="mb-6 text-muted-foreground"
+        >
+          <p>A step-by-step guide to identify your pet's food allergies through dietary management</p>
+        </motion.div>
+
+        <div className="grid grid-cols-4 gap-2 mb-6 overflow-x-auto px-1 py-2 no-scrollbar">
+          {ELIMINATION_PHASES.map((phase) => (
+            <motion.div
+              key={phase.id}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setActivePhaseId(phase.id)}
+              className={`cursor-pointer rounded-lg p-3 transition-all ${
+                activePhaseId === phase.id 
+                  ? "bg-primary text-primary-foreground shadow-md" 
+                  : "bg-muted/50 hover:bg-muted/80"
+              }`}
+            >
+              <div className="text-center">
+                <div className="font-semibold text-sm truncate">{phase.name}</div>
+                <div className="text-xs mt-1 opacity-80">{phase.duration}</div>
               </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-muted-foreground mb-4">No pets found. Add a pet to get started.</p>
-                <Button onClick={() => window.location.href = "/add-pet"}>Add a Pet</Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <Tabs defaultValue="overview" className="mb-6">
-            <TabsList className="mb-4 w-full">
-              <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
-              <TabsTrigger value="phases" className="flex-1">Diet Phases</TabsTrigger>
-              <TabsTrigger value="analyze" className="flex-1">Food Analyzer</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="overview">
-              <Card className="mb-6">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Current Phase</CardTitle>
-                  <CardDescription>Track your progress through the elimination diet</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="py-4">
-                    <h3 className="font-medium text-lg">{currentPhase.name}</h3>
-                    <p className="text-muted-foreground mb-2">Day {currentStep + 1} of {currentPhase.duration}</p>
-                    <div className="w-full bg-muted rounded-full h-2.5">
-                      <div 
-                        className="bg-primary h-2.5 rounded-full" 
-                        style={{ width: `${((currentStep + 1) / currentPhase.duration) * 100}%` }}
-                      ></div>
-                    </div>
-                    
-                    <Separator className="my-4" />
-                    
-                    <div className="space-y-4">
-                      <Alert>
-                        <Info className="h-4 w-4" />
-                        <AlertTitle>Phase Overview</AlertTitle>
-                        <AlertDescription>
-                          {currentPhase.description}
-                        </AlertDescription>
-                      </Alert>
-                      
-                      <div>
-                        <h4 className="font-medium mb-2">Key Tasks</h4>
-                        <ul className="space-y-2">
-                          {currentPhase.tips.map((tip, index) => (
-                            <li key={index} className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full ${index <= currentStep ? "bg-primary/10" : "bg-muted"} flex items-center justify-center mr-2`}>
-                                {index <= currentStep && <Check className="h-3 w-3 text-primary" />}
-                              </div>
-                              <span>{tip}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between mt-6">
-                      <Button 
-                        variant="outline" 
-                        onClick={handlePreviousStep}
-                        disabled={currentStep === 0}
-                      >
-                        Previous
-                      </Button>
-                      <Button 
-                        onClick={handleNextStep}
-                        disabled={currentStep >= 3}
-                      >
-                        Next Task
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Upcoming Phases</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {ELIMINATION_PHASES.slice(activePhase + 1).map((phase, index) => (
-                      <div key={index} className="p-3 border rounded-lg">
-                        <div className="flex justify-between">
-                          <h3 className="font-medium">{phase.name}</h3>
-                          <Badge variant="outline">{phase.duration} days</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">{phase.description.substring(0, 100)}...</p>
-                      </div>
-                    ))}
-                    
-                    {activePhase === ELIMINATION_PHASES.length - 1 && (
-                      <p className="text-center text-muted-foreground py-2">
-                        You've reached the final phase of the elimination diet!
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="phases">
-              <div className="space-y-6">
-                {ELIMINATION_PHASES.map((phase, index) => (
-                  <Card 
-                    key={index} 
-                    className={`transition-all ${activePhase === index ? 'border-primary' : ''}`}
-                  >
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{phase.name}</CardTitle>
-                        <Badge variant="outline">{phase.duration} days</Badge>
-                      </div>
-                      <CardDescription>{phase.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-medium mb-2">Key Tips</h4>
-                          <ul className="space-y-1">
-                            {phase.tips.map((tip, tipIndex) => (
-                              <li key={tipIndex} className="flex items-start">
-                                <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center mr-2 mt-0.5">
-                                  <Check className="h-3 w-3 text-primary" />
-                                </div>
-                                <span className="text-sm">{tip}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        
-                        {phase.recommendedFoods && phase.recommendedFoods.length > 0 && (
-                          <div>
-                            <h4 className="font-medium mb-2">Recommended Foods</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {phase.recommendedFoods.map((food, foodIndex) => (
-                                <Badge key={foodIndex} variant="secondary">
-                                  {food}
-                                </Badge>
-                              ))}
-                            </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {activePhase && (
+          <motion.div
+            key={activePhase.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-none shadow-md bg-card/80 backdrop-blur-sm mb-4">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg">{activePhase.name}</CardTitle>
+                  <Badge variant="outline">{activePhase.duration}</Badge>
+                </div>
+                <p className="text-muted-foreground text-sm">{activePhase.description}</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium flex items-center mb-2">
+                      <ListChecks className="h-4 w-4 mr-2 text-primary" />
+                      Tips for this phase
+                    </h3>
+                    <ul className="space-y-2">
+                      {activePhase.tips.map((tip, index) => (
+                        <motion.li
+                          key={index}
+                          initial={{ opacity: 0, x: -5 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-start"
+                        >
+                          <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
+                            <span className="text-xs text-primary font-medium">{index + 1}</span>
                           </div>
-                        )}
-                        
-                        <div className="flex justify-end">
-                          <Button 
-                            variant={activePhase === index ? "default" : "outline"}
-                            onClick={() => selectPhase(index)}
+                          <span className="text-sm">{tip}</span>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium flex items-center mb-2">
+                      <Clipboard className="h-4 w-4 mr-2 text-primary" />
+                      Recommended Foods
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {activePhase.recommendedFoods.map((food, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <Badge 
+                            className="bg-primary/10 hover:bg-primary/20 text-primary-foreground" 
+                            variant="secondary"
                           >
-                            {activePhase === index ? 'Current Phase' : 'Switch to This Phase'}
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
+                            {food}
+                          </Badge>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
-            <TabsContent value="analyze">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Analyze Pet Food</CardTitle>
-                  <CardDescription>
-                    Check if a food is suitable for your pet's elimination diet
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <FoodAnalyzer 
-                    petId={selectedPetId} 
-                    petName={pets.find(p => p.id === selectedPetId)?.name || "your pet"} 
-                    initialIngredients={ingredients}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+            <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
+              <div className="flex items-start">
+                <Info className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-medium text-sm mb-1">Important Note</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Always consult with your veterinarian before starting an elimination diet. 
+                    This guide is for informational purposes only and may need to be adjusted 
+                    for your pet's specific health needs.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+        
+        <div className="mt-6 flex justify-between">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const currentIndex = ELIMINATION_PHASES.findIndex(phase => phase.id === activePhaseId);
+              if (currentIndex > 0) {
+                setActivePhaseId(ELIMINATION_PHASES[currentIndex - 1].id);
+              }
+            }}
+            disabled={activePhaseId === "1"}
+          >
+            Previous Phase
+          </Button>
           
-          <div className="flex justify-center mb-4">
-            <Button variant="outline" onClick={() => setSelectedPetId(null)}>
-              Choose Different Pet
-            </Button>
-          </div>
-        </>
-      )}
-
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const currentIndex = ELIMINATION_PHASES.findIndex(phase => phase.id === activePhaseId);
+              if (currentIndex < ELIMINATION_PHASES.length - 1) {
+                setActivePhaseId(ELIMINATION_PHASES[currentIndex + 1].id);
+              }
+            }}
+            disabled={activePhaseId === "4"}
+          >
+            Next Phase
+            <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
+      </div>
       <BottomNavigation />
     </div>
   );

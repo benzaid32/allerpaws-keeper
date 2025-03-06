@@ -2,6 +2,7 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import { 
   Home, 
   ClipboardList, 
@@ -25,8 +26,13 @@ const BottomNavigation = () => {
   const location = useLocation();
   
   return (
-    <div className="fixed bottom-0 left-0 right-0 border-t bg-background z-50">
-      <div className="flex justify-around items-center h-16">
+    <motion.div 
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.3, delay: 0.3 }}
+      className="fixed bottom-0 left-0 right-0 border-t bg-card/80 backdrop-blur-md z-50 shadow-lg"
+    >
+      <div className="flex justify-around items-center h-16 safe-bottom">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -35,17 +41,24 @@ const BottomNavigation = () => {
               onClick={() => navigate(item.path)}
               className={cn(
                 "flex flex-col items-center justify-center flex-1 h-full px-1",
-                "transition-colors",
+                "transition-colors relative",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
+              {isActive && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full"
+                  transition={{ type: "spring", duration: 0.5 }}
+                />
+              )}
               <item.icon className="h-5 w-5 mb-1" />
               <span className="text-xs">{item.label}</span>
             </button>
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -1,138 +1,138 @@
-
-// Any constant values that were previously defined in this file (other than ONBOARDING_STEPS)
-import { format } from "date-fns";
-
-// App information
 export const APP_NAME = "AllerPaws";
-export const APP_DESCRIPTION = "Track and manage your pet's food allergies";
-
-// Navigation
-export const NAVIGATION_ITEMS = [
-  { name: "Dashboard", href: "/dashboard", path: "/dashboard", icon: "dashboard" },
-  { name: "Pets", href: "/pets", path: "/pets", icon: "pets" },
-  { name: "Food Diary", href: "/food-diary", path: "/food-diary", icon: "food_diary" },
-  { name: "Progress", href: "/progress", path: "/progress", icon: "progress" },
-  { name: "Settings", href: "/settings", path: "/settings", icon: "settings" },
-];
-
-// Onboarding steps
-export const ONBOARDING_STEPS = [
-  { id: "welcome", title: "Welcome" },
-  { id: "register", title: "Create Account" },
-  { id: "symptoms", title: "Symptoms" },
-  { id: "allergies", title: "Allergies" },
-  { id: "food-database", title: "Food Database" },
-];
+export const APP_DESCRIPTION = "Track, manage and prevent pet food allergies";
 
 // Elimination diet phases
 export const ELIMINATION_PHASES = [
-  { 
-    id: "planning", 
-    name: "Planning", 
-    description: "Select novel protein and carbohydrate sources your pet hasn't been exposed to.",
-    duration: "1-2 weeks"
+  {
+    id: "1",
+    name: "Elimination Phase",
+    description: "Remove common allergens from your pet's diet",
+    duration: "4-6 weeks",
+    tips: [
+      "Feed your pet a simple diet with novel protein",
+      "Remove all treats and supplements temporarily",
+      "Keep a detailed food diary",
+      "Monitor symptoms closely"
+    ],
+    recommendedFoods: [
+      "Hydrolyzed protein diets",
+      "Limited ingredient foods",
+      "Novel protein sources (venison, duck, rabbit)"
+    ]
   },
-  { 
-    id: "elimination", 
-    name: "Elimination", 
-    description: "Feed only the selected novel ingredients, avoiding all other foods and treats.",
-    duration: "8-12 weeks"
+  {
+    id: "2",
+    name: "Stabilization Phase",
+    description: "Continue with successful diet to ensure symptoms resolve",
+    duration: "2-4 weeks",
+    tips: [
+      "Continue with the elimination diet",
+      "Look for complete symptom resolution",
+      "Maintain consistent feeding",
+      "Start planning for challenges"
+    ],
+    recommendedFoods: [
+      "Continue with successful elimination diet",
+      "Maintain consistent protein source",
+      "Keep treats limited to same protein source"
+    ]
   },
-  { 
-    id: "challenge", 
-    name: "Challenge", 
-    description: "Reintroduce potential allergens one at a time to identify reactions.",
-    duration: "4-8 weeks"
+  {
+    id: "3",
+    name: "Challenge Phase",
+    description: "Carefully reintroduce potential allergens",
+    duration: "6-8 weeks",
+    tips: [
+      "Introduce one new ingredient at a time",
+      "Wait 1-2 weeks between new foods",
+      "Document any reactions promptly",
+      "Stop if symptoms reappear"
+    ],
+    recommendedFoods: [
+      "Same base diet plus test ingredient",
+      "Single-ingredient treats for testing",
+      "Carefully selected commercial foods"
+    ]
   },
-  { 
-    id: "maintenance", 
-    name: "Maintenance", 
-    description: "Build a long-term diet plan avoiding identified allergens.",
-    duration: "Ongoing"
+  {
+    id: "4",
+    name: "Maintenance Phase",
+    description: "Long-term diet planning based on results",
+    duration: "Ongoing",
+    tips: [
+      "Create a personalized safe food list",
+      "Establish a long-term feeding plan",
+      "Set up regular vet check-ups",
+      "Maintain a symptom journal"
+    ],
+    recommendedFoods: [
+      "Customized diet avoiding trigger ingredients",
+      "Balanced commercial foods without allergens",
+      "Rotation diet if tolerated"
+    ]
   }
 ];
 
-// Pet species options
-export const PET_SPECIES = [
-  { value: "dog", label: "Dog" },
-  { value: "cat", label: "Cat" },
-  { value: "other", label: "Other" },
-];
+// Severity levels for symptom tracking
+export const SEVERITY_LEVELS = ["mild", "moderate", "severe"] as const;
 
-// Common symptoms for pets
-export const COMMON_SYMPTOMS = [
-  { id: "itching", name: "Itching/Scratching", description: "Excessive scratching or licking", severity: "moderate" },
-  { id: "redness", name: "Skin Redness", description: "Red, inflamed skin", severity: "moderate" },
-  { id: "vomiting", name: "Vomiting", description: "Throwing up food", severity: "severe" },
-  { id: "diarrhea", name: "Diarrhea", description: "Loose or watery stool", severity: "severe" },
-  { id: "ear_infection", name: "Ear Infection", description: "Inflammation of the ear", severity: "moderate" },
-  { id: "gas", name: "Excessive Gas", description: "Flatulence or bloating", severity: "mild" },
-];
-
-// Severity levels for symptoms
-export const SEVERITY_LEVELS = [
-  { value: "mild", label: "Mild" },
-  { value: "moderate", label: "Moderate" },
-  { value: "severe", label: "Severe" },
-];
-
-// Food types
-export const FOOD_TYPES = [
-  { value: "kibble", label: "Kibble" },
-  { value: "wet_food", label: "Wet Food" },
-  { value: "raw", label: "Raw Food" },
-  { value: "homemade", label: "Homemade" },
-  { value: "treats", label: "Treats" },
-  { value: "supplement", label: "Supplement" },
-  { value: "other", label: "Other" },
-];
-
-// Common food allergens for pets
-export const COMMON_ALLERGENS = [
-  { value: "chicken", label: "Chicken" },
-  { value: "beef", label: "Beef" },
-  { value: "dairy", label: "Dairy" },
-  { value: "wheat", label: "Wheat" },
-  { value: "soy", label: "Soy" },
-  { value: "corn", label: "Corn" },
-  { value: "egg", label: "Egg" },
-  { value: "fish", label: "Fish" },
-  { value: "lamb", label: "Lamb" },
-  { value: "pork", label: "Pork" },
-];
-
-// Date formatting functions
-export const formatDate = (date: Date | string): string => {
-  const dateObj = typeof date === "string" ? new Date(date) : date;
-  return format(dateObj, "MMM d, yyyy");
-};
-
-export const formatDateTime = (date: Date | string): string => {
-  const dateObj = typeof date === "string" ? new Date(date) : date;
-  return format(dateObj, "MMM d, yyyy h:mm a");
-};
-
-// Define supported subscription plan types
-export const SUBSCRIPTION_PLANS = {
-  MONTHLY: "monthly",
-  ANNUAL: "annual"
-};
-
-// Define subscription statuses
-export const SUBSCRIPTION_STATUS = {
-  ACTIVE: "active",
-  CANCELED: "canceled",
-  PAST_DUE: "past_due",
-  INCOMPLETE: "incomplete",
-  TRIALING: "trialing"
-};
-
-// LemonSqueezy Configuration
-export const LEMON_SQUEEZY = {
-  STORE_ID: "your-store-id", // Replace with your actual store ID
-  PRODUCT_IDS: {
-    monthly: "price_1234", // Replace with your actual monthly price ID
-    annual: "price_5678",  // Replace with your actual annual price ID
+// Onboarding steps with titles and descriptions
+export const ONBOARDING_STEPS = [
+  {
+    id: "welcome",
+    title: "Welcome to AllerPaws",
+    description: "Your pet's food allergy management solution"
   },
-  CHECKOUT_URL: "https://allerpaws.lemonsqueezy.com/checkout/buy"
-};
+  {
+    id: "symptoms",
+    title: "Identify Symptoms",
+    description: "Track your pet's allergy symptoms"
+  },
+  {
+    id: "allergies",
+    title: "Common Allergies",
+    description: "Learn about common food allergies in pets"
+  },
+  {
+    id: "database",
+    title: "Food Database",
+    description: "Find allergy-friendly food options"
+  },
+  {
+    id: "register",
+    title: "Create Account",
+    description: "Get started with AllerPaws"
+  }
+];
+
+export const PLANS = [
+  {
+    name: "Free",
+    slug: "free",
+    quota: 10,
+    features: [
+      "Up to 10 symptom logs",
+      "Basic food database access",
+      "Community support",
+    ],
+    isFree: true,
+  },
+  {
+    name: "Pro",
+    slug: "pro",
+    quota: 50,
+    price: {
+      amount: 19,
+      priceIds: {
+        test: "price_1OxxqGA14w4R3Ob9UQyY7jkI",
+        production: "",
+      },
+    },
+    features: [
+      "Up to 50 symptom logs",
+      "Advanced food database access",
+      "Email support",
+    ],
+    isFree: false,
+  },
+];
