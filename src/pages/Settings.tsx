@@ -1,11 +1,10 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/hooks/use-settings";
-import { useUserSubscription } from "@/hooks/use-user-subscription";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -17,7 +16,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { theme, notifications, updateTheme, updateNotifications } = useSettings();
-  const { subscription, loading } = useUserSubscription();
+  const { subscription, isLoading: loading } = useSubscription();
 
   const handleSignOut = async () => {
     try {

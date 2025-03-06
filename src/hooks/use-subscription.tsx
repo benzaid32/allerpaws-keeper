@@ -5,31 +5,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UserSubscription } from "@/types/subscriptions";
 
-export interface Subscription {
-  id: string;
-  status: "active" | "canceled" | "past_due" | "incomplete" | "trialing";
-  planId: string;
-  currentPeriodEnd: string;
-  cancelAtPeriodEnd: boolean;
-}
-
-export const useSubscription = () => {
+export function useSubscription() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch the user's subscription
   const fetchSubscription = async () => {
     if (!user) {
       setSubscription(null);
-      setLoading(false);
+      setIsLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
+      setIsLoading(true);
       
       const { data, error } = await supabase
         .from("user_subscriptions")
@@ -38,123 +28,83 @@ export const useSubscription = () => {
         .order("created_at", { ascending: false })
         .limit(1)
         .single();
-      
+
       if (error && error.code !== "PGRST116") {
-        // PGRST116 is the error code for "no rows returned"
+        // PGRST116 is "no rows returned" - not an error for us
         console.error("Error fetching subscription:", error);
-        throw error;
-      }
-
-      if (data) {
-        const subData = data as unknown as UserSubscription;
-        setSubscription({
-          id: subData.id,
-          status: subData.status,
-          planId: subData.plan_id,
-          currentPeriodEnd: subData.current_period_end,
-          cancelAtPeriodEnd: subData.cancel_at_period_end,
+        toast({
+          title: "Error",
+          description: "Failed to load subscription information",
+          variant: "destructive",
         });
-      } else {
-        setSubscription(null);
       }
-    } catch (error: any) {
-      console.error("Error in fetchSubscription:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch subscription details",
-        variant: "destructive",
-      });
+
+      setSubscription(data as UserSubscription || null);
+    } catch (error) {
+      console.error("Error in subscription hook:", error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  // Cancel subscription
-  const cancelSubscription = async () => {
-    if (!user || !subscription) return;
-    
-    try {
-      setIsProcessing(true);
-      
-      // For LemonSqueezy, we'll redirect to their customer portal
-      // This is just a placeholder - replace with actual LemonSqueezy customer portal URL
-      window.location.href = "https://allerpaws.lemonsqueezy.com/my-account";
-      
-      // Note: the actual cancellation will be handled by LemonSqueezy
-      // and the webhook will update our database
-      
-      toast({
-        title: "Redirecting to customer portal",
-        description: "You'll be redirected to manage your subscription",
-      });
-      
-      // We don't immediately update state since the change will happen on LemonSqueezy's side
-      return;
-    } catch (error: any) {
-      console.error("Error redirecting to customer portal:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to open customer portal",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
+  // Fetch subscription on mount and when user changes
+  useEffect(() => {
+    fetchSubscription();
+  }, [user?.id]);
+
+  // Calculate derived subscription states 
+  const isPremium = !!subscription && 
+    subscription.status === "active" && 
+    (subscription.plan_id === "monthly" || subscription.plan_id === "annual");
+  
+  // Define limits based on subscription status
+  const maxAllowedPets = isPremium ? 100 : 2;
+  const maxEntriesPerMonth = isPremium ? 1000 : 20;
+  const canAccessAdvancedAnalysis = isPremium;
+
+  // Function to check if user is on a free plan
+  const isFreePlan = () => {
+    if (!user) return true; // No user = free plan
+    if (!subscription) return true; // No subscription = free plan
+    return subscription.plan_id === "free" || subscription.status !== "active";
   };
 
-  // Resume subscription (manage on LemonSqueezy portal)
-  const resumeSubscription = async () => {
-    if (!user || !subscription) return;
+  // Function to check if user has premium features
+  const hasPremiumAccess = () => {
+    if (!user) return false; // No user = no premium
+    if (!subscription) return false; // No subscription = no premium
     
-    try {
-      setIsProcessing(true);
-      
-      // For LemonSqueezy, we'll redirect to their customer portal
-      window.location.href = "https://allerpaws.lemonsqueezy.com/my-account";
-      
-      toast({
-        title: "Redirecting to customer portal",
-        description: "You'll be redirected to manage your subscription",
-      });
-      
-      return;
-    } catch (error: any) {
-      console.error("Error redirecting to customer portal:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to open customer portal",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Check if user has active premium features
-  const hasPremium = () => {
-    if (!subscription) return false;
-    
-    // User has premium if they have an active subscription
-    // or a canceled subscription that hasn't ended yet
+    // Check if subscription is active and not on free plan
     return (
-      subscription.status === "active" || 
-      subscription.status === "trialing" ||
-      (subscription.status === "canceled" && new Date(subscription.currentPeriodEnd) > new Date())
+      subscription.status === "active" && 
+      (subscription.plan_id === "monthly" || subscription.plan_id === "annual")
     );
   };
 
-  // Initialize subscription data
-  useEffect(() => {
-    fetchSubscription();
-  }, [user]);
+  // Get the plan name as a formatted string
+  const getPlanName = () => {
+    if (!subscription) return "Free Plan";
+    
+    switch (subscription.plan_id) {
+      case "monthly":
+        return "Premium Monthly";
+      case "annual":
+        return "Premium Annual";
+      default:
+        return "Free Plan";
+    }
+  };
 
   return {
     subscription,
-    loading,
-    isProcessing,
-    hasPremium: hasPremium(),
-    fetchSubscription,
-    cancelSubscription,
-    resumeSubscription,
+    isLoading,
+    isPremium,
+    maxAllowedPets,
+    maxEntriesPerMonth,
+    canAccessAdvancedAnalysis,
+    isFreePlan,
+    hasPremiumAccess,
+    getPlanName,
+    refreshSubscription: fetchSubscription
   };
-};
+}
