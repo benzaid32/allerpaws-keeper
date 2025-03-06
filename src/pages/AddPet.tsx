@@ -12,6 +12,7 @@ import { ArrowLeft, Loader2, Plus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { SEVERITY_LEVELS } from "@/lib/constants";
 
 interface PetFormData {
   name: string;
@@ -106,10 +107,13 @@ const AddPet = () => {
       
       // Add allergies if any
       if (formData.allergies.length > 0) {
+        // Use the first severity level (mild) as default
+        const severity = SEVERITY_LEVELS[0];
+        
         const allergiesToInsert = formData.allergies.map(name => ({
           pet_id: petData.id,
           name,
-          severity: "unknown",
+          severity, // Using the correct severity value from constants
         }));
         
         const { error: allergiesError } = await supabase

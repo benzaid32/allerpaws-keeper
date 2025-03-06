@@ -9,6 +9,7 @@ import { Plus, Trash } from "lucide-react";
 import { Pet } from "@/lib/types";
 import { supabase, isQueryError } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { SEVERITY_LEVELS } from "@/lib/constants";
 
 interface AllergiesCardProps {
   pet: Pet;
@@ -23,12 +24,15 @@ const AllergiesCard: React.FC<AllergiesCardProps> = ({ pet, setPet }) => {
     if (!newAllergen.trim()) return;
     
     try {
+      // Using mild as default severity from the allowed values
+      const severity = SEVERITY_LEVELS[0]; // This will be "mild"
+      
       const { error } = await supabase
         .from("allergies")
         .insert({
           pet_id: pet.id,
           name: newAllergen.trim(),
-          severity: "unknown" // Adding required severity field
+          severity // Using the correct severity value from constants
         });
         
       if (error) throw error;

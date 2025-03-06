@@ -1,17 +1,16 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Plus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNavigation from "@/components/BottomNavigation";
+import { SEVERITY_LEVELS } from "@/lib/constants";
 
 interface PetFormData {
   name: string;
@@ -169,10 +168,13 @@ const EditPet = () => {
       
       // Add new allergies
       if (toAdd.length > 0) {
+        // Use the first severity level (mild) as default
+        const severity = SEVERITY_LEVELS[0];
+        
         const allergiesToInsert = toAdd.map(name => ({
           pet_id: id,
           name,
-          severity: "unknown",
+          severity, // Using the correct severity value from constants
         }));
         
         const { error: insertError } = await supabase
