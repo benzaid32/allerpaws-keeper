@@ -52,12 +52,101 @@ const Onboarding: React.FC = () => {
     setPet(prev => ({ ...prev, ...updates }));
   };
 
+  // Check if the user is logged in and has a stored pet
+  useEffect(() => {
+    // If user is logged in and pet data is stored in localStorage, try to save it
+    if (user) {
+      const storedPetData = localStorage.getItem('temporaryPetData');
+      if (storedPetData) {
+        try {
+          const tempPet = JSON.parse(storedPetData);
+          console.log("Found temporary pet data:", tempPet);
+          
+          savePetToDatabase(tempPet)
+            .then(success => {
+              if (success) {
+                console.log("Successfully saved pet from temporary data");
+                clearTemporaryPetData();
+                navigate("/dashboard");
+              }
+            })
+            .catch(error => {
+              console.error("Error saving pet from temporary data:", error);
+            });
+        } catch (error) {
+          console.error("Error parsing temporary pet data:", error);
+          clearTemporaryPetData();
+        }
+      }
+    }
+  }, [user, navigate]);
+
   // Clear any registration errors when switching to the register step
   useEffect(() => {
     if (step === EXTENDED_STEPS.length - 1) {
       setRegistrationError(null);
     }
   }, [step]);
+
+  // Helper function to save pet to database
+  const savePetToDatabase = async (petData: Pet) => {
+    try {
+      if (!user) {
+        console.error("No user found when trying to save pet");
+        return false;
+      }
+      
+      console.log("Saving pet with user ID:", user.id);
+      
+      // Insert pet data into Supabase
+      const { data, error } = await supabase.from("pets").insert({
+        name: petData.name,
+        species: petData.species,
+        breed: petData.breed,
+        age: petData.age,
+        weight: petData.weight,
+        user_id: user.id,
+      }).select().single();
+
+      if (error) {
+        console.error("Error saving pet:", error);
+        toast({
+          title: "Error saving pet information",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      console.log("Pet saved successfully:", data);
+
+      // Save pet allergies if any
+      if (petData.knownAllergies.length > 0) {
+        const allergiesData = petData.knownAllergies.map(allergen => ({
+          pet_id: data.id,
+          name: allergen,
+        }));
+
+        const { error: allergiesError } = await supabase
+          .from("allergies")
+          .insert(allergiesData);
+
+        if (allergiesError) {
+          console.error("Error saving allergies:", allergiesError);
+        }
+      }
+
+      toast({
+        title: "Pet added successfully",
+        description: `${petData.name} has been added to your account.`,
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error("Error in savePetToDatabase:", error);
+      return false;
+    }
+  };
 
   // Handle user registration and pet data saving
   const handleRegisterAndSavePet = async () => {
@@ -74,7 +163,7 @@ const Onboarding: React.FC = () => {
       setIsSubmitting(true);
       setRegistrationError(null);
       
-      // Store pet data temporarily
+      // Store pet data temporarily 
       storeTemporaryPetData(pet);
       
       // Register the user
@@ -93,17 +182,17 @@ const Onboarding: React.FC = () => {
         return true;
       }
       
-      // If no email confirmation is needed, we can try to save the pet directly
-      // (this will likely not happen with Supabase's default settings)
+      // If no email confirmation is needed (unlikely), try to save pet right away
+      if (user) {
+        const success = await savePetToDatabase(pet);
+        if (success) {
+          navigate("/dashboard");
+          return true;
+        }
+      }
       
-      toast({
-        title: "Account created successfully",
-        description: `${pet.name} has been added to your account.`,
-      });
-      
-      // Navigate to dashboard
-      navigate("/dashboard");
-      
+      // Navigate to dashboard or auth page as appropriate
+      navigate(user ? "/dashboard" : "/auth");
       return true;
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -123,59 +212,12 @@ const Onboarding: React.FC = () => {
     
     // For users who are already logged in
     if (user) {
-      try {
-        setIsSubmitting(true);
-
-        // Insert pet data into Supabase
-        const { data, error } = await supabase.from("pets").insert({
-          name: pet.name,
-          species: pet.species,
-          breed: pet.breed,
-          age: pet.age,
-          weight: pet.weight,
-          user_id: user.id,
-        }).select().single();
-
-        if (error) {
-          throw error;
-        }
-
-        console.log("Pet saved successfully:", data);
-
-        // Save pet allergies if any
-        if (pet.knownAllergies.length > 0) {
-          const allergiesData = pet.knownAllergies.map(allergen => ({
-            pet_id: data.id,
-            name: allergen,
-          }));
-
-          const { error: allergiesError } = await supabase
-            .from("allergies")
-            .insert(allergiesData);
-
-          if (allergiesError) {
-            console.error("Error saving allergies:", allergiesError);
-          }
-        }
-
-        toast({
-          title: "Pet added successfully",
-          description: `${pet.name} has been added to your account.`,
-        });
-
-        // Navigate to dashboard after successful save
+      const success = await savePetToDatabase(pet);
+      if (success) {
         navigate("/dashboard");
         return true;
-      } catch (error: any) {
-        toast({
-          title: "Error saving pet information",
-          description: error.message,
-          variant: "destructive",
-        });
-        return false;
-      } finally {
-        setIsSubmitting(false);
       }
+      return false;
     } else {
       // Move to registration step if user is not logged in
       setStep(EXTENDED_STEPS.length - 1);

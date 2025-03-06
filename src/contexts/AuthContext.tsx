@@ -79,18 +79,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
 
     // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth state changed:", _event);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event);
       setSession(session);
       setUser(session?.user || null);
       setIsLoading(false);
+      
+      // If the user has just signed in, and we have temporary pet data, show a toast
+      if (event === 'SIGNED_IN' && localStorage.getItem('temporaryPetData')) {
+        toast({
+          title: "Pet data available",
+          description: "We found your onboarding pet data and will try to save it now."
+        });
+      }
     });
 
     return () => {
       subscription.unsubscribe();
       clearTimeout(timeoutId);
     };
-  }, [isLoading]);
+  }, [isLoading, toast]);
 
   const signOut = async () => {
     try {
@@ -122,6 +130,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       setAuthError(null);
+      console.log("Attempting to sign in:", email);
+      
       const result = await supabase.auth.signInWithPassword({
         email,
         password
@@ -130,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       
       if (result.error) {
+        console.error("Sign in error:", result.error);
         setAuthError(result.error.message);
         
         // Show appropriate toast based on error type
@@ -147,6 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         }
       } else {
+        console.log("Sign in successful");
         toast({
           title: "Signed in",
           description: "You have successfully signed in."
@@ -174,6 +186,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       setAuthError(null);
       
+      console.log("Signing up with email:", email);
+      
       const result = await supabase.auth.signUp({
         email,
         password,
@@ -185,6 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       
       if (result.error) {
+        console.error("Sign up error:", result.error);
         setAuthError(result.error.message);
         
         toast({
@@ -202,11 +217,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Check if email confirmation is needed
       const needsEmailConfirmation = !result.data?.session;
+      console.log("Email confirmation needed:", needsEmailConfirmation);
       
       if (needsEmailConfirmation) {
         toast({
           title: "Verification email sent",
-          description: "Please check your email to confirm your account."
+          description: "Please check your email to confirm your account. Don't worry, we've saved your pet data for when you log in."
         });
       } else {
         toast({

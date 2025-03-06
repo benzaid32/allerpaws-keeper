@@ -1,11 +1,18 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
+  
+  // Check if there's temporary pet data stored
+  useEffect(() => {
+    if (user && localStorage.getItem('temporaryPetData')) {
+      console.log("Protected route: Found temporary pet data to process");
+    }
+  }, [user]);
   
   // Show minimal loading state while checking auth - much shorter
   if (isLoading) {

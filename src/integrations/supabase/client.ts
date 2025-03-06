@@ -14,9 +14,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     detectSessionInUrl: true
   },
   global: {
-    fetch: (...args) => {
-      // @ts-ignore
-      return fetch(...args);
+    headers: {
+      'X-Client-Info': 'allerpaws-app'
     }
   }
 });
