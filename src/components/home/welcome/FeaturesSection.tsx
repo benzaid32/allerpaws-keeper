@@ -1,12 +1,17 @@
 
 import React from "react";
-import { Clock, Database, Shield, CheckCircle, HeartPulse } from "lucide-react";
+import { Clock, Database, Shield, CheckCircle, HeartPulse, Zap } from "lucide-react";
 import { APP_NAME } from "@/lib/constants";
 
 const FeaturesSection: React.FC = () => {
   return (
-    <div className="mb-24">
-      <h2 className="text-3xl font-bold text-center mb-12 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-sm">Why Choose {APP_NAME}?</h2>
+    <div className="mb-28">
+      <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-sm">
+        Why Choose {APP_NAME}?
+      </h2>
+      <p className="text-center text-muted-foreground mb-16 max-w-2xl mx-auto">
+        Our platform combines advanced tracking with an extensive food database to help your pets live healthier, happier lives.
+      </p>
       
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         <FeatureCard
@@ -38,6 +43,12 @@ const FeaturesSection: React.FC = () => {
           title="Health Insights"
           description="Gain valuable insights into your pet's health patterns and triggers over time."
         />
+        
+        <FeatureCard
+          icon={<Zap className="h-7 w-7 text-primary" />}
+          title="Fast Response"
+          description="Quickly identify patterns and correlations between diet changes and symptoms."
+        />
       </div>
     </div>
   );
@@ -51,11 +62,11 @@ interface FeatureCardProps {
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description }) => {
   return (
-    <div className="bg-card p-7 rounded-xl border border-border/70 shadow-sm hover:shadow-elegant transition-all duration-300 hover:border-primary/30 group">
-      <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-3 rounded-full w-fit mb-4 group-hover:from-primary/20 group-hover:to-accent/20 transition-colors">
+    <div className="bg-card/90 p-8 rounded-xl border border-border/70 shadow-sm hover:shadow-elegant transition-all duration-300 hover:border-primary/30 hover:translate-y-[-5px] group">
+      <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-4 rounded-full w-fit mb-5 group-hover:from-primary/20 group-hover:to-accent/20 transition-colors">
         {icon}
       </div>
-      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">{title}</h3>
+      <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">{title}</h3>
       <p className="text-muted-foreground">
         {description}
       </p>

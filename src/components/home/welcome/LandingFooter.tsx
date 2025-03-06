@@ -1,17 +1,17 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Twitter, Facebook, Instagram, Github } from "lucide-react";
+import { Twitter, Facebook, Instagram, Github, Heart } from "lucide-react";
 import { APP_NAME } from "@/lib/constants";
 
 const LandingFooter: React.FC = () => {
   return (
-    <footer className="bg-card/80 backdrop-blur-sm shadow-md border-t border-border py-12 w-full relative z-10">
+    <footer className="bg-card/90 backdrop-blur-sm shadow-md border-t border-border py-16 w-full relative z-10">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="mb-6 md:mb-0">
-            <div className="flex items-center">
-              <div className="rounded-full bg-gradient-to-r from-primary/10 to-accent/10 p-1 mr-3">
+          <div className="mb-8 md:mb-0 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start">
+              <div className="rounded-full bg-gradient-to-r from-primary/10 to-accent/10 p-2 mr-3">
                 <img 
                   src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
                   alt="AllerPaws Logo" 
@@ -20,7 +20,10 @@ const LandingFooter: React.FC = () => {
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-sm">{APP_NAME}</span>
             </div>
-            <p className="text-sm text-muted-foreground mt-2">© {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground mt-3">© {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center md:justify-start">
+              Made with <Heart className="h-3 w-3 mx-1 text-red-500" /> for pets everywhere
+            </p>
           </div>
           
           <div className="flex flex-col md:flex-row gap-12">
@@ -43,8 +46,8 @@ const LandingFooter: React.FC = () => {
             />
             
             <div>
-              <h4 className="font-semibold mb-3">Connect</h4>
-              <div className="flex space-x-4">
+              <h4 className="font-semibold mb-3 text-center md:text-left">Connect</h4>
+              <div className="flex space-x-4 justify-center md:justify-start">
                 <SocialLink href="https://twitter.com" icon={<Twitter size={20} />} />
                 <SocialLink href="https://facebook.com" icon={<Facebook size={20} />} />
                 <SocialLink href="https://instagram.com" icon={<Instagram size={20} />} />
@@ -65,7 +68,7 @@ interface FooterLinkGroupProps {
 
 const FooterLinkGroup: React.FC<FooterLinkGroupProps> = ({ title, links }) => {
   return (
-    <div>
+    <div className="text-center md:text-left">
       <h4 className="font-semibold mb-3">{title}</h4>
       <ul className="space-y-2 text-sm">
         {links.map((link, index) => (
