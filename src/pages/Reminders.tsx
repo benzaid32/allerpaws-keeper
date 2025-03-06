@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRemindersData } from "@/hooks/reminders/use-reminders-data";
@@ -15,8 +14,14 @@ import { Reminder } from "@/lib/types";
 
 const Reminders = () => {
   const navigate = useNavigate();
-  const { reminders, loading } = useRemindersData();
-  const { handleDelete, handleToggleActive } = useReminderOperations();
+  const { reminders, loading, fetchData, setReminders } = useRemindersData();
+  const { handleDelete, handleToggleActive } = useReminderOperations({
+    fetchData,
+    setReminders,
+    setOpen: () => {},
+    setSubmitting: () => {}
+  });
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   
