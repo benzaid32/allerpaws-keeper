@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
@@ -31,10 +30,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session - with shorter timeout
     const initializeAuth = async () => {
       try {
         console.log("Initializing auth...");
@@ -58,18 +56,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAuthError(error.message || "Authentication error");
       } finally {
         setIsLoading(false);
-        setHasInitialized(true);
       }
     };
 
-    // Add a timeout to prevent endless loading
+    // Reduce auth initialization timeout to just 2 seconds max
     const timeoutId = setTimeout(() => {
-      if (!hasInitialized) {
+      if (isLoading) {
         console.log("Auth initialization timed out");
         setIsLoading(false);
-        setAuthError("Authentication initialization timed out");
       }
-    }, 5000);
+    }, 2000);
 
     initializeAuth();
 
@@ -85,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
       clearTimeout(timeoutId);
     };
-  }, [hasInitialized]);
+  }, [isLoading]);
 
   const signOut = async () => {
     try {
