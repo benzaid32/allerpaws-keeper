@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
-import { useSubscriptionContext } from '@/hooks/use-user-subscription';
+import { useUserSubscription } from '@/hooks/use-user-subscription';
 import { SubscriptionContextType } from '@/types/subscription-context';
 
 // Create the context with a default value
@@ -22,14 +22,14 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
   const {
     loading: isLoading,
     subscription,
-    isPremium,
+    hasPremiumAccess: isPremium,
     maxAllowedPets,
     maxEntriesPerMonth,
     canAccessAdvancedAnalysis,
-    fetchSubscription: refreshSubscription,
+    refreshSubscription,
     cancelSubscription,
     resumeSubscription,
-  } = useSubscriptionContext();
+  } = useUserSubscription();
 
   // Only log once on mount to prevent excessive console output
   useEffect(() => {

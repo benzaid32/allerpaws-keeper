@@ -52,45 +52,46 @@ export function useUserSubscription() {
     fetchSubscription();
   }, [user?.id]);
 
-  // Function to check if user is on a free plan
-  const isFreePlan = () => {
-    if (!user) return true; // No user = free plan
-    if (!subscription) return true; // No subscription = free plan
-    return subscription.plan_id === "free" || subscription.status !== "active";
+  // Calculate derived subscription states 
+  const hasPremiumAccess = !!subscription && 
+    subscription.status === "active" && 
+    (subscription.plan_id === "monthly" || subscription.plan_id === "annual");
+  
+  // Define limits based on subscription status
+  const maxAllowedPets = hasPremiumAccess ? 100 : 2;
+  const maxEntriesPerMonth = hasPremiumAccess ? 1000 : 20;
+  const canAccessAdvancedAnalysis = hasPremiumAccess;
+
+  // Mock implementation for subscription management functions
+  const cancelSubscription = async () => {
+    // This would call an API to cancel subscription
+    console.log("Cancel subscription requested");
+    toast({
+      title: "Subscription update",
+      description: "Your subscription has been scheduled for cancellation at the end of the billing period.",
+    });
+    await fetchSubscription();
   };
 
-  // Function to check if user has premium features
-  const hasPremiumAccess = () => {
-    if (!user) return false; // No user = no premium
-    if (!subscription) return false; // No subscription = no premium
-    
-    // Check if subscription is active and not on free plan
-    return (
-      subscription.status === "active" && 
-      (subscription.plan_id === "monthly" || subscription.plan_id === "annual")
-    );
-  };
-
-  // Get the plan name as a formatted string
-  const getPlanName = () => {
-    if (!subscription) return "Free Plan";
-    
-    switch (subscription.plan_id) {
-      case "monthly":
-        return "Premium Monthly";
-      case "annual":
-        return "Premium Annual";
-      default:
-        return "Free Plan";
-    }
+  const resumeSubscription = async () => {
+    // This would call an API to resume subscription
+    console.log("Resume subscription requested");
+    toast({
+      title: "Subscription update",
+      description: "Your subscription has been resumed.",
+    });
+    await fetchSubscription();
   };
 
   return {
     subscription,
     loading,
-    isFreePlan,
     hasPremiumAccess,
-    getPlanName,
-    refreshSubscription: fetchSubscription
+    maxAllowedPets,
+    maxEntriesPerMonth,
+    canAccessAdvancedAnalysis,
+    refreshSubscription: fetchSubscription,
+    cancelSubscription,
+    resumeSubscription
   };
 }
