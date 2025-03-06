@@ -1,3 +1,4 @@
+
 // Any constant values that were previously defined in this file (other than ONBOARDING_STEPS)
 import { format } from "date-fns";
 
@@ -87,4 +88,14 @@ export const SUBSCRIPTION_STATUS = {
   PAST_DUE: "past_due",
   INCOMPLETE: "incomplete",
   TRIALING: "trialing"
+};
+
+// LemonSqueezy Configuration
+export const LEMON_SQUEEZY = {
+  STORE_ID: "your-store-id", // Replace with your actual store ID
+  PRODUCT_IDS: {
+    monthly: "price_1234", // Replace with your actual monthly price ID
+    annual: "price_5678",  // Replace with your actual annual price ID
+  },
+  CHECKOUT_URL: "https://allerpaws.lemonsqueezy.com/checkout/buy"
 };

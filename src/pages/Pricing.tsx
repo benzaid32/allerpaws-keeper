@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -6,8 +5,13 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PricingPlans from "@/components/subscription/PricingPlans";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+
+// LemonSqueezy product IDs (replace with your actual product IDs)
+const LEMON_PRODUCT_IDS = {
+  monthly: "price_1234", // Replace with your actual monthly price ID
+  annual: "price_5678",  // Replace with your actual annual price ID
+};
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -72,20 +76,28 @@ const Pricing = () => {
   };
   
   const handleConfirmSubscription = async () => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You must be signed in to purchase a subscription",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+    
     setLoading(true);
     try {
-      // This would normally create a checkout session through a Supabase Edge Function
-      // For now we'll simulate the process with a delay
-      toast({
-        title: "Redirecting to payment",
-        description: "You'll be redirected to complete your payment shortly.",
-      });
+      const priceId = LEMON_PRODUCT_IDS[confirmDialog.planId];
+      if (!priceId) {
+        throw new Error("Invalid plan selected");
+      }
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Create the checkout URL with custom data to identify the user
+      const checkoutUrl = `https://allerpaws.lemonsqueezy.com/checkout/buy/${priceId}?checkout[custom][user_id]=${user.id}`;
       
-      // Redirect to a simulated checkout page
-      navigate(`/subscription/checkout?plan=${confirmDialog.planId}`);
+      // Redirect to LemonSqueezy checkout
+      window.location.href = checkoutUrl;
     } catch (error: any) {
       console.error("Subscription error:", error);
       toast({
@@ -93,7 +105,6 @@ const Pricing = () => {
         description: error.message || "There was an error processing your subscription",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
       setConfirmDialog(prev => ({ ...prev, open: false }));
     }

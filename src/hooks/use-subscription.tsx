@@ -76,35 +76,25 @@ export const useSubscription = () => {
     try {
       setIsProcessing(true);
       
-      // For a real implementation, this would call a Supabase Edge Function
-      // that would interact with Stripe to cancel the subscription
+      // For LemonSqueezy, we'll redirect to their customer portal
+      // This is just a placeholder - replace with actual LemonSqueezy customer portal URL
+      window.location.href = "https://allerpaws.lemonsqueezy.com/my-account";
       
-      // For now, we'll just update our local database
-      const { error } = await supabase
-        .from("user_subscriptions")
-        .update({
-          cancel_at_period_end: true,
-          updated_at: new Date().toISOString(),
-        } as any)
-        .eq("id", subscription.id);
-      
-      if (error) throw error;
-      
-      // Update the local state
-      setSubscription({
-        ...subscription,
-        cancelAtPeriodEnd: true,
-      });
+      // Note: the actual cancellation will be handled by LemonSqueezy
+      // and the webhook will update our database
       
       toast({
-        title: "Subscription canceled",
-        description: "Your subscription will end at the end of the current billing period",
+        title: "Redirecting to customer portal",
+        description: "You'll be redirected to manage your subscription",
       });
+      
+      // We don't immediately update state since the change will happen on LemonSqueezy's side
+      return;
     } catch (error: any) {
-      console.error("Error canceling subscription:", error);
+      console.error("Error redirecting to customer portal:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to cancel subscription",
+        description: error.message || "Failed to open customer portal",
         variant: "destructive",
       });
     } finally {
@@ -112,42 +102,27 @@ export const useSubscription = () => {
     }
   };
 
-  // Resume subscription
+  // Resume subscription (manage on LemonSqueezy portal)
   const resumeSubscription = async () => {
     if (!user || !subscription) return;
     
     try {
       setIsProcessing(true);
       
-      // For a real implementation, this would call a Supabase Edge Function
-      // that would interact with Stripe to resume the subscription
-      
-      // For now, we'll just update our local database
-      const { error } = await supabase
-        .from("user_subscriptions")
-        .update({
-          cancel_at_period_end: false,
-          updated_at: new Date().toISOString(),
-        } as any)
-        .eq("id", subscription.id);
-      
-      if (error) throw error;
-      
-      // Update the local state
-      setSubscription({
-        ...subscription,
-        cancelAtPeriodEnd: false,
-      });
+      // For LemonSqueezy, we'll redirect to their customer portal
+      window.location.href = "https://allerpaws.lemonsqueezy.com/my-account";
       
       toast({
-        title: "Subscription resumed",
-        description: "Your subscription will continue automatically",
+        title: "Redirecting to customer portal",
+        description: "You'll be redirected to manage your subscription",
       });
+      
+      return;
     } catch (error: any) {
-      console.error("Error resuming subscription:", error);
+      console.error("Error redirecting to customer portal:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to resume subscription",
+        description: error.message || "Failed to open customer portal",
         variant: "destructive",
       });
     } finally {
