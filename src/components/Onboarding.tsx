@@ -58,12 +58,14 @@ const Onboarding: React.FC = () => {
 
     try {
       if (step === 1) {
-        const { error } = await signUp(email, password, {
+        const options = {
           data: {
             full_name: fullName,
           },
           redirectTo: `${window.location.origin}/auth/callback`,
-        });
+        };
+        
+        const { error } = await signUp(email, password, options);
 
         if (error) {
           setRegistrationError(error.message);

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -101,12 +102,21 @@ const Auth = () => {
     try {
       setLoading(true);
       
-      const { error, needsEmailConfirmation } = await signUp(email, password, {
-        full_name: fullName,
-      });
+      const options = {
+        data: {
+          full_name: fullName,
+        },
+      };
+      
+      const { error, needsEmailConfirmation } = await signUp(email, password, options);
       
       if (error) {
         // Error is already handled in the AuthContext
+        toast({
+          title: "Sign up failed",
+          description: error.message,
+          variant: "destructive",
+        });
         return;
       }
       

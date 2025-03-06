@@ -9,7 +9,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   
   // Check if there's temporary pet data stored and try to save it
   useEffect(() => {
-    if (user) {
+    if (user && savePetData) {
       const tempPetData = localStorage.getItem('temporaryPetData');
       if (tempPetData) {
         try {
