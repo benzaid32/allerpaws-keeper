@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
@@ -19,6 +18,7 @@ type AuthContextType = {
     needsEmailConfirmation: boolean;
   }>;
   authError: string | null;
+  savePetData: (petData: any) => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -28,7 +28,8 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   signIn: async () => ({ error: null, data: { user: null, session: null } }),
   signUp: async () => ({ error: null, data: { user: null, session: null }, needsEmailConfirmation: false }),
-  authError: null
+  authError: null,
+  savePetData: async () => false
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -39,6 +40,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Helper function to save pet data to the database
+  const savePetData = async (petData: any): Promise<boolean> => {
+    try {
+      if (!user) {
+        console.error("Cannot save pet data: No authenticated user");
+        return false;
+      }
+      
+      console.log("Saving pet data to database:", petData);
+      
+      // Insert pet data into Supabase
+      const { data, error } = await supabase.from("pets").insert({
+        name: petData.name,
+        species: petData.species,
+        breed: petData.breed || null,
+        age: petData.age || null,
+        weight: petData.weight || null,
+        user_id: user.id,
+      }).select().single();
+
+      if (error) {
+        console.error("Error saving pet:", error);
+        toast({
+          title: "Error saving pet information",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      console.log("Pet saved successfully:", data);
+
+      // Save pet allergies if any
+      if (petData.knownAllergies && petData.knownAllergies.length > 0) {
+        const allergiesData = petData.knownAllergies.map((allergen: string) => ({
+          pet_id: data.id,
+          name: allergen,
+        }));
+
+        const { error: allergiesError } = await supabase
+          .from("allergies")
+          .insert(allergiesData);
+
+        if (allergiesError) {
+          console.error("Error saving allergies:", allergiesError);
+        }
+      }
+
+      toast({
+        title: "Pet added successfully",
+        description: `${petData.name} has been added to your account.`,
+      });
+      
+      // Clear temporary data
+      localStorage.removeItem('temporaryPetData');
+      
+      return true;
+    } catch (error: any) {
+      console.error("Error in savePetData:", error);
+      toast({
+        title: "Error saving pet information",
+        description: error.message,
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
 
   useEffect(() => {
     // Get initial session - with shorter timeout
@@ -57,6 +126,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session) {
           console.log("User authenticated:", session.user.id);
+          
+          // Try to save any temporary pet data
+          const tempPetData = localStorage.getItem('temporaryPetData');
+          if (tempPetData) {
+            try {
+              const petData = JSON.parse(tempPetData);
+              console.log("Found temporary pet data to save after auth initialization:", petData);
+              await savePetData(petData);
+            } catch (error) {
+              console.error("Error parsing or saving temporary pet data:", error);
+            }
+          }
         } else {
           console.log("No active session found");
         }
@@ -79,18 +160,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
 
     // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
       setSession(session);
       setUser(session?.user || null);
       setIsLoading(false);
       
-      // If the user has just signed in, and we have temporary pet data, show a toast
-      if (event === 'SIGNED_IN' && localStorage.getItem('temporaryPetData')) {
-        toast({
-          title: "Pet data available",
-          description: "We found your onboarding pet data and will try to save it now."
-        });
+      // If the user has just signed in, and we have temporary pet data, try to save it
+      if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && localStorage.getItem('temporaryPetData')) {
+        try {
+          const petData = JSON.parse(localStorage.getItem('temporaryPetData') || '');
+          console.log("Attempting to save temporary pet data after auth event:", event);
+          await savePetData(petData);
+        } catch (error) {
+          console.error("Error parsing or saving temporary pet data:", error);
+        }
       }
     });
 
@@ -98,7 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
       clearTimeout(timeoutId);
     };
-  }, [isLoading, toast]);
+  }, [toast]);
 
   const signOut = async () => {
     try {
@@ -263,7 +347,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signOut, 
       signIn, 
       signUp, 
-      authError 
+      authError,
+      savePetData
     }}>
       {children}
     </AuthContext.Provider>

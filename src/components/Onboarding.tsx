@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,7 +29,7 @@ const EXTENDED_STEPS = [...ONBOARDING_STEPS, "Register"];
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, signUp } = useAuth();
+  const { user, signUp, savePetData } = useAuth();
   const [step, setStep] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,7 +61,7 @@ const Onboarding: React.FC = () => {
           const tempPet = JSON.parse(storedPetData);
           console.log("Found temporary pet data:", tempPet);
           
-          savePetToDatabase(tempPet)
+          savePetData(tempPet)
             .then(success => {
               if (success) {
                 console.log("Successfully saved pet from temporary data");
@@ -79,7 +78,7 @@ const Onboarding: React.FC = () => {
         }
       }
     }
-  }, [user, navigate]);
+  }, [user, navigate, savePetData]);
 
   // Clear any registration errors when switching to the register step
   useEffect(() => {
@@ -96,52 +95,7 @@ const Onboarding: React.FC = () => {
         return false;
       }
       
-      console.log("Saving pet with user ID:", user.id);
-      
-      // Insert pet data into Supabase
-      const { data, error } = await supabase.from("pets").insert({
-        name: petData.name,
-        species: petData.species,
-        breed: petData.breed,
-        age: petData.age,
-        weight: petData.weight,
-        user_id: user.id,
-      }).select().single();
-
-      if (error) {
-        console.error("Error saving pet:", error);
-        toast({
-          title: "Error saving pet information",
-          description: error.message,
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      console.log("Pet saved successfully:", data);
-
-      // Save pet allergies if any
-      if (petData.knownAllergies.length > 0) {
-        const allergiesData = petData.knownAllergies.map(allergen => ({
-          pet_id: data.id,
-          name: allergen,
-        }));
-
-        const { error: allergiesError } = await supabase
-          .from("allergies")
-          .insert(allergiesData);
-
-        if (allergiesError) {
-          console.error("Error saving allergies:", allergiesError);
-        }
-      }
-
-      toast({
-        title: "Pet added successfully",
-        description: `${petData.name} has been added to your account.`,
-      });
-      
-      return true;
+      return await savePetData(petData);
     } catch (error: any) {
       console.error("Error in savePetToDatabase:", error);
       return false;

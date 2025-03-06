@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon, RefreshCw, Mail } from "lucide-react";
+import { InfoIcon, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTemporaryPetData, clearTemporaryPetData } from "@/lib/utils";
@@ -25,31 +24,40 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, savePetData } = useAuth();
 
   // Check if user is already logged in and if there's temporary pet data
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      
-      // Get temporary pet data if it exists
-      const petData = getTemporaryPetData();
-      setTempPetData(petData);
-      
-      // If the URL includes a parameter indicating email verification was sent
-      const searchParams = new URLSearchParams(location.search);
-      if (searchParams.get("verifyEmail") === "true") {
-        setShowVerificationMessage(true);
-        setActiveTab("login");
-      }
-      
-      if (data.session) {
-        if (petData) {
-          // If we have pet data and user is logged in, save the pet data
-          await savePetData(petData, data.session.user.id);
-        } else {
+      try {
+        // Get temporary pet data if it exists
+        const petData = getTemporaryPetData();
+        setTempPetData(petData);
+        
+        // If the URL includes a parameter indicating email verification was sent
+        const searchParams = new URLSearchParams(location.search);
+        if (searchParams.get("verifyEmail") === "true") {
+          setShowVerificationMessage(true);
+          setActiveTab("login");
+        }
+        
+        // Check for authenticated session
+        const { data } = await supabase.auth.getSession();
+        
+        if (data.session) {
+          console.log("User already authenticated in Auth page:", data.session.user.id);
+          
+          if (petData) {
+            // If we have pet data and user is logged in, save the pet data
+            console.log("Found temporary pet data in Auth page, saving:", petData);
+            await savePetData(petData);
+          }
+          
+          // Always redirect to dashboard after checking for pet data
           navigate("/dashboard");
         }
+      } catch (error) {
+        console.error("Error in Auth page initialization:", error);
       }
     };
     
@@ -58,14 +66,17 @@ const Auth = () => {
     // Set up auth state change listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed in Auth page:", event);
         if (session) {
           const petData = getTemporaryPetData();
           if (petData) {
             // If we have pet data and user just logged in, save the pet data
-            await savePetData(petData, session.user.id);
-          } else {
-            navigate("/dashboard");
+            console.log("Auth page detected login, saving pet data:", petData);
+            await savePetData(petData);
           }
+          
+          // Always navigate to dashboard after auth state change resulting in a session
+          navigate("/dashboard");
         }
       }
     );
@@ -73,72 +84,7 @@ const Auth = () => {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [navigate, location.search]);
-
-  // Function to save pet data after login
-  const savePetData = async (pet: Pet, userId: string) => {
-    try {
-      setLoading(true);
-      
-      toast({
-        title: "Saving your pet information",
-        description: "Please wait while we set up your account...",
-      });
-      
-      // Insert pet data into Supabase
-      const { data, error } = await supabase.from("pets").insert({
-        name: pet.name,
-        species: pet.species,
-        breed: pet.breed || null,
-        age: pet.age || null,
-        weight: pet.weight || null,
-        user_id: userId,
-      }).select().single();
-
-      if (error) {
-        throw error;
-      }
-
-      console.log("Pet saved successfully:", data);
-
-      // Save pet allergies if any
-      if (pet.knownAllergies && pet.knownAllergies.length > 0) {
-        const allergiesData = pet.knownAllergies.map(allergen => ({
-          pet_id: data.id,
-          name: allergen,
-        }));
-
-        const { error: allergiesError } = await supabase
-          .from("allergies")
-          .insert(allergiesData);
-
-        if (allergiesError) {
-          console.error("Error saving allergies:", allergiesError);
-        }
-      }
-
-      toast({
-        title: "Pet added successfully",
-        description: `${pet.name} has been added to your account.`,
-      });
-      
-      // Clear temporary data
-      clearTemporaryPetData();
-      
-      // Navigate to dashboard after successful save
-      navigate("/dashboard");
-    } catch (error: any) {
-      console.error("Error saving pet information:", error);
-      toast({
-        title: "Error saving pet information",
-        description: error.message,
-        variant: "destructive",
-      });
-      navigate("/dashboard"); // Navigate anyway to avoid getting stuck
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [navigate, location.search, savePetData]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();

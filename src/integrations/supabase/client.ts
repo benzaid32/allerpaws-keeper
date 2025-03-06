@@ -6,7 +6,7 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://whspcnovvaqeztgtcsjl.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indoc3Bjbm92dmFxZXp0Z3Rjc2psIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDExNDI0MDUsImV4cCI6MjA1NjcxODQwNX0.dadXKAcGccwgVwrBcwEpDp5jeQRo5w-_A4z_MmbrbFo";
 
-// Create Supabase client with custom error handling
+// Create Supabase client with enhanced error handling
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     autoRefreshToken: true,
@@ -17,5 +17,14 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     headers: {
       'X-Client-Info': 'allerpaws-app'
     }
-  }
+  },
+  // Add debug mode to log all requests in development
+  debug: process.env.NODE_ENV === 'development'
 });
+
+// Add a helper function to check if an error is a Row Level Security error
+export const isRLSError = (error: any): boolean => {
+  return error?.message?.includes('row-level security') || 
+         error?.code === 'PGRST301' || 
+         error?.code === '42501';
+};
