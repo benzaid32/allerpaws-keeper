@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,66 +7,14 @@ import { Plus, Bell, Calendar } from "lucide-react";
 import Onboarding from "@/components/Onboarding";
 import { useAuth } from "@/contexts/AuthContext";
 import BottomNavigation from "@/components/BottomNavigation";
-
-type RecentLog = {
-  id: string;
-  date: string;
-  petName: string;
-  symptoms: string[];
-};
-
-type Reminder = {
-  id: string;
-  time: string;
-  title: string;
-  description: string;
-};
+import { useHomeData } from "@/hooks/use-home-data";
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { toast } = useToast();
-  
-  // Mock data for demonstration
-  const [recentLogs, setRecentLogs] = useState<RecentLog[]>([]);
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-
-  useEffect(() => {
-    // If user is authenticated, fetch logs and reminders
-    if (user && !isLoading) {
-      // Mock data - in a real app, this would come from Supabase
-      setRecentLogs([
-        {
-          id: "1",
-          date: "Today, 9:30 AM",
-          petName: "Buddy",
-          symptoms: ["Itchy Skin", "Ear Infection"]
-        },
-        {
-          id: "2",
-          date: "Yesterday, 8:15 PM",
-          petName: "Buddy",
-          symptoms: ["Vomiting"]
-        }
-      ]);
-      
-      setReminders([
-        {
-          id: "1",
-          time: "12:00 PM",
-          title: "Log Lunch",
-          description: "Record what Buddy ate for lunch"
-        },
-        {
-          id: "2",
-          time: "8:00 PM",
-          title: "Evening Check",
-          description: "Check for any evening symptoms"
-        }
-      ]);
-    }
-  }, [user, isLoading]);
+  const { recentLogs, reminders, loading } = useHomeData();
 
   const handleGetStarted = () => {
     if (user) {
@@ -85,7 +32,7 @@ const Index = () => {
     });
   };
 
-  if (isLoading) {
+  if (isLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -179,7 +126,7 @@ const Index = () => {
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg">Active Reminders</CardTitle>
-            <Button variant="ghost" size="sm" className="h-8" onClick={() => navigate("/settings/reminders")}>
+            <Button variant="ghost" size="sm" className="h-8" onClick={() => navigate("/reminders")}>
               <Bell className="h-4 w-4 mr-1" />
               Manage
             </Button>
@@ -201,7 +148,7 @@ const Index = () => {
           ) : (
             <div className="text-center py-4 text-muted-foreground">
               <p>No active reminders</p>
-              <Button variant="link" onClick={() => navigate("/settings/reminders")}>Set up reminders</Button>
+              <Button variant="link" onClick={() => navigate("/reminders")}>Set up reminders</Button>
             </div>
           )}
         </CardContent>
