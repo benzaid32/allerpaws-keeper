@@ -2,6 +2,7 @@
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { useUserSubscription } from '@/hooks/use-user-subscription';
 import { SubscriptionContextType } from '@/types/subscription-context';
+import { useToast } from '@/hooks/use-toast';
 
 // Create the context with a default value
 const SubscriptionContext = createContext<SubscriptionContextType>({
@@ -19,6 +20,8 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
 export const useSubscriptionContext = () => useContext(SubscriptionContext);
 
 export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { toast } = useToast();
+  
   const {
     loading: isLoading,
     subscription,
@@ -29,6 +32,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
     refreshSubscription,
     cancelSubscription,
     resumeSubscription,
+    error
   } = useUserSubscription();
 
   // Only log once on mount to prevent excessive console output
@@ -38,6 +42,16 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
       subscription,
       isPremium,
     });
+    
+    // Show error toast if there was an error fetching subscription
+    if (error) {
+      console.error('Subscription error:', error);
+      toast({
+        title: "Couldn't Load Subscription",
+        description: "Your subscription details couldn't be loaded. Some features may be limited.",
+        variant: "destructive",
+      });
+    }
   }, []);
 
   // Log state updates when relevant values change

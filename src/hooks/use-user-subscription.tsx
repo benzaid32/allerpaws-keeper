@@ -10,16 +10,19 @@ export function useUserSubscription() {
   const { toast } = useToast();
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const fetchSubscription = async () => {
     if (!user) {
       setSubscription(null);
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
       setLoading(true);
+      setError(null);
       console.log("useSubscription: fetching subscription for user", user.id);
       
       const { data, error } = await supabase
@@ -28,11 +31,12 @@ export function useUserSubscription() {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle(); // Changed from single() to maybeSingle() to avoid errors when no subscriptions exist
 
       if (error && error.code !== "PGRST116") {
         // PGRST116 is "no rows returned" - not an error for us
         console.error("Error fetching subscription:", error);
+        setError(new Error(error.message));
         toast({
           title: "Error",
           description: "Failed to load subscription information",
@@ -41,8 +45,9 @@ export function useUserSubscription() {
       }
 
       setSubscription(data as UserSubscription || null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in subscription hook:", error);
+      setError(error);
     } finally {
       setLoading(false);
     }
@@ -66,28 +71,53 @@ export function useUserSubscription() {
 
   // Mock implementation for subscription management functions
   const cancelSubscription = async () => {
-    // This would call an API to cancel subscription
-    console.log("Cancel subscription requested");
-    toast({
-      title: "Subscription update",
-      description: "Your subscription has been scheduled for cancellation at the end of the billing period.",
-    });
-    await fetchSubscription();
+    try {
+      setLoading(true);
+      // This would call an API to cancel subscription
+      console.log("Cancel subscription requested");
+      toast({
+        title: "Subscription update",
+        description: "Your subscription has been scheduled for cancellation at the end of the billing period.",
+      });
+      await fetchSubscription();
+    } catch (error: any) {
+      console.error("Error cancelling subscription:", error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel subscription. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resumeSubscription = async () => {
-    // This would call an API to resume subscription
-    console.log("Resume subscription requested");
-    toast({
-      title: "Subscription update",
-      description: "Your subscription has been resumed.",
-    });
-    await fetchSubscription();
+    try {
+      setLoading(true);
+      // This would call an API to resume subscription
+      console.log("Resume subscription requested");
+      toast({
+        title: "Subscription update",
+        description: "Your subscription has been resumed.",
+      });
+      await fetchSubscription();
+    } catch (error: any) {
+      console.error("Error resuming subscription:", error);
+      toast({
+        title: "Error",
+        description: "Failed to resume subscription. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return {
     subscription,
     loading,
+    error,
     hasPremiumAccess,
     maxAllowedPets,
     maxEntriesPerMonth,

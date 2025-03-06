@@ -1,18 +1,24 @@
-import { createContext, useContext, useEffect } from "react";
+
+import { createContext, useContext, useEffect, useState } from "react";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthContextType } from "@/types/auth";
 import { useAuthOperations } from "@/hooks/use-auth-operations";
+import { useToast } from "@/hooks/use-toast";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [authInitialized, setAuthInitialized] = useState(false);
+  const { toast } = useToast();
+  
   const {
     user,
     setUser,
     session,
     setSession,
     loading,
+    setLoading,
     signIn,
     signInWithProvider,
     signOut,
@@ -24,16 +30,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const getSession = async () => {
       try {
+        setLoading(true);
         const {
           data: { session },
+          error
         } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("Error getting session:", error);
+          toast({
+            title: "Authentication Error",
+            description: "Failed to retrieve your session. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
 
         setSession(session);
         setUser(session?.user ?? null);
+        
+        console.log("Initial session loaded:", session ? "User authenticated" : "No session");
       } catch (error) {
         console.error("Error getting session:", error);
       } finally {
-        // Keep loading state management
+        setLoading(false);
+        setAuthInitialized(true);
       }
     };
 
@@ -43,12 +64,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Auth state changed:", event);
       setUser(session?.user ?? null);
       setSession(session);
+      
+      if (event === 'SIGNED_OUT') {
+        // Clear any cached data on sign out
+        localStorage.removeItem('tempPetData');
+      }
     });
 
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [setUser, setSession]);
+  }, [setUser, setSession, setLoading, toast]);
 
   const value: AuthContextType = {
     user,
@@ -57,8 +83,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signOut,
     signInWithProvider,
     signUp,
-    loading,
-    isLoading: loading, // Alias loading as isLoading
+    loading: loading || !authInitialized, // Loading until auth is fully initialized
+    isLoading: loading || !authInitialized, // Alias loading as isLoading
     refreshUser,
     savePetData,
   };

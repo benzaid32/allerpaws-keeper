@@ -21,15 +21,52 @@ import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import Pricing from './pages/Pricing';
 import Reminders from './pages/Reminders';
 import { LoadingSpinner } from './components/ui/loading-spinner';
+import { useToast } from './hooks/use-toast';
 
 function App() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
+  // Unregister any existing service workers to prevent caching issues
   useEffect(() => {
-    // Minimal initialization with no service worker handling
-    // This prevents refresh loops and loading issues
-    console.log("App initialized");
-  }, []);
+    const cleanupServiceWorker = async () => {
+      try {
+        // Unregister any existing service workers to prevent caching issues
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            await registration.unregister();
+            console.log('Service worker unregistered to prevent caching issues');
+          }
+        }
+      } catch (error) {
+        console.error('Service worker cleanup error:', error);
+      } finally {
+        console.log("App initialized, service worker cleanup complete");
+        setIsLoading(false);
+      }
+    };
+
+    cleanupServiceWorker();
+
+    // Add error handling for uncaught errors
+    const handleUnhandledError = (event) => {
+      console.error('Unhandled error:', event.error || event.message);
+      toast({
+        title: "Something went wrong",
+        description: "The application encountered an error. Please refresh the page.",
+        variant: "destructive",
+      });
+    };
+
+    window.addEventListener('error', handleUnhandledError);
+    window.addEventListener('unhandledrejection', handleUnhandledError);
+
+    return () => {
+      window.removeEventListener('error', handleUnhandledError);
+      window.removeEventListener('unhandledrejection', handleUnhandledError);
+    };
+  }, [toast]);
 
   if (isLoading) {
     return (

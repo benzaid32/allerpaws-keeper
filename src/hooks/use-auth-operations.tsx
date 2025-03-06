@@ -3,11 +3,13 @@ import { useState } from "react";
 import { User, Session, Provider } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Pet } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 export function useAuthOperations() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
@@ -19,6 +21,11 @@ export function useAuthOperations() {
       if (error) throw error;
     } catch (error: any) {
       console.error("Error signing in:", error.message);
+      toast({
+        title: "Sign In Failed",
+        description: error.message || "Please check your credentials and try again",
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setLoading(false);
@@ -34,6 +41,11 @@ export function useAuthOperations() {
       if (error) throw error;
     } catch (error: any) {
       console.error("Error signing in with provider:", error.message);
+      toast({
+        title: "Sign In Failed",
+        description: `Could not sign in with ${provider}. Please try again.`,
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setLoading(false);
@@ -48,10 +60,17 @@ export function useAuthOperations() {
       setLoading(true);
       
       // Sign out from Supabase
-      const { error } = await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut({
+        scope: 'local' // Only sign out from current device, to prevent token issues
+      });
       
       if (error) {
         console.error("Error signing out:", error.message);
+        toast({
+          title: "Sign Out Error",
+          description: error.message || "Failed to sign out. Please try again.",
+          variant: "destructive",
+        });
         throw error;
       }
       
@@ -64,8 +83,10 @@ export function useAuthOperations() {
       
       console.log("Sign out successful");
       
-      // Force page reload to clear any cached state and ensure complete logout
-      window.location.href = "/";
+      // Refresh the page to clear any cached state and ensure complete logout
+      setTimeout(() => {
+        window.location.href = "/auth";
+      }, 500);
       
     } catch (error: any) {
       console.error("Error signing out:", error.message);
@@ -93,8 +114,18 @@ export function useAuthOperations() {
       });
       
       if (error) {
+        toast({
+          title: "Sign Up Failed",
+          description: error.message || "Could not create account. Please try again.",
+          variant: "destructive",
+        });
         return { error };
       }
+      
+      toast({
+        title: "Verify Your Email",
+        description: "Please check your email to complete registration",
+      });
       
       // Assuming email verification is required
       return { needsEmailConfirmation: true };
@@ -108,10 +139,20 @@ export function useAuthOperations() {
 
   const refreshUser = async () => {
     try {
-      const { data } = await supabase.auth.getUser();
+      setLoading(true);
+      const { data, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.error("Error refreshing user:", error);
+        return;
+      }
+      
       setUser(data.user);
+      console.log("User refreshed:", data.user?.id);
     } catch (error) {
       console.error("Error refreshing user:", error);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -136,6 +177,7 @@ export function useAuthOperations() {
     session,
     setSession,
     loading,
+    setLoading,
     signIn,
     signInWithProvider,
     signOut,
