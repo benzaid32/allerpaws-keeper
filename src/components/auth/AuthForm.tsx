@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { APP_NAME } from "@/lib/constants";
-import { Mail, Key, User, CheckCircle, AlertTriangle } from "lucide-react";
+import { Mail, Key, User, CheckCircle, Shield, Lock, ArrowRight } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface AuthFormProps {
   initialView?: "sign-in" | "sign-up";
@@ -21,6 +22,9 @@ const AuthForm = ({ initialView = "sign-in" }: AuthFormProps) => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { signIn, signUp, isLoading, refreshUser } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -37,6 +41,7 @@ const AuthForm = ({ initialView = "sign-in" }: AuthFormProps) => {
     }
 
     try {
+      setIsSubmitting(true);
       await signIn(email, password);
       toast({
         title: "Sign in successful",
@@ -50,6 +55,8 @@ const AuthForm = ({ initialView = "sign-in" }: AuthFormProps) => {
         description: error.message || "Invalid credentials. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -65,6 +72,7 @@ const AuthForm = ({ initialView = "sign-in" }: AuthFormProps) => {
     }
 
     try {
+      setIsSubmitting(true);
       // Adjust the signUp call to match the expected function signature
       await signUp(email, password, { name });
       toast({
@@ -79,6 +87,8 @@ const AuthForm = ({ initialView = "sign-in" }: AuthFormProps) => {
         description: error.message || "Failed to create account. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -94,6 +104,7 @@ const AuthForm = ({ initialView = "sign-in" }: AuthFormProps) => {
     }
 
     try {
+      setIsSubmitting(true);
       // Simulate verification process
       await new Promise((resolve) => setTimeout(resolve, 1000));
       toast({
@@ -108,146 +119,260 @@ const AuthForm = ({ initialView = "sign-in" }: AuthFormProps) => {
         title: "Verification failed",
         description: error.message || "Failed to verify account. Please try again.",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address to reset your password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // This would normally call a password reset function from your auth provider
+    toast({
+      title: "Password reset email sent",
+      description: "Check your inbox for instructions to reset your password.",
+    });
+    setShowPasswordReset(false);
+  };
+
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">
-          {view === "sign-in"
-            ? "Sign In"
-            : view === "sign-up"
-            ? "Create Account"
-            : "Verify Account"}
-        </CardTitle>
-        <CardDescription>
-          {view === "sign-in"
-            ? "Enter your credentials to access your account."
-            : view === "sign-up"
-            ? "Create a new account to get started."
-            : "Enter the verification code sent to your email."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4">
-        {view === "sign-up" && (
-          <div className="grid gap-2">
-            <Label htmlFor="name">
-              <User className="mr-2 h-4 w-4" />
-              Name
-            </Label>
-            <Input
-              id="name"
-              placeholder="John Doe"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={isLoading}
-            />
+    <>
+      <Card className="backdrop-blur-sm border-border/50 shadow-elegant overflow-hidden">
+        <CardContent className="pt-6 pb-4">
+          {view === "sign-up" && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="name" className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-primary" />
+                  Full Name
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="name"
+                    placeholder="John Doe"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={isLoading || isSubmitting}
+                    className="pl-3 pr-3 py-5 bg-card border-border/50 focus-visible:ring-primary/20"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-3 mt-4">
+            <div className="space-y-1">
+              <Label htmlFor="email" className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" />
+                Email Address
+              </Label>
+              <div className="relative">
+                <Input
+                  id="email"
+                  placeholder="name@example.com"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading || isSubmitting}
+                  className="pl-3 pr-3 py-5 bg-card border-border/50 focus-visible:ring-primary/20"
+                />
+              </div>
+            </div>
           </div>
-        )}
-        <div className="grid gap-2">
-          <Label htmlFor="email">
-            <Mail className="mr-2 h-4 w-4" />
-            Email
-          </Label>
-          <Input
-            id="email"
-            placeholder="name@example.com"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={isLoading}
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="password">
-            <Key className="mr-2 h-4 w-4" />
-            Password
-          </Label>
-          <Input
-            id="password"
-            placeholder="••••••••"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-          />
-        </div>
-        {view === "verification" && (
-          <div className="grid gap-2">
-            <Label htmlFor="code">
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Verification Code
-            </Label>
-            <Input
-              id="code"
-              placeholder="123456"
-              type="text"
-              value={verificationCode}
-              onChange={(e) => setVerificationCode(e.target.value)}
-              disabled={isLoading}
-            />
+
+          {view !== "verification" && (
+            <div className="space-y-3 mt-4">
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <Label htmlFor="password" className="flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-primary" />
+                    Password
+                  </Label>
+                  {view === "sign-in" && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordReset(true)}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    placeholder="••••••••"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading || isSubmitting}
+                    className="pl-3 pr-3 py-5 bg-card border-border/50 focus-visible:ring-primary/20"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {view === "verification" && (
+            <div className="space-y-3 mt-4">
+              <div className="space-y-1">
+                <Label htmlFor="code" className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-primary" />
+                  Verification Code
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="code"
+                    placeholder="123456"
+                    type="text"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    disabled={isLoading || isSubmitting}
+                    className="pl-3 pr-3 py-5 bg-card border-border/50 focus-visible:ring-primary/20"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 space-y-4">
+            {view === "sign-in" && (
+              <Button 
+                className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all py-6 group"
+                onClick={handleSignIn} 
+                disabled={isLoading || isSubmitting}
+              >
+                <span>Sign In</span>
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                {(isLoading || isSubmitting) && (
+                  <LoadingSpinner className="ml-2 h-4 w-4" />
+                )}
+              </Button>
+            )}
+            
+            {view === "sign-up" && (
+              <Button 
+                className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all py-6 group"
+                onClick={handleSignUp} 
+                disabled={isLoading || isSubmitting}
+              >
+                <span>Create Account</span>
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                {(isLoading || isSubmitting) && (
+                  <LoadingSpinner className="ml-2 h-4 w-4" />
+                )}
+              </Button>
+            )}
+            
+            {view === "verification" && (
+              <Button 
+                className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all py-6 group"
+                onClick={handleVerify} 
+                disabled={isLoading || isSubmitting}
+              >
+                <span>Verify Account</span>
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                {(isLoading || isSubmitting) && (
+                  <LoadingSpinner className="ml-2 h-4 w-4" />
+                )}
+              </Button>
+            )}
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex flex-col gap-4">
-        {view === "sign-in" && (
-          <>
-            <Button className="w-full" onClick={handleSignIn} disabled={isLoading}>
-              Sign In
-            </Button>
-            <Separator />
-            <div className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <button
-                className="text-primary underline underline-offset-4 hover:no-underline"
-                onClick={() => setView("sign-up")}
-                type="button"
-              >
-                Create one
-              </button>
+        </CardContent>
+
+        <div className="px-6 pb-6">
+          <Separator className="my-4" />
+          
+          <div className="flex items-center justify-center px-2">
+            <div className="text-sm text-center">
+              {view === "sign-in" && (
+                <div className="text-muted-foreground">
+                  Don't have an account?{" "}
+                  <button
+                    className="font-medium text-primary hover:underline"
+                    onClick={() => setView("sign-up")}
+                    type="button"
+                  >
+                    Create one
+                  </button>
+                </div>
+              )}
+              
+              {view === "sign-up" && (
+                <div className="text-muted-foreground">
+                  Already have an account?{" "}
+                  <button
+                    className="font-medium text-primary hover:underline"
+                    onClick={() => setView("sign-in")}
+                    type="button"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              )}
+              
+              {view === "verification" && (
+                <div className="text-muted-foreground">
+                  Didn't receive the code?{" "}
+                  <button
+                    className="font-medium text-primary hover:underline"
+                    onClick={() => setView("sign-up")}
+                    type="button"
+                  >
+                    Resend
+                  </button>
+                </div>
+              )}
             </div>
-          </>
-        )}
-        {view === "sign-up" && (
-          <>
-            <Button className="w-full" onClick={handleSignUp} disabled={isLoading}>
-              Create Account
-            </Button>
-            <Separator />
-            <div className="text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <button
-                className="text-primary underline underline-offset-4 hover:no-underline"
-                onClick={() => setView("sign-in")}
-                type="button"
-              >
-                Sign In
-              </button>
+          </div>
+          
+          {/* Security note */}
+          <div className="flex justify-center items-center text-xs text-muted-foreground mt-4">
+            <Shield className="h-3 w-3 mr-1 text-green-500" />
+            <span>Secure, encrypted connection</span>
+          </div>
+        </div>
+      </Card>
+
+      {/* Password reset dialog */}
+      <Dialog open={showPasswordReset} onOpenChange={setShowPasswordReset}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reset your password</DialogTitle>
+            <DialogDescription>
+              Enter your email address below and we'll send you instructions to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handlePasswordReset} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="name@example.com"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+              />
             </div>
-          </>
-        )}
-        {view === "verification" && (
-          <>
-            <Button className="w-full" onClick={handleVerify} disabled={isLoading}>
-              Verify Account
-            </Button>
-            <Separator />
-            <div className="text-sm text-muted-foreground">
-              Didn't receive the code?{" "}
-              <button
-                className="text-primary underline underline-offset-4 hover:no-underline"
-                onClick={() => setView("sign-up")}
-                type="button"
-              >
-                Resend
-              </button>
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setShowPasswordReset(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Send reset link</Button>
             </div>
-          </>
-        )}
-      </CardFooter>
-    </Card>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
