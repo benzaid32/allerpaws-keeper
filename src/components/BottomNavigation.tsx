@@ -15,7 +15,7 @@ import {
 const navItems = [
   { path: "/", label: "Home", icon: Home },
   { path: "/symptom-diary", label: "Symptoms", icon: ClipboardList },
-  { path: "/elimination-diet", label: "Diet Guide", icon: BookOpen },
+  { path: "/elimination-diet", label: "Diet", icon: BookOpen },
   { path: "/food-database", label: "Foods", icon: Database },
   { path: "/reminders", label: "Reminders", icon: Bell },
   { path: "/settings", label: "Settings", icon: Settings },
@@ -42,8 +42,10 @@ const BottomNavigation = () => {
               className={cn(
                 "flex flex-col items-center justify-center flex-1 h-full px-1",
                 "transition-colors relative",
+                "touch-manipulation", // Improves touch response on mobile
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
+              aria-label={item.label}
             >
               {isActive && (
                 <motion.div
@@ -53,7 +55,7 @@ const BottomNavigation = () => {
                 />
               )}
               <item.icon className="h-5 w-5 mb-1" />
-              <span className="text-xs">{item.label}</span>
+              <span className="text-xs truncate max-w-[3.5rem]">{item.label}</span>
             </button>
           );
         })}

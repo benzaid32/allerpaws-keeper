@@ -33,8 +33,16 @@ const ReminderFormDialog: React.FC<ReminderFormDialogProps> = ({
   onOpenChange,
   reminderToEdit 
 }) => {
+  // Create hooks with required parameters
+  const hookParams = {
+    fetchData: async () => {},
+    setReminders: () => {},
+    setOpen: onOpenChange,
+    setSubmitting: () => {}
+  };
+  
   const { formData, setFormData, isEditing, submitting, setIsEditing } = useReminderForm();
-  const { handleSubmit } = useReminderOperations();
+  const { handleSubmit } = useReminderOperations(hookParams);
 
   useEffect(() => {
     if (reminderToEdit) {
@@ -77,11 +85,11 @@ const ReminderFormDialog: React.FC<ReminderFormDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-w-[90vw] w-full">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Reminder" : "Create Reminder"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} className="overflow-y-auto max-h-[70vh]">
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="title">Title</Label>
@@ -112,6 +120,7 @@ const ReminderFormDialog: React.FC<ReminderFormDialogProps> = ({
                 value={formData.time}
                 onChange={(e) => handleFieldChange("time", e.target.value)}
                 required
+                className="touch-manipulation"
               />
             </div>
             
@@ -129,7 +138,12 @@ const ReminderFormDialog: React.FC<ReminderFormDialogProps> = ({
                 className="justify-between"
               >
                 {DAYS_OF_WEEK.map((day) => (
-                  <ToggleGroupItem key={day.value} value={day.value} aria-label={day.value}>
+                  <ToggleGroupItem 
+                    key={day.value} 
+                    value={day.value} 
+                    aria-label={day.value}
+                    className="touch-manipulation min-w-8 h-8"
+                  >
                     {day.label}
                   </ToggleGroupItem>
                 ))}
@@ -142,11 +156,12 @@ const ReminderFormDialog: React.FC<ReminderFormDialogProps> = ({
                 id="active"
                 checked={formData.active}
                 onCheckedChange={(checked) => handleFieldChange("active", checked)}
+                className="touch-manipulation"
               />
             </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="gap-2 flex-wrap sm:flex-nowrap">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

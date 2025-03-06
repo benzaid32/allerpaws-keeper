@@ -53,7 +53,8 @@ const Reminders = () => {
           <h1 className="text-2xl font-bold flex-1">Reminders</h1>
           <Button onClick={() => setIsFormOpen(true)} size="sm" className="gap-1">
             <Plus className="h-4 w-4" />
-            New Reminder
+            <span className="hidden sm:inline">New Reminder</span>
+            <span className="sm:hidden">New</span>
           </Button>
         </div>
 
