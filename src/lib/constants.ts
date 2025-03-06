@@ -1,3 +1,4 @@
+
 export const APP_NAME = "AllerPaws";
 export const APP_DESCRIPTION = "Track, manage and prevent pet food allergies";
 
@@ -7,7 +8,7 @@ export const ELIMINATION_PHASES = [
     id: "1",
     name: "Elimination Phase",
     description: "Remove common allergens from your pet's diet",
-    duration: "4-6 weeks",
+    duration: 42, // Changed from string to number (days)
     tips: [
       "Feed your pet a simple diet with novel protein",
       "Remove all treats and supplements temporarily",
@@ -24,7 +25,7 @@ export const ELIMINATION_PHASES = [
     id: "2",
     name: "Stabilization Phase",
     description: "Continue with successful diet to ensure symptoms resolve",
-    duration: "2-4 weeks",
+    duration: 21, // Changed from string to number (days)
     tips: [
       "Continue with the elimination diet",
       "Look for complete symptom resolution",
@@ -41,7 +42,7 @@ export const ELIMINATION_PHASES = [
     id: "3",
     name: "Challenge Phase",
     description: "Carefully reintroduce potential allergens",
-    duration: "6-8 weeks",
+    duration: 49, // Changed from string to number (days)
     tips: [
       "Introduce one new ingredient at a time",
       "Wait 1-2 weeks between new foods",
@@ -58,7 +59,7 @@ export const ELIMINATION_PHASES = [
     id: "4",
     name: "Maintenance Phase",
     description: "Long-term diet planning based on results",
-    duration: "Ongoing",
+    duration: 0, // 0 means ongoing/indefinite
     tips: [
       "Create a personalized safe food list",
       "Establish a long-term feeding plan",
@@ -135,4 +136,32 @@ export const PLANS = [
     ],
     isFree: false,
   },
+];
+
+// Adding missing constants
+export const NAVIGATION_ITEMS = [
+  { name: "Home", path: "/dashboard", icon: "home" },
+  { name: "Symptoms", path: "/symptom-diary", icon: "clipboard-list" },
+  { name: "Diet Guide", path: "/elimination-diet", icon: "book-open" },
+  { name: "Foods", path: "/food-database", icon: "database" },
+  { name: "Settings", path: "/settings", icon: "settings" }
+];
+
+export const COMMON_SYMPTOMS = [
+  { id: "1", name: "Itching", description: "Excessive scratching or licking", icon: "paw" },
+  { id: "2", name: "Ear Infection", description: "Redness, swelling, or discharge", icon: "ear" },
+  { id: "3", name: "Digestive Issues", description: "Vomiting, diarrhea, or flatulence", icon: "stomach" },
+  { id: "4", name: "Skin Rash", description: "Red, inflamed, or irritated skin", icon: "rash" },
+  { id: "5", name: "Hair Loss", description: "Patchy or general hair loss", icon: "hair" }
+];
+
+export const COMMON_ALLERGENS = [
+  { id: "1", name: "Beef", category: "protein" },
+  { id: "2", name: "Chicken", category: "protein" },
+  { id: "3", name: "Dairy", category: "protein" },
+  { id: "4", name: "Egg", category: "protein" },
+  { id: "5", name: "Wheat", category: "grain" },
+  { id: "6", name: "Corn", category: "grain" },
+  { id: "7", name: "Soy", category: "legume" },
+  { id: "8", name: "Fish", category: "protein" }
 ];

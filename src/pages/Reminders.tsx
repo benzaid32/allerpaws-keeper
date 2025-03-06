@@ -14,8 +14,8 @@ import { ArrowLeft, Plus, Clock, Bell } from "lucide-react";
 
 const Reminders = () => {
   const navigate = useNavigate();
-  const { reminders, loading, error } = useRemindersData();
-  const { deleteReminder, toggleReminderActive } = useReminderOperations();
+  const { reminders, loading } = useRemindersData();
+  const { handleDelete, handleToggleActive } = useReminderOperations();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingReminder, setEditingReminder] = useState(null);
   
@@ -69,10 +69,6 @@ const Reminders = () => {
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
           </div>
-        ) : error ? (
-          <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
-            Error loading reminders: {error.message}
-          </div>
         ) : reminders && reminders.length > 0 ? (
           <Tabs defaultValue="active" className="mb-6">
             <TabsList className="grid grid-cols-2 bg-muted/50">
@@ -99,8 +95,8 @@ const Reminders = () => {
                       <ReminderCard
                         reminder={reminder}
                         onEdit={() => handleEditReminder(reminder)}
-                        onDelete={() => deleteReminder(reminder.id)}
-                        onToggleActive={() => toggleReminderActive(reminder.id, !reminder.active)}
+                        onDelete={() => handleDelete(reminder)}
+                        onToggleActive={() => handleToggleActive(reminder)}
                       />
                     </motion.div>
                   ))
@@ -128,8 +124,8 @@ const Reminders = () => {
                       <ReminderCard
                         reminder={reminder}
                         onEdit={() => handleEditReminder(reminder)}
-                        onDelete={() => deleteReminder(reminder.id)}
-                        onToggleActive={() => toggleReminderActive(reminder.id, !reminder.active)}
+                        onDelete={() => handleDelete(reminder)}
+                        onToggleActive={() => handleToggleActive(reminder)}
                       />
                     </motion.div>
                   ))
@@ -142,13 +138,13 @@ const Reminders = () => {
             </TabsContent>
           </Tabs>
         ) : (
-          <EmptyReminders onCreateReminder={() => setIsFormOpen(true)} />
+          <EmptyReminders onCreateReminderClick={() => setIsFormOpen(true)} />
         )}
       </div>
       
       <ReminderFormDialog
-        open={isFormOpen}
-        onClose={handleFormClose}
+        isOpen={isFormOpen}
+        onOpenChange={setIsFormOpen}
         reminderToEdit={editingReminder}
       />
       

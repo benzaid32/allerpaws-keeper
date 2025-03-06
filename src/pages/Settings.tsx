@@ -31,8 +31,8 @@ import {
 const Settings = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { settings, updateSettings } = useSettings();
-  const { subscription, isLoading: subLoading } = useSubscription();
+  const { theme, notifications, updateTheme, updateNotifications } = useSettings();
+  const { subscription, loading: subLoading, cancelSubscription, resumeSubscription } = useSubscription();
   const { toast } = useToast();
   const [isThemeToggling, setIsThemeToggling] = useState(false);
 
@@ -52,23 +52,17 @@ const Settings = () => {
   const handleThemeToggle = () => {
     setIsThemeToggling(true);
     setTimeout(() => {
-      updateSettings({ 
-        ...settings, 
-        theme: settings.theme === "light" ? "dark" : "light" 
-      });
+      updateTheme(theme === "light" ? "dark" : "light");
       setIsThemeToggling(false);
     }, 300);
   };
 
   const handleNotificationsToggle = () => {
-    updateSettings({ 
-      ...settings, 
-      notifications: !settings.notifications 
-    });
+    updateNotifications(!notifications);
     
     toast({
-      title: settings.notifications ? "Notifications disabled" : "Notifications enabled",
-      description: settings.notifications 
+      title: notifications ? "Notifications disabled" : "Notifications enabled",
+      description: notifications 
         ? "You won't receive app notifications" 
         : "You'll receive important updates and reminders",
     });
@@ -151,7 +145,7 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    {settings.theme === "dark" ? (
+                    {theme === "dark" ? (
                       <Moon className="h-5 w-5 text-primary" />
                     ) : (
                       <Sun className="h-5 w-5 text-primary" />
@@ -161,7 +155,7 @@ const Settings = () => {
                   <div className={isThemeToggling ? "animate-pulse" : ""}>
                     <Switch
                       id="theme-toggle"
-                      checked={settings.theme === "dark"}
+                      checked={theme === "dark"}
                       onCheckedChange={handleThemeToggle}
                     />
                   </div>
@@ -184,7 +178,7 @@ const Settings = () => {
                   <Label htmlFor="notifications-toggle">Enable Notifications</Label>
                   <Switch
                     id="notifications-toggle"
-                    checked={settings.notifications}
+                    checked={notifications}
                     onCheckedChange={handleNotificationsToggle}
                   />
                 </div>
@@ -216,7 +210,13 @@ const Settings = () => {
                     <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary"></div>
                   </div>
                 ) : (
-                  <ManageSubscription subscription={subscription} />
+                  <ManageSubscription 
+                    subscription={subscription} 
+                    isLoading={subLoading}
+                    onCancel={cancelSubscription}
+                    onResume={resumeSubscription}
+                    onUpgrade={() => navigate('/pricing')}
+                  />
                 )}
               </CardContent>
             </Card>

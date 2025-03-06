@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -57,15 +58,11 @@ const Onboarding: React.FC = () => {
 
     try {
       if (step === 1) {
-        const { error } = await signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-            },
-            redirectTo: `${window.location.origin}/auth/callback`,
+        const { error } = await signUp(email, password, {
+          data: {
+            full_name: fullName,
           },
+          redirectTo: `${window.location.origin}/auth/callback`,
         });
 
         if (error) {

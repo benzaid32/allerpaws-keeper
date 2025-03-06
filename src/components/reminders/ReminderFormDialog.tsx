@@ -1,200 +1,146 @@
-import React from "react";
+
+import React, { useEffect } from "react";
+import { useReminderForm } from "@/hooks/reminders/use-reminder-form";
+import { useReminderOperations } from "@/hooks/reminders/use-reminder-operations";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Loader2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ReminderFormData } from "@/hooks/reminders/use-reminder-form";
+import { Reminder } from "@/lib/types";
 
-interface Pet {
-  id: string;
-  name: string;
-}
-
-interface ReminderFormDialogProps {
-  open: boolean;
+export interface ReminderFormDialogProps {
+  isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  isEditing: boolean;
-  formData: ReminderFormData;
-  setFormData: React.Dispatch<React.SetStateAction<ReminderFormData>>;
-  pets: Pet[];
-  onSubmit: (e: React.FormEvent) => Promise<void>;
-  submitting: boolean;
+  reminderToEdit: Reminder | null;
 }
 
-const daysOfWeek = [
+const DAYS_OF_WEEK = [
   { value: "mon", label: "M" },
   { value: "tue", label: "T" },
   { value: "wed", label: "W" },
   { value: "thu", label: "T" },
   { value: "fri", label: "F" },
   { value: "sat", label: "S" },
-  { value: "sun", label: "S" },
+  { value: "sun", label: "S" }
 ];
 
-const ReminderFormDialog: React.FC<ReminderFormDialogProps> = ({
-  open,
+const ReminderFormDialog: React.FC<ReminderFormDialogProps> = ({ 
+  isOpen, 
   onOpenChange,
-  isEditing,
-  formData,
-  setFormData,
-  pets,
-  onSubmit,
-  submitting,
+  reminderToEdit 
 }) => {
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const { formData, setFormData, isEditing, submitting, setIsEditing } = useReminderForm();
+  const { handleSubmit } = useReminderOperations();
 
-  const handleActiveChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, active: checked }));
-  };
-
-  const handleDaysChange = (values: string[]) => {
-    setFormData(prev => ({ ...prev, days: values }));
-  };
-
-  const handlePetChange = (value: string) => {
-    if (value === "none") {
-      setFormData(prev => ({ ...prev, petId: value, petName: undefined }));
+  useEffect(() => {
+    if (reminderToEdit) {
+      setFormData({
+        id: reminderToEdit.id,
+        title: reminderToEdit.title,
+        description: reminderToEdit.description || "",
+        time: reminderToEdit.time,
+        days: reminderToEdit.days,
+        petId: reminderToEdit.petId || "none",
+        petName: reminderToEdit.petName,
+        active: reminderToEdit.active
+      });
+      setIsEditing(true);
     } else {
-      const selectedPet = pets.find(pet => pet.id === value);
-      setFormData(prev => ({ 
-        ...prev, 
-        petId: value,
-        petName: selectedPet?.name
-      }));
+      setIsEditing(false);
     }
+  }, [reminderToEdit, setFormData, setIsEditing]);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleSubmit(e, formData, isEditing);
+    onOpenChange(false);
+  };
+
+  const handleFieldChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Reminder" : "Create Reminder"}</DialogTitle>
-          <DialogDescription>
-            {isEditing 
-              ? "Update your reminder settings below." 
-              : "Set up a new reminder for your pet care routine."}
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit}>
           <div className="grid gap-4 py-4">
-            <div className="space-y-2">
+            <div className="grid gap-2">
               <Label htmlFor="title">Title</Label>
               <Input
                 id="title"
-                name="title"
                 value={formData.title}
-                onChange={handleInputChange}
-                placeholder="Feed Fido, Give medication, etc."
+                onChange={(e) => handleFieldChange("title", e.target.value)}
+                placeholder="Medication reminder"
                 required
               />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="time">Time</Label>
-                <Input
-                  id="time"
-                  name="time"
-                  type="time"
-                  value={formData.time}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="pet">Pet (Optional)</Label>
-                <Select
-                  value={formData.petId}
-                  onValueChange={handlePetChange}
-                >
-                  <SelectTrigger id="pet">
-                    <SelectValue placeholder="Select pet" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">All pets</SelectItem>
-                    {pets && pets.length > 0 && pets.map((pet) => (
-                      <SelectItem key={pet.id} value={pet.id}>
-                        {pet.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description (optional)</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleFieldChange("description", e.target.value)}
+                placeholder="Give 1 pill with food"
+              />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="days">Repeat on days</Label>
-              <ToggleGroup
-                type="multiple"
+            <div className="grid gap-2">
+              <Label htmlFor="time">Time</Label>
+              <Input
+                id="time"
+                type="time"
+                value={formData.time}
+                onChange={(e) => handleFieldChange("time", e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label>Days</Label>
+              <ToggleGroup 
+                type="multiple" 
+                variant="outline"
                 value={formData.days}
-                onValueChange={handleDaysChange}
+                onValueChange={(value) => {
+                  if (value.length > 0) {
+                    handleFieldChange("days", value)
+                  }
+                }}
                 className="justify-between"
               >
-                {daysOfWeek.map((day) => (
-                  <ToggleGroupItem
-                    key={day.value}
-                    value={day.value}
-                    className="w-8 h-8 p-0"
-                  >
+                {DAYS_OF_WEEK.map((day) => (
+                  <ToggleGroupItem key={day.value} value={day.value} aria-label={day.value}>
                     {day.label}
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                placeholder="Any additional notes or instructions"
-                className="min-h-24"
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="active" 
+            <div className="flex items-center justify-between">
+              <Label htmlFor="active">Active</Label>
+              <Switch
+                id="active"
                 checked={formData.active}
-                onCheckedChange={handleActiveChange}
+                onCheckedChange={(checked) => handleFieldChange("active", checked)}
               />
-              <Label htmlFor="active" className="cursor-pointer">Active</Label>
             </div>
           </div>
+          
           <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isEditing ? "Updating..." : "Creating..."}
-                </>
-              ) : (
-                isEditing ? "Update Reminder" : "Create Reminder"
-              )}
+              {submitting ? "Saving..." : isEditing ? "Update" : "Create"}
             </Button>
           </DialogFooter>
         </form>
