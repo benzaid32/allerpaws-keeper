@@ -10,6 +10,10 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import PetProfile from "./pages/PetProfile";
+import SymptomDiary from "./pages/SymptomDiary";
+import EliminationDiet from "./pages/EliminationDiet";
+import FoodDatabase from "./pages/FoodDatabase";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +41,38 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <PetProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/symptom-diary"
+              element={
+                <ProtectedRoute>
+                  <SymptomDiary />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/elimination-diet"
+              element={
+                <ProtectedRoute>
+                  <EliminationDiet />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/food-database"
+              element={
+                <ProtectedRoute>
+                  <FoodDatabase />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />
