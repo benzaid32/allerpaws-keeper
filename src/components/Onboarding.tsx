@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,7 +30,7 @@ const EXTENDED_STEPS = [...ONBOARDING_STEPS, "Register"];
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, signIn } = useAuth();
+  const { user, signUp } = useAuth();
   const [step, setStep] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,23 +59,6 @@ const Onboarding: React.FC = () => {
     }
   }, [step]);
 
-  // Helper to handle rate limiting errors
-  const handleRateLimitError = (error: any) => {
-    console.error("Registration error:", error);
-    
-    if (error.status === 429) {
-      setRegistrationError(
-        "Too many sign-up attempts. Please wait a moment before trying again."
-      );
-    } else if (error.message?.includes("over_email_send_rate_limit")) {
-      setRegistrationError(
-        "Too many email verification requests. Please wait a moment before trying again."
-      );
-    } else {
-      setRegistrationError(error.message || "An error occurred during registration");
-    }
-  };
-
   // Handle user registration and pet data saving
   const handleRegisterAndSavePet = async () => {
     if (!email || !password || !fullName) {
@@ -90,83 +74,40 @@ const Onboarding: React.FC = () => {
       setIsSubmitting(true);
       setRegistrationError(null);
       
+      // Store pet data temporarily
+      storeTemporaryPetData(pet);
+      
       // Register the user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
+      const { error, needsEmailConfirmation } = await signUp(email, password, {
+        full_name: fullName,
       });
       
-      if (authError) {
-        handleRateLimitError(authError);
+      if (error) {
+        setRegistrationError(error.message || "Failed to create user account");
         return false;
       }
       
-      if (!authData.user) {
-        setRegistrationError("Failed to create user account");
-        return false;
+      // If email confirmation is needed, navigate to auth page with a flag
+      if (needsEmailConfirmation) {
+        navigate("/auth?verifyEmail=true");
+        return true;
       }
       
-      // Sign in immediately after registration to get a valid session
-      const { error: signInError } = await signIn(email, password);
+      // If no email confirmation is needed, we can try to save the pet directly
+      // (this will likely not happen with Supabase's default settings)
       
-      if (signInError) {
-        console.error("Error signing in after registration:", signInError);
-        // Continue anyway since we have the user ID from registration
-      }
-      
-      // Insert pet data into Supabase
-      const { data: petData, error: petError } = await supabase.from("pets").insert({
-        name: pet.name,
-        species: pet.species,
-        breed: pet.breed,
-        age: pet.age,
-        weight: pet.weight,
-        user_id: authData.user.id,
-      }).select().single();
-
-      if (petError) {
-        console.error("Error saving pet data:", petError);
-        setRegistrationError("Failed to save pet information");
-        return false;
-      }
-
-      console.log("Pet saved successfully:", petData);
-
-      // Save pet allergies if any
-      if (pet.knownAllergies.length > 0) {
-        const allergiesData = pet.knownAllergies.map(allergen => ({
-          pet_id: petData.id,
-          name: allergen,
-        }));
-
-        const { error: allergiesError } = await supabase
-          .from("allergies")
-          .insert(allergiesData);
-
-        if (allergiesError) {
-          console.error("Error saving allergies:", allergiesError);
-        }
-      }
-
       toast({
         title: "Account created successfully",
-        description: `${pet.name} has been added to your account. Please check your email to confirm your registration.`,
+        description: `${pet.name} has been added to your account.`,
       });
-
-      // Clear temporary data
-      clearTemporaryPetData();
       
-      // Navigate to dashboard after successful save
+      // Navigate to dashboard
       navigate("/dashboard");
       
       return true;
     } catch (error: any) {
-      handleRateLimitError(error);
+      console.error("Registration error:", error);
+      setRegistrationError(error.message || "An error occurred during registration");
       return false;
     } finally {
       setIsSubmitting(false);

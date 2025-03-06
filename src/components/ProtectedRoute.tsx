@@ -10,8 +10,8 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   // Show minimal loading state while checking auth - much shorter
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }

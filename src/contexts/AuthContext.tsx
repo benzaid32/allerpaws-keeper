@@ -1,6 +1,8 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
   user: User | null;
@@ -11,6 +13,11 @@ type AuthContextType = {
     error: any | null;
     data: { user: User | null; session: Session | null } | null;
   }>;
+  signUp: (email: string, password: string, userData?: object) => Promise<{
+    error: any | null;
+    data: { user: User | null; session: Session | null } | null;
+    needsEmailConfirmation: boolean;
+  }>;
   authError: string | null;
 };
 
@@ -20,6 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   signOut: async () => {},
   signIn: async () => ({ error: null, data: { user: null, session: null } }),
+  signUp: async () => ({ error: null, data: { user: null, session: null }, needsEmailConfirmation: false }),
   authError: null
 });
 
@@ -30,6 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Get initial session - with shorter timeout
@@ -59,13 +68,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Reduce auth initialization timeout to just 2 seconds max
+    // Reduce auth initialization timeout to just 1 second max
     const timeoutId = setTimeout(() => {
       if (isLoading) {
         console.log("Auth initialization timed out");
         setIsLoading(false);
       }
-    }, 2000);
+    }, 1000);
 
     initializeAuth();
 
@@ -88,10 +97,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       await supabase.auth.signOut();
       setIsLoading(false);
+      
+      // Clear any auth errors on sign out
+      setAuthError(null);
+      
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out."
+      });
     } catch (error: any) {
       console.error("Error signing out:", error);
       setAuthError(error.message);
       setIsLoading(false);
+      
+      toast({
+        title: "Sign out failed",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   };
 
@@ -108,6 +131,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (result.error) {
         setAuthError(result.error.message);
+        
+        // Show appropriate toast based on error type
+        if (result.error.message.includes("Email not confirmed")) {
+          toast({
+            title: "Email not confirmed",
+            description: "Please check your email and confirm your account before signing in.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Sign in failed",
+            description: result.error.message,
+            variant: "destructive"
+          });
+        }
+      } else {
+        toast({
+          title: "Signed in",
+          description: "You have successfully signed in."
+        });
       }
       
       return result;
@@ -115,12 +158,97 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Error during sign in:", error);
       setAuthError(error.message);
       setIsLoading(false);
+      
+      toast({
+        title: "Sign in failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      
       return { error, data: null };
     }
   };
 
+  const signUp = async (email: string, password: string, userData?: object) => {
+    try {
+      setIsLoading(true);
+      setAuthError(null);
+      
+      const result = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userData || {},
+        },
+      });
+      
+      setIsLoading(false);
+      
+      if (result.error) {
+        setAuthError(result.error.message);
+        
+        toast({
+          title: "Sign up failed",
+          description: result.error.message,
+          variant: "destructive"
+        });
+        
+        return { 
+          error: result.error, 
+          data: null, 
+          needsEmailConfirmation: false 
+        };
+      }
+      
+      // Check if email confirmation is needed
+      const needsEmailConfirmation = !result.data?.session;
+      
+      if (needsEmailConfirmation) {
+        toast({
+          title: "Verification email sent",
+          description: "Please check your email to confirm your account."
+        });
+      } else {
+        toast({
+          title: "Account created",
+          description: "Your account has been created successfully."
+        });
+      }
+      
+      return { 
+        error: null, 
+        data: result.data, 
+        needsEmailConfirmation 
+      };
+    } catch (error: any) {
+      console.error("Error during sign up:", error);
+      setAuthError(error.message);
+      setIsLoading(false);
+      
+      toast({
+        title: "Sign up failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      
+      return { 
+        error, 
+        data: null, 
+        needsEmailConfirmation: false 
+      };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signOut, signIn, authError }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      isLoading, 
+      signOut, 
+      signIn, 
+      signUp, 
+      authError 
+    }}>
       {children}
     </AuthContext.Provider>
   );

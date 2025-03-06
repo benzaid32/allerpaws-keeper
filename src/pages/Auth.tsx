@@ -1,14 +1,16 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon, RefreshCw, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Rabbit } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { getTemporaryPetData, clearTemporaryPetData } from "@/lib/utils";
 import { Pet } from "@/lib/types";
 
@@ -18,8 +20,12 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [tempPetData, setTempPetData] = useState<Pet | null>(null);
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const { user, signIn, signUp } = useAuth();
 
   // Check if user is already logged in and if there's temporary pet data
   useEffect(() => {
@@ -29,6 +35,13 @@ const Auth = () => {
       // Get temporary pet data if it exists
       const petData = getTemporaryPetData();
       setTempPetData(petData);
+      
+      // If the URL includes a parameter indicating email verification was sent
+      const searchParams = new URLSearchParams(location.search);
+      if (searchParams.get("verifyEmail") === "true") {
+        setShowVerificationMessage(true);
+        setActiveTab("login");
+      }
       
       if (data.session) {
         if (petData) {
@@ -60,7 +73,7 @@ const Auth = () => {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, location.search]);
 
   // Function to save pet data after login
   const savePetData = async (pet: Pet, userId: string) => {
@@ -76,12 +89,17 @@ const Auth = () => {
       const { data, error } = await supabase.from("pets").insert({
         name: pet.name,
         species: pet.species,
+        breed: pet.breed || null,
+        age: pet.age || null,
+        weight: pet.weight || null,
         user_id: userId,
       }).select().single();
 
       if (error) {
         throw error;
       }
+
+      console.log("Pet saved successfully:", data);
 
       // Save pet allergies if any
       if (pet.knownAllergies && pet.knownAllergies.length > 0) {
@@ -110,6 +128,7 @@ const Auth = () => {
       // Navigate to dashboard after successful save
       navigate("/dashboard");
     } catch (error: any) {
+      console.error("Error saving pet information:", error);
       toast({
         title: "Error saving pet information",
         description: error.message,
@@ -136,28 +155,24 @@ const Auth = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
+      const { error, needsEmailConfirmation } = await signUp(email, password, {
+        full_name: fullName,
       });
       
       if (error) {
-        throw error;
+        // Error is already handled in the AuthContext
+        return;
       }
       
-      toast({
-        title: "Account created",
-        description: "Welcome to AllerPaws! You can now login.",
-      });
-      
-      // Auto-switch to login tab if we have temp pet data
-      if (tempPetData) {
-        document.getElementById("login-tab")?.click();
+      if (needsEmailConfirmation) {
+        // Show verification message and switch to login tab
+        setShowVerificationMessage(true);
+        setActiveTab("login");
+        // Add a URL parameter to indicate email verification was sent
+        navigate(`/auth?verifyEmail=true`);
+      } else {
+        // If no email confirmation is needed, the AuthContext will handle the login
+        // and the auth state listener will navigate to dashboard
       }
       
     } catch (error: any) {
@@ -185,26 +200,41 @@ const Auth = () => {
     
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      await signIn(email, password);
+      // The auth state change listener will handle navigation
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address first",
+        variant: "destructive",
       });
-      
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+
       if (error) {
         throw error;
       }
-      
+
       toast({
-        title: "Welcome back",
-        description: "You have successfully logged in",
+        title: "Verification email sent",
+        description: "Please check your inbox for the verification link",
       });
-      
-      // The auth state change listener will handle navigation
-      
     } catch (error: any) {
       toast({
-        title: "Login failed",
+        title: "Failed to resend verification",
         description: error.message,
         variant: "destructive",
       });
@@ -218,7 +248,23 @@ const Auth = () => {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-            <Rabbit className="w-8 h-8 text-primary" />
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              className="w-8 h-8 text-primary"
+            >
+              <path d="M19 9c0 1.3-.8 2.1-1.3 2.7-.7.8-1.7 1.3-2.7 1.3s-2-.5-2.7-1.3C11.8 11.1 11 10.3 11 9c0-1.3.8-2.1 1.3-2.7.7-.8 1.7-1.3 2.7-1.3s2 .5 2.7 1.3c.5.6 1.3 1.4 1.3 2.7z" />
+              <path d="M9 18h6" />
+              <path d="M14 13v5" />
+              <path d="M5 5c.3 1 1.5 2 3 2" />
+              <path d="M17 18.7c.4.2.7.3 1 .3 1 0 2-.5 2.7-1.3.5-.6 1.3-1.4 1.3-2.7s-.8-2.1-1.3-2.7c-.7-.8-1.7-1.3-2.7-1.3" />
+              <path d="M10 18.7c-.4.2-.7.3-1 .3-1 0-2-.5-2.7-1.3C5.8 17.1 5 16.3 5 15s.8-2.1 1.3-2.7c.7-.8 1.7-1.3 2.7-1.3" />
+            </svg>
           </div>
           <h1 className="text-3xl font-bold tracking-tight">AllerPaws</h1>
           <p className="text-muted-foreground mt-2">
@@ -234,11 +280,30 @@ const Auth = () => {
         </div>
 
         <Card>
-          <Tabs defaultValue="login">
+          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login" id="login-tab">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
+            
+            {showVerificationMessage && (
+              <Alert className="m-4 bg-amber-50 border-amber-200">
+                <InfoIcon className="h-4 w-4 mr-2 text-amber-600" />
+                <AlertDescription className="text-amber-800">
+                  Please check your email for a verification link. Once verified, you can log in.
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="pl-1 h-auto text-amber-700"
+                    onClick={handleResendVerification}
+                    disabled={loading}
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" /> 
+                    Resend verification email
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
             
             <TabsContent value="login">
               <form onSubmit={handleLogin}>
@@ -271,7 +336,12 @@ const Auth = () => {
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Logging in..." : "Login"}
+                    {loading ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Logging in...
+                      </>
+                    ) : "Login"}
                   </Button>
                 </CardFooter>
               </form>
@@ -319,13 +389,24 @@ const Auth = () => {
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Creating account..." : "Sign Up"}
+                    {loading ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Creating account...
+                      </>
+                    ) : "Sign Up"}
                   </Button>
                 </CardFooter>
               </form>
             </TabsContent>
           </Tabs>
         </Card>
+
+        <div className="text-center text-sm text-muted-foreground">
+          <Button variant="link" size="sm" className="p-0 h-auto" onClick={() => navigate("/")}>
+            Return to home
+          </Button>
+        </div>
       </div>
     </div>
   );
