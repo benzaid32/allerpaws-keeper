@@ -34,14 +34,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     }
   }, [user, savePetData]);
   
-  // Show a proper loading state
+  // Show a compact loading state to minimize layout shifts
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-3">
-          <LoadingSpinner />
-          <p className="text-sm text-muted-foreground">Loading your profile...</p>
-        </div>
+      <div className="flex items-center justify-center p-4 min-h-[200px]">
+        <LoadingSpinner />
       </div>
     );
   }

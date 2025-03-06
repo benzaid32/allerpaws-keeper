@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -40,41 +41,36 @@ function App() {
               }
             }
             
-            // Register a new service worker without reloading
-            const registration = await navigator.serviceWorker.register('/service-worker.js', {
-              updateViaCache: 'none' // Prevent the browser from using cached service worker
+            // Set isInitializing to false immediately to prevent delay
+            setIsInitializing(false);
+            
+            // Minimal service worker registration that won't cause refreshes
+            navigator.serviceWorker.register('/service-worker.js', {
+              updateViaCache: 'none', // Prevent the browser from using cached service worker
+              scope: '/'
+            }).then(() => {
+              console.log('Service worker registered successfully');
+            }).catch(error => {
+              console.error('Service worker registration failed:', error);
             });
-            
-            console.log('Service worker registered with scope:', registration.scope);
-            
-            // Set up an interval to ping the service worker to keep it alive
-            setInterval(() => {
-              if (registration.active) {
-                const channel = new MessageChannel();
-                registration.active.postMessage(
-                  { type: 'PING' }, 
-                  [channel.port2]
-                );
-              }
-            }, 60000); // Ping every minute
           } catch (error) {
-            console.error('Service worker registration failed:', error);
+            console.error('Service worker error:', error);
+            setIsInitializing(false);
           }
+        } else {
+          // Not in production or no service worker support
+          setIsInitializing(false);
         }
       } catch (error) {
         console.error('App initialization error:', error);
-      } finally {
-        // Always complete initialization after a short delay to prevent flashing
-        setTimeout(() => {
-          setIsInitializing(false);
-        }, 800);
+        setIsInitializing(false);
       }
     };
 
     initializeApp();
   }, []);
 
-  // Show initial loading screen
+  // Show initial loading screen, but only briefly
   if (isInitializing) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
