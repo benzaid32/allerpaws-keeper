@@ -1,52 +1,59 @@
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useSubscription } from '@/hooks/use-subscription';
+import { SubscriptionContextType } from '@/types/subscription-context';
 
-import React, { createContext, useContext, ReactNode } from "react";
-import { useSubscription } from "@/hooks/use-subscription";
-import { SubscriptionContextType } from "@/types/subscription-context";
+// Create the context with a default value
+const SubscriptionContext = createContext<SubscriptionContextType>({
+  isLoading: true,
+  subscription: null,
+  isPremium: false,
+  maxAllowedPets: 2,
+  maxEntriesPerMonth: 30,
+  canAccessAdvancedAnalysis: false,
+  refreshSubscription: async () => {},
+  cancelSubscription: async () => {},
+  resumeSubscription: async () => {},
+});
 
-const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
+export const useSubscriptionContext = () => useContext(SubscriptionContext);
 
-export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
-  const { 
-    subscription, 
-    loading: isLoading, 
+export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const {
+    loading: isLoading,
+    subscription,
     isPremium,
     maxAllowedPets,
     maxEntriesPerMonth,
     canAccessAdvancedAnalysis,
     fetchSubscription: refreshSubscription,
     cancelSubscription,
-    resumeSubscription
+    resumeSubscription,
   } = useSubscription();
 
-  const value: SubscriptionContextType = {
+  console.log('SubscriptionProvider rendering with value:', {
     isLoading,
     subscription,
     isPremium,
     maxAllowedPets,
     maxEntriesPerMonth,
     canAccessAdvancedAnalysis,
-    refreshSubscription,
-    cancelSubscription,
-    resumeSubscription
-  };
-
-  console.log("SubscriptionProvider rendering with value:", { 
-    isLoading, 
-    hasSubscription: Boolean(subscription),
-    isPremium 
   });
 
   return (
-    <SubscriptionContext.Provider value={value}>
+    <SubscriptionContext.Provider
+      value={{
+        isLoading,
+        subscription,
+        isPremium,
+        maxAllowedPets,
+        maxEntriesPerMonth,
+        canAccessAdvancedAnalysis,
+        refreshSubscription,
+        cancelSubscription,
+        resumeSubscription,
+      }}
+    >
       {children}
     </SubscriptionContext.Provider>
   );
-};
-
-export const useSubscriptionContext = () => {
-  const context = useContext(SubscriptionContext);
-  if (context === undefined) {
-    throw new Error("useSubscriptionContext must be used within a SubscriptionProvider");
-  }
-  return context;
 };
