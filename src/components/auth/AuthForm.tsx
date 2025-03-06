@@ -1,10 +1,7 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import LoginForm from "./LoginForm";
 import SignUpForm from "./SignUpForm";
@@ -14,7 +11,7 @@ import { Pet } from "@/lib/types";
 interface AuthFormProps {
   tempPetData: Pet | null;
   handleLogin: (email: string, password: string) => Promise<void>;
-  handleSignUp: (email: string, password: string, fullName: string) => Promise<void>;
+  handleSignUp: (email: string, password: string, fullName: string) => Promise<boolean | void>;
   handleResendVerification: () => Promise<void>;
   loading: boolean;
 }
@@ -62,14 +59,16 @@ const AuthForm: React.FC<AuthFormProps> = ({
     }
     
     try {
-      await handleSignUp(email, password, fullName);
+      const needsEmailConfirmation = await handleSignUp(email, password, fullName);
       
-      // Show verification message and switch to login tab
-      setShowVerificationMessage(true);
-      setActiveTab("login");
-      
-      // Add a URL parameter to indicate email verification was sent
-      navigate(`/auth?verifyEmail=true`);
+      // Only show verification message if email confirmation is needed
+      if (needsEmailConfirmation) {
+        setShowVerificationMessage(true);
+        setActiveTab("login");
+        
+        // Add a URL parameter to indicate email verification was sent
+        navigate(`/auth?verifyEmail=true`);
+      }
     } catch (error: any) {
       // Error is already handled in the handleSignUp function
     }
