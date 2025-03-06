@@ -15,8 +15,8 @@ interface CurrentPlanProps {
 const CurrentPlan = ({ subscription, isLoading }: CurrentPlanProps) => {
   const navigate = useNavigate();
 
-  // Add console logs to debug the subscription data
-  console.log("CurrentPlan component - subscription:", subscription);
+  // Enhanced console logs to debug the subscription data
+  console.log("CurrentPlan component received subscription:", subscription);
   console.log("CurrentPlan component - isLoading:", isLoading);
 
   if (isLoading) {

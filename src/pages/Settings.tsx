@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,11 @@ const Settings = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { theme, notifications, updateTheme, updateNotifications } = useSettings();
-  const { subscription, isLoading: loading } = useSubscriptionContext();
+  const { subscription, isLoading } = useSubscriptionContext();
+
+  // Add additional logging to debug subscription data
+  console.log("Settings page - subscription data:", subscription);
+  console.log("Settings page - isLoading:", isLoading);
 
   const handleSignOut = async () => {
     try {
@@ -48,7 +51,7 @@ const Settings = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <CurrentPlan subscription={subscription} isLoading={loading} />
+            <CurrentPlan subscription={subscription} isLoading={isLoading} />
             <div className="mt-4">
               <Button 
                 onClick={() => navigate("/pricing")} 

@@ -31,7 +31,8 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
     resumeSubscription,
   } = useSubscription();
 
-  console.log('SubscriptionProvider rendering with value:', {
+  // Added debug log to see all subscription-related values
+  console.log('SubscriptionProvider rendering with subscription state:', {
     isLoading,
     subscription,
     isPremium,
