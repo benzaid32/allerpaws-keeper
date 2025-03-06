@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,7 +73,16 @@ const ReminderFormDialog: React.FC<ReminderFormDialogProps> = ({
   };
 
   const handlePetChange = (value: string) => {
-    setFormData(prev => ({ ...prev, petId: value }));
+    if (value === "none") {
+      setFormData(prev => ({ ...prev, petId: value, petName: undefined }));
+    } else {
+      const selectedPet = pets.find(pet => pet.id === value);
+      setFormData(prev => ({ 
+        ...prev, 
+        petId: value,
+        petName: selectedPet?.name
+      }));
+    }
   };
 
   return (

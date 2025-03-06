@@ -9,6 +9,7 @@ export interface ReminderFormData {
   time: string;
   days: string[];
   petId: string;
+  petName?: string; // Added petName as an optional property
   active: boolean;
 }
 
@@ -34,6 +35,7 @@ export const useReminderForm = () => {
       time: "08:00",
       days: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
       petId: "none",
+      petName: undefined,
       active: true,
     });
     setIsEditing(false);
@@ -48,6 +50,7 @@ export const useReminderForm = () => {
       time: reminder.time,
       days: reminder.days,
       petId: reminder.petId || "none",
+      petName: reminder.petName,
       active: reminder.active,
     });
     setIsEditing(true);
