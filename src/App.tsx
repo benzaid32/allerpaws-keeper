@@ -23,55 +23,15 @@ import Reminders from './pages/Reminders';
 import { LoadingSpinner } from './components/ui/loading-spinner';
 
 function App() {
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Handle one-time initialization only
-    const initializeApp = async () => {
-      try {
-        // Only handle service worker in production
-        if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-          try {
-            // Unregister any existing service workers to get a clean start
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            if (registrations.length > 0) {
-              for (const registration of registrations) {
-                await registration.unregister();
-                console.log('Service worker unregistered successfully');
-              }
-            }
-            
-            // Set isInitializing to false immediately to prevent delay
-            setIsInitializing(false);
-            
-            // Minimal service worker registration that won't cause refreshes
-            navigator.serviceWorker.register('/service-worker.js', {
-              updateViaCache: 'none', // Prevent the browser from using cached service worker
-              scope: '/'
-            }).then(() => {
-              console.log('Service worker registered successfully');
-            }).catch(error => {
-              console.error('Service worker registration failed:', error);
-            });
-          } catch (error) {
-            console.error('Service worker error:', error);
-            setIsInitializing(false);
-          }
-        } else {
-          // Not in production or no service worker support
-          setIsInitializing(false);
-        }
-      } catch (error) {
-        console.error('App initialization error:', error);
-        setIsInitializing(false);
-      }
-    };
-
-    initializeApp();
+    // Minimal initialization with no service worker handling
+    // This prevents refresh loops and loading issues
+    console.log("App initialized");
   }, []);
 
-  // Show initial loading screen, but only briefly
-  if (isInitializing) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-4">

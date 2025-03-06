@@ -1,11 +1,11 @@
 
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
-import { useSubscription } from '@/hooks/use-subscription';
+import { useSubscriptionContext } from '@/hooks/use-user-subscription';
 import { SubscriptionContextType } from '@/types/subscription-context';
 
 // Create the context with a default value
 const SubscriptionContext = createContext<SubscriptionContextType>({
-  isLoading: true,
+  isLoading: false,
   subscription: null,
   isPremium: false,
   maxAllowedPets: 2,
@@ -29,31 +29,16 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
     fetchSubscription: refreshSubscription,
     cancelSubscription,
     resumeSubscription,
-  } = useSubscription();
+  } = useSubscriptionContext();
 
-  // Enhanced debug logging
+  // Only log once on mount to prevent excessive console output
   useEffect(() => {
     console.log('SubscriptionProvider mounted with initial state:', {
       isLoading,
       subscription,
       isPremium,
-      maxAllowedPets,
-      maxEntriesPerMonth,
-      canAccessAdvancedAnalysis,
     });
   }, []);
-
-  // Enhanced debug logging for state changes
-  useEffect(() => {
-    console.log('SubscriptionProvider state updated:', {
-      isLoading,
-      subscription,
-      isPremium,
-      maxAllowedPets,
-      maxEntriesPerMonth,
-      canAccessAdvancedAnalysis,
-    });
-  }, [isLoading, subscription, isPremium, maxAllowedPets, maxEntriesPerMonth, canAccessAdvancedAnalysis]);
 
   return (
     <SubscriptionContext.Provider
