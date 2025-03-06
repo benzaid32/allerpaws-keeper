@@ -24,6 +24,7 @@ export const useSettings = () => {
     try {
       setLoading(true);
       
+      // Explicitly type the query result to avoid deep type instantiation
       const { data, error } = await supabase
         .from("reminders")
         .select("id, title, time, active")
@@ -33,12 +34,13 @@ export const useSettings = () => {
         
       if (error) throw error;
       
-      const settings: ReminderSetting[] = (data || []).map(item => ({
+      // Transform the data with explicit typing to avoid circular references
+      const settings: ReminderSetting[] = data ? data.map((item: any) => ({
         id: item.id,
         name: item.title,
         time: format(new Date(`2000-01-01T${item.time}`), 'h:mm a'),
         active: item.active
-      }));
+      })) : [];
       
       setReminderSettings(settings);
     } catch (error: any) {
