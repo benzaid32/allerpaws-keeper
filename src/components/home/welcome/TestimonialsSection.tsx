@@ -5,7 +5,7 @@ import { Quote, Star } from "lucide-react";
 
 const TestimonialsSection: React.FC = () => {
   return (
-    <div className="mb-28">
+    <div className="py-16 px-4 md:py-24 mb-16">
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-sm">
         What Pet Owners Say
       </h2>
@@ -13,7 +13,7 @@ const TestimonialsSection: React.FC = () => {
         Hear from pet owners who've successfully identified and managed their pet's allergies with our app.
       </p>
       
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 px-4 max-w-6xl mx-auto">
         <TestimonialCard
           quote={`"${APP_NAME} helped identify my dog's chicken allergy in just two weeks. My vet was impressed with the detailed logs I could show!"`}
           author="Sarah T., Dog Owner"
@@ -48,26 +48,26 @@ interface TestimonialCardProps {
 
 const TestimonialCard: React.FC<TestimonialCardProps> = ({ quote, author, imgSrc, rating }) => {
   return (
-    <div className="bg-card/90 p-8 rounded-xl border border-border/70 shadow-sm hover:shadow-elegant transition-all duration-300 flex flex-col relative group hover:border-primary/30 hover:translate-y-[-5px]">
-      <Quote className="absolute top-4 right-4 h-8 w-8 text-primary/20 group-hover:text-primary/30 transition-colors" />
-      <p className="italic mb-8 pt-2 text-lg">{quote}</p>
+    <div className="bg-card/90 p-6 md:p-8 rounded-xl border border-border/70 shadow-sm hover:shadow-elegant transition-all duration-300 flex flex-col relative group hover:border-primary/30 hover:translate-y-[-5px] h-full">
+      <Quote className="absolute top-4 right-4 h-6 w-6 text-primary/20 group-hover:text-primary/30 transition-colors" />
+      <p className="italic mb-6 pt-2 text-base md:text-lg">{quote}</p>
       
       <div className="flex mb-4">
         {Array(5).fill(0).map((_, i) => (
           <Star 
             key={i} 
-            className={`h-5 w-5 ${i < rating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`}
+            className={`h-4 w-4 md:h-5 md:w-5 ${i < rating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`}
           />
         ))}
       </div>
       
       <div className="mt-auto flex items-center gap-3">
         {imgSrc && (
-          <div className="h-12 w-12 rounded-full overflow-hidden border-2 border-primary/20">
+          <div className="h-10 w-10 md:h-12 md:w-12 rounded-full overflow-hidden border-2 border-primary/20">
             <img src={imgSrc} alt={author} className="h-full w-full object-cover" />
           </div>
         )}
-        <p className="font-semibold text-base">{author}</p>
+        <p className="font-semibold text-sm md:text-base">{author}</p>
       </div>
     </div>
   );

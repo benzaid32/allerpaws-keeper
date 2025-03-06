@@ -29,33 +29,68 @@ import TestimonialsSection from './components/home/welcome/TestimonialsSection';
 import LandingFooter from './components/home/welcome/LandingFooter';
 import EnhancedDashboard from './components/dashboard/EnhancedDashboard';
 
-// Create a simplified landing page using the original components
+// Create a stylish, mobile-friendly landing page using the components
 const OriginalLanding = () => {
+  const navigate = useNavigate();
+  
   const handleGetStarted = () => {
-    window.location.href = '/auth';
+    navigate('/auth');
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <div className="flex justify-center items-center py-4 border-b">
-        <div className="flex items-center gap-2">
-          <img 
-            src="/icons/icon-144x144.png" 
-            alt={APP_NAME} 
-            className="w-10 h-10"
-          />
-          <span className="font-bold text-2xl">{APP_NAME}</span>
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-background/95 overflow-hidden">
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none z-0"></div>
+      
+      <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border/40 shadow-sm">
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
+              alt={APP_NAME} 
+              className="w-8 h-8 md:w-10 md:h-10"
+            />
+            <span className="font-bold text-lg md:text-xl">{APP_NAME}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => navigate('/auth')} 
+              variant="ghost" 
+              size="sm" 
+              className="hidden sm:inline-flex"
+            >
+              Sign In
+            </Button>
+            <Button 
+              onClick={handleGetStarted} 
+              size="sm" 
+              className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all"
+            >
+              Get Started
+            </Button>
+          </div>
         </div>
-      </div>
-      <main className="flex-1">
-        <HeroSection onGetStarted={handleGetStarted} />
-        <FeaturesSection />
-        <TestimonialsSection />
+      </header>
+      
+      <main className="flex-1 overflow-auto">
+        <div className="relative">
+          <div className="absolute top-0 inset-x-0 h-64 bg-gradient-to-b from-primary/5 to-transparent -z-10"></div>
+          <div className="absolute bottom-0 right-0 w-72 h-72 bg-accent/10 rounded-full filter blur-3xl -z-10"></div>
+          <div className="absolute top-1/4 left-0 w-96 h-96 bg-primary/10 rounded-full filter blur-3xl -z-10"></div>
+          
+          <HeroSection onGetStarted={handleGetStarted} />
+          <FeaturesSection />
+          <TestimonialsSection />
+        </div>
       </main>
+      
       <LandingFooter />
     </div>
   );
 };
+
+// Need to add the import for useNavigate and Button
+import { useNavigate } from 'react-router-dom';
+import { Button } from './components/ui/button';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);

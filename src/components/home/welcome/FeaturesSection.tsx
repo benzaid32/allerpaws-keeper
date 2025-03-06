@@ -5,15 +5,15 @@ import { APP_NAME } from "@/lib/constants";
 
 const FeaturesSection: React.FC = () => {
   return (
-    <div className="mb-28">
+    <div className="py-16 px-4 md:py-24 mb-16">
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-sm">
         Why Choose {APP_NAME}?
       </h2>
-      <p className="text-center text-muted-foreground mb-16 max-w-2xl mx-auto">
+      <p className="text-center text-muted-foreground mb-16 max-w-2xl mx-auto px-4">
         Our platform combines advanced tracking with an extensive food database to help your pets live healthier, happier lives.
       </p>
       
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 px-4 max-w-6xl mx-auto">
         <FeatureCard
           icon={<Clock className="h-7 w-7 text-primary" />}
           title="Save Time"
@@ -62,7 +62,7 @@ interface FeatureCardProps {
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description }) => {
   return (
-    <div className="bg-card/90 p-8 rounded-xl border border-border/70 shadow-sm hover:shadow-elegant transition-all duration-300 hover:border-primary/30 hover:translate-y-[-5px] group">
+    <div className="bg-card/90 p-6 md:p-8 rounded-xl border border-border/70 shadow-sm hover:shadow-elegant transition-all duration-300 hover:border-primary/30 hover:translate-y-[-5px] group h-full">
       <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-4 rounded-full w-fit mb-5 group-hover:from-primary/20 group-hover:to-accent/20 transition-colors">
         {icon}
       </div>
