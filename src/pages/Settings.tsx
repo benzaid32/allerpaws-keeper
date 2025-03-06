@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/hooks/use-settings";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -16,7 +16,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { theme, notifications, updateTheme, updateNotifications } = useSettings();
-  const { subscription, isLoading: loading } = useSubscription();
+  const { subscription, isLoading: loading } = useSubscriptionContext();
 
   const handleSignOut = async () => {
     try {
