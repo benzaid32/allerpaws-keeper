@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,8 +13,10 @@ const Dashboard = () => {
   const { user, signOut } = useAuth();
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { id: petId } = useParams<{ id?: string }>();
 
   useEffect(() => {
     const fetchPets = async () => {
@@ -60,6 +62,21 @@ const Dashboard = () => {
         );
 
         setPets(petsWithAllergies);
+        
+        // If a pet ID is provided in the URL, set it as the selected pet
+        if (petId) {
+          const selectedPet = petsWithAllergies.find(pet => pet.id === petId);
+          if (selectedPet) {
+            setSelectedPet(selectedPet);
+          } else {
+            console.error("Pet not found with ID:", petId);
+            toast({
+              title: "Pet Not Found",
+              description: "The selected pet could not be found.",
+              variant: "destructive",
+            });
+          }
+        }
       } catch (error: any) {
         console.error("Error fetching pets:", error.message);
         toast({
@@ -73,7 +90,7 @@ const Dashboard = () => {
     };
 
     fetchPets();
-  }, [toast]);
+  }, [toast, petId]);
 
   const handleSignOut = async () => {
     try {
@@ -108,7 +125,77 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {loading ? (
+      {selectedPet ? (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">Pet Details: {selectedPet.name}</h3>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                setSelectedPet(null);
+                navigate("/");
+              }}
+            >
+              Back to All Pets
+            </Button>
+          </div>
+          
+          <div className="border rounded-lg p-6">
+            <h3 className="font-semibold text-lg">{selectedPet.name}</h3>
+            <p className="text-muted-foreground capitalize">{selectedPet.species}</p>
+            
+            {selectedPet.breed && (
+              <p className="mt-2">
+                <span className="text-sm text-muted-foreground">Breed: </span>
+                <span className="text-sm">{selectedPet.breed}</span>
+              </p>
+            )}
+            
+            {selectedPet.age && (
+              <p className="mt-2">
+                <span className="text-sm text-muted-foreground">Age: </span>
+                <span className="text-sm">{selectedPet.age} years</span>
+              </p>
+            )}
+            
+            {selectedPet.weight && (
+              <p className="mt-2">
+                <span className="text-sm text-muted-foreground">Weight: </span>
+                <span className="text-sm">{selectedPet.weight} kg</span>
+              </p>
+            )}
+            
+            {selectedPet.knownAllergies && selectedPet.knownAllergies.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-md font-medium">Known Allergies:</h4>
+                <ul className="list-disc list-inside mt-2">
+                  {selectedPet.knownAllergies.map((allergy, index) => (
+                    <li key={index} className="text-sm">{allergy}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <div className="mt-6 flex gap-3">
+              <Button 
+                onClick={() => navigate(`/edit-pet/${selectedPet.id}`)}
+                variant="outline"
+                size="sm"
+              >
+                Edit Details
+              </Button>
+              <Button 
+                onClick={() => navigate(`/symptom-diary?petId=${selectedPet.id}`)}
+                variant="outline"
+                size="sm"
+              >
+                Symptom Diary
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : loading ? (
         <div className="flex justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
         </div>
