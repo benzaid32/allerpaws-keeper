@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,7 +37,7 @@ const AuthForm = ({ initialView = "sign-in" }: AuthFormProps) => {
     }
 
     try {
-      await signIn({ email, password });
+      await signIn(email, password);
       toast({
         title: "Sign in successful",
         description: "You are now signed in.",
@@ -64,8 +65,8 @@ const AuthForm = ({ initialView = "sign-in" }: AuthFormProps) => {
     }
 
     try {
-      // Check the actual signature of signUp and adjust accordingly
-      const result = await signUp({ email, password, name });
+      // Adjust the signUp call to match the expected function signature
+      await signUp(email, password, { name });
       toast({
         title: "Sign up successful",
         description: "Please check your email for a verification link.",
