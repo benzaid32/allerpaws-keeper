@@ -48,10 +48,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     getSession();
 
-    supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      console.log("Auth state changed:", event);
       setUser(session?.user ?? null);
       setSession(session);
     });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -88,8 +93,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     setLoading(true);
     try {
+      console.log("Attempting to sign out...");
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase signOut error:", error);
+        throw error;
+      }
+      
+      // Clear local state after successful sign out
+      setUser(null);
+      setSession(null);
+      
+      // Clear any stored data
+      localStorage.removeItem('tempPetData');
+      
+      console.log("Sign out successful");
     } catch (error: any) {
       console.error("Error signing out:", error.message);
       throw error;

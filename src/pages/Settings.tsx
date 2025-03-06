@@ -35,17 +35,24 @@ const Settings = () => {
   const { subscription, loading: subLoading, cancelSubscription, resumeSubscription } = useSubscription();
   const { toast } = useToast();
   const [isThemeToggling, setIsThemeToggling] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
     try {
+      setIsSigningOut(true);
       await signOut();
+      // Clear any user-related data from localStorage to ensure clean logout
+      localStorage.removeItem("tempPetData");
       navigate("/");
     } catch (error) {
+      console.error("Error during sign out:", error);
       toast({
         title: "Error signing out",
         description: "Please try again",
         variant: "destructive",
       });
+    } finally {
+      setIsSigningOut(false);
     }
   };
 
@@ -272,9 +279,19 @@ const Settings = () => {
               variant="outline" 
               className="w-full border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={handleSignOut}
+              disabled={isSigningOut}
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
+              {isSigningOut ? (
+                <>
+                  <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-current mr-2"></span>
+                  Signing out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </>
+              )}
             </Button>
           </motion.div>
         </motion.div>
