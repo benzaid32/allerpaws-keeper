@@ -13,7 +13,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import FoodAnalyzer from "@/components/FoodAnalyzer";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { FoodProduct } from "@/lib/types";
+import { FoodProduct, Pet } from "@/lib/types";
 
 // Type helper for converting db response to our FoodProduct type
 const mapToFoodProduct = (dbProduct: any): FoodProduct => {
@@ -83,13 +83,20 @@ const FoodDatabase = () => {
 
       if (error) throw error;
       
-      setPets(data || []);
-      if (data && data.length > 0) {
-        setSelectedPetId(data[0].id);
+      // Cast the species property to the expected type
+      const typedPets: UserPet[] = data?.map(pet => ({
+        id: pet.id,
+        name: pet.name,
+        species: pet.species as "dog" | "cat" | "other"
+      })) || [];
+      
+      setPets(typedPets);
+      if (typedPets.length > 0) {
+        setSelectedPetId(typedPets[0].id);
         
         // Extract unique species from pets
         const species = new Set<string>();
-        data.forEach(pet => {
+        typedPets.forEach(pet => {
           if (pet.species === "dog" || pet.species === "cat") {
             species.add(pet.species);
           }
@@ -223,6 +230,7 @@ const FoodDatabase = () => {
 
   // Check if food is compatible with user's pets
   const getFoodCompatibility = (product: FoodProduct) => {
+    // For foods suitable for both species
     if (product.species === "both") {
       return { compatible: true, message: "Suitable for all pets" };
     }
@@ -238,7 +246,7 @@ const FoodDatabase = () => {
     }
     
     // If user has both dogs and cats but food is species-specific
-    if (userPetSpecies.size > 1 && product.species !== "both") {
+    if (userPetSpecies.size > 1 && (product.species === "dog" || product.species === "cat")) {
       return { 
         compatible: true, 
         message: `Only for ${product.species === "dog" ? "dogs" : "cats"}` 
