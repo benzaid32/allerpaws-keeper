@@ -13,7 +13,7 @@ import { ArrowLeft, PawPrint, Bell } from "lucide-react";
 const Settings = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { notificationSettings, toggleNotifications } = useSettings();
+  const { notifications, updateNotifications } = useSettings();
 
   const handleSignOut = async () => {
     try {
@@ -69,8 +69,8 @@ const Settings = () => {
               </div>
               <Switch
                 id="notifications"
-                checked={notificationSettings.enabled}
-                onCheckedChange={toggleNotifications}
+                checked={notifications}
+                onCheckedChange={updateNotifications}
               />
             </div>
           </CardContent>
