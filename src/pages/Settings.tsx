@@ -1,17 +1,21 @@
 
-import React from "react";
-import { Bell, Download, LogOut } from "lucide-react";
+import React, { useState } from "react";
+import { Bell, Download, LogOut, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import BottomNavigation from "@/components/BottomNavigation";
+import { useSettings } from "@/hooks/use-settings";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { reminderSettings, loading, toggleReminderSetting, exportData } = useSettings();
+  const [exporting, setExporting] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -23,6 +27,15 @@ const Settings = () => {
         description: error.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const handleExport = async (type: "progress" | "food") => {
+    setExporting(true);
+    try {
+      await exportData(type);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -42,16 +55,33 @@ const Settings = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex justify-between items-center p-2 border-b">
-              <span>Daily symptom log</span>
-              <div className="text-sm font-medium text-primary">8:00 PM</div>
-            </div>
-            <div className="flex justify-between items-center p-2 border-b">
-              <span>Food log reminder</span>
-              <div className="text-sm font-medium text-primary">After meals</div>
-            </div>
-            <Button variant="outline" className="w-full">
-              Manage Reminders
+            {loading ? (
+              <div className="py-4 text-center text-muted-foreground">Loading settings...</div>
+            ) : reminderSettings.length > 0 ? (
+              reminderSettings.map(setting => (
+                <div key={setting.id} className="flex justify-between items-center p-2 border-b">
+                  <span>{setting.name}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm font-medium text-primary">{setting.time}</div>
+                    <Switch 
+                      checked={setting.active} 
+                      onCheckedChange={(checked) => toggleReminderSetting(setting.id, checked)}
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-4 text-center text-muted-foreground">No reminder settings found</div>
+            )}
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => navigate("/reminders")}
+            >
+              <span className="flex items-center justify-between w-full">
+                Manage Reminders
+                <ChevronRight className="h-4 w-4" />
+              </span>
             </Button>
           </div>
         </CardContent>
@@ -66,11 +96,21 @@ const Settings = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <Button variant="outline" className="w-full">
-              Export Progress Report
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleExport("progress")}
+              disabled={exporting}
+            >
+              {exporting ? "Exporting..." : "Export Progress Report"}
             </Button>
-            <Button variant="outline" className="w-full">
-              Export Food Diary
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleExport("food")}
+              disabled={exporting}
+            >
+              {exporting ? "Exporting..." : "Export Food Diary"}
             </Button>
           </div>
         </CardContent>

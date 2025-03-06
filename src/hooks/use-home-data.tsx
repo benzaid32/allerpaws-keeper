@@ -35,7 +35,7 @@ export const useHomeData = () => {
       // First, get the user's pets
       const { data: petsData, error: petsError } = await supabase
         .from("pets")
-        .select("id")
+        .select("id, name")
         .eq("user_id", user.id);
         
       if (petsError) throw petsError;
@@ -49,15 +49,10 @@ export const useHomeData = () => {
       
       const petIds = petsData.map(pet => pet.id);
       
-      // Fetch recent symptom logs for user's pets
+      // Fetch recent symptom logs for user's pets - fixed query structure
       const { data: logsData, error: logsError } = await supabase
         .from("symptom_entries")
-        .select(`
-          id,
-          date,
-          pet_id,
-          pets(name)
-        `)
+        .select("id, date, pet_id")
         .in("pet_id", petIds)
         .order("date", { ascending: false })
         .limit(3);
@@ -68,13 +63,13 @@ export const useHomeData = () => {
       const logs: HomeLog[] = [];
       
       for (const log of logsData || []) {
+        // Find pet name from the pets we already fetched
+        const pet = petsData.find(p => p.id === log.pet_id);
+        
         // Fetch symptoms for this entry
         const { data: symptomDetails, error: symptomError } = await supabase
           .from("symptom_details")
-          .select(`
-            symptom_id,
-            symptoms(name)
-          `)
+          .select("symptom_id, symptoms(name)")
           .eq("entry_id", log.id);
           
         if (symptomError) throw symptomError;
@@ -87,7 +82,7 @@ export const useHomeData = () => {
         logs.push({
           id: log.id,
           date: formatDate(log.date),
-          petName: log.pets?.name || "Unknown Pet",
+          petName: pet?.name || "Unknown Pet",
           symptoms: symptomNames
         });
       }
@@ -97,12 +92,7 @@ export const useHomeData = () => {
       // Fetch active reminders
       const { data: remindersData, error: remindersError } = await supabase
         .from("reminders")
-        .select(`
-          id,
-          title,
-          description,
-          time
-        `)
+        .select("id, title, description, time")
         .eq("user_id", user.id)
         .eq("active", true)
         .order("time")
