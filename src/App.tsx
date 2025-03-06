@@ -23,17 +23,49 @@ import Reminders from './pages/Reminders';
 
 function App() {
   useEffect(() => {
-    // Register service worker for PWA
+    // Force update service worker and clear caches
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
+      // Force reload the page when a new service worker is activated
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('Service worker controller changed - reloading page');
+        window.location.reload();
+      });
+
+      // Unregister old service workers first
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (const registration of registrations) {
+          console.log('Unregistering service worker');
+          registration.unregister();
+        }
+        
+        // Then register new service worker
+        console.log('Registering new service worker');
+        navigator.serviceWorker.register('/service-worker.js?v=' + new Date().getTime())
           .then(registration => {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            console.log('New ServiceWorker registered with scope: ', registration.scope);
+            
+            // Check for updates immediately
+            registration.update();
+            
+            // Send message to activate immediately if waiting
+            if (registration.waiting) {
+              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
           })
           .catch(error => {
             console.error('ServiceWorker registration failed: ', error);
           });
       });
+      
+      // Clear application cache
+      if ('caches' in window) {
+        caches.keys().then(cacheNames => {
+          cacheNames.forEach(cacheName => {
+            console.log('Deleting cache:', cacheName);
+            caches.delete(cacheName);
+          });
+        });
+      }
     }
   }, []);
 
