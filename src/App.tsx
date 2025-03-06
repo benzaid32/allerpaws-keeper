@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import PetProfile from "./pages/PetProfile";
 import SymptomDiary from "./pages/SymptomDiary";
+import NewSymptomEntry from "./pages/NewSymptomEntry";
 import EliminationDiet from "./pages/EliminationDiet";
 import FoodDatabase from "./pages/FoodDatabase";
 import Settings from "./pages/Settings";
@@ -49,6 +50,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <SymptomDiary />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/symptom-diary/new"
+              element={
+                <ProtectedRoute>
+                  <NewSymptomEntry />
                 </ProtectedRoute>
               }
             />

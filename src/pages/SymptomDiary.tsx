@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
@@ -342,23 +341,10 @@ const SymptomDiary = () => {
               )}
             </CardContent>
             <CardFooter>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="w-full">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add New Entry
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Add Symptom Entry</DialogTitle>
-                  </DialogHeader>
-                  <SymptomEntryForm 
-                    petId={selectedPetId!} 
-                    onSuccess={handleNewEntrySuccess} 
-                  />
-                </DialogContent>
-              </Dialog>
+              <Button onClick={() => navigate("/symptom-diary/new")} className="w-full">
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Entry
+              </Button>
             </CardFooter>
           </Card>
           
