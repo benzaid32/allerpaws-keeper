@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
@@ -19,51 +19,72 @@ import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import Pricing from './pages/Pricing';
 import Reminders from './pages/Reminders';
+import { LoadingSpinner } from './components/ui/loading-spinner';
 
 function App() {
-  useEffect(() => {
-    // Handle service worker registration with simpler, more robust approach
-    if ('serviceWorker' in navigator) {
-      // Handle service worker update with graceful page reloading
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('Service worker controller changed - reloading page');
-        window.location.reload();
-      });
+  const [isInitializing, setIsInitializing] = useState(true);
 
-      // Register the service worker with improved error handling
-      const registerServiceWorker = async () => {
-        try {
-          // Unregister old service workers first for a clean slate
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          for (const registration of registrations) {
-            console.log('Unregistering service worker');
-            await registration.unregister();
+  useEffect(() => {
+    // Handle one-time initialization only
+    const initializeApp = async () => {
+      try {
+        // Only handle service worker in production
+        if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+          try {
+            // Unregister any existing service workers to get a clean start
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            if (registrations.length > 0) {
+              for (const registration of registrations) {
+                await registration.unregister();
+                console.log('Service worker unregistered successfully');
+              }
+            }
+            
+            // Register a new service worker without reloading
+            const registration = await navigator.serviceWorker.register('/service-worker.js', {
+              updateViaCache: 'none' // Prevent the browser from using cached service worker
+            });
+            
+            console.log('Service worker registered with scope:', registration.scope);
+            
+            // Set up an interval to ping the service worker to keep it alive
+            setInterval(() => {
+              if (registration.active) {
+                const channel = new MessageChannel();
+                registration.active.postMessage(
+                  { type: 'PING' }, 
+                  [channel.port2]
+                );
+              }
+            }, 60000); // Ping every minute
+          } catch (error) {
+            console.error('Service worker registration failed:', error);
           }
-          
-          // Register new service worker with cache busting
-          console.log('Registering new service worker');
-          const swUrl = `/service-worker.js?v=${new Date().getTime()}`;
-          const registration = await navigator.serviceWorker.register(swUrl);
-          console.log('New ServiceWorker registered with scope: ', registration.scope);
-        } catch (error) {
-          console.error('ServiceWorker registration failed: ', error);
         }
-      };
-      
-      // Execute registration
-      registerServiceWorker();
-      
-      // Clear application cache
-      if ('caches' in window) {
-        caches.keys().then(cacheNames => {
-          cacheNames.forEach(cacheName => {
-            console.log('Deleting cache:', cacheName);
-            caches.delete(cacheName);
-          });
-        });
+      } catch (error) {
+        console.error('App initialization error:', error);
+      } finally {
+        // Always complete initialization after a short delay to prevent flashing
+        setTimeout(() => {
+          setIsInitializing(false);
+        }, 800);
       }
-    }
+    };
+
+    initializeApp();
   }, []);
+
+  // Show initial loading screen
+  if (isInitializing) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <LoadingSpinner className="h-12 w-12" />
+          <p className="text-lg font-medium">Starting AllerPaws...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen flex flex-col">

@@ -13,10 +13,7 @@ serve(async (req) => {
         JSON.stringify({ 
           error: "Missing 'query' or 'type' parameter" 
         }),
-        { 
-          status: 400, 
-          headers: { 'Content-Type': 'application/json' } 
-        }
+        { status: 400 }
       );
     }
 
@@ -68,10 +65,7 @@ serve(async (req) => {
         data,
         count: data.length,
       }),
-      { 
-        status: 200, 
-        headers: { 'Content-Type': 'application/json' } 
-      }
+      { status: 200 }
     );
   } catch (error) {
     console.error("Error in search-food function:", error);
@@ -81,10 +75,7 @@ serve(async (req) => {
         success: false,
         error: error.message || "An unexpected error occurred" 
       }),
-      { 
-        status: 500, 
-        headers: { 'Content-Type': 'application/json' } 
-      }
+      { status: 500 }
     );
   }
 });

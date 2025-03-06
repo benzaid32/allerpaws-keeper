@@ -17,10 +17,7 @@ serve(async (req) => {
         JSON.stringify({ 
           error: "Missing or invalid 'ingredients' parameter. Expected an array of strings." 
         }),
-        { 
-          status: 400, 
-          headers: { 'Content-Type': 'application/json' } 
-        }
+        { status: 400 }
       );
     }
 
@@ -106,10 +103,7 @@ serve(async (req) => {
         analysis: parsedResult,
         timestamp: new Date().toISOString()
       }),
-      { 
-        status: 200, 
-        headers: { 'Content-Type': 'application/json' } 
-      }
+      { status: 200 }
     );
   } catch (error) {
     console.error("Error in analyze-food function:", error);
@@ -118,10 +112,7 @@ serve(async (req) => {
       JSON.stringify({ 
         error: error.message || "An unexpected error occurred during food analysis" 
       }),
-      { 
-        status: 500, 
-        headers: { 'Content-Type': 'application/json' } 
-      }
+      { status: 500 }
     );
   }
 });

@@ -1,65 +1,52 @@
-// Service Worker for AllerPaws Keeper PWA
+// AllerPaws Service Worker - No cache version
+// This version does not cache any assets to prevent refresh loops
 
-// Version for cache busting
-const CACHE_VERSION = 'v3-no-cache-' + new Date().getTime();
-
-// Skip caching - this service worker will bypass caches
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installed - caching disabled');
-  self.skipWaiting(); // Force activation
+  console.log('Service Worker installing...');
+  self.skipWaiting(); // This forces the waiting service worker to become the active service worker
 });
 
-// Clean up any existing caches when activated
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activated - removing all caches');
+  console.log('Service Worker activated');
+  
+  // Clear any existing caches to prevent stale content
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.map((cacheName) => {
-          console.log('Deleting cache:', cacheName);
-          return caches.delete(cacheName);
+        cacheNames.map(cache => {
+          console.log('Clearing cache:', cache);
+          return caches.delete(cache);
         })
       );
-    }).then(() => {
-      console.log('All caches cleared');
-      return self.clients.claim(); // Take control of all clients
     })
   );
+  
+  return self.clients.claim(); // Take control of all clients
 });
 
-// Network-only strategy without CORS handling - only handle same-origin requests
+// Simple pass-through fetch handler - does not cache anything
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-  
-  // Only intercept same-origin requests to avoid CORS issues
-  if (url.origin === self.location.origin) {
+  // Only handle same-origin requests to avoid CORS issues
+  if (new URL(event.request.url).origin === self.location.origin) {
+    // Only use network requests, no caching
     event.respondWith(
-      fetch(event.request, { 
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      })
-      .catch((error) => {
-        console.error('Fetch failed:', error);
-        // Return a simple offline response if network is unavailable
-        if (event.request.mode === 'navigate') {
-          return new Response('<html><body><h1>You are offline</h1></body></html>', {
-            headers: { 'Content-Type': 'text/html' }
+      fetch(event.request)
+        .catch(error => {
+          console.error('Fetch error:', error);
+          // Return a simple offline page if network request fails
+          return new Response('You are offline', { 
+            status: 503,
+            headers: { 'Content-Type': 'text/plain' }
           });
-        }
-        return new Response('Offline');
-      })
+        })
     );
   }
-  // For cross-origin requests, don't intercept - let browser handle them natively
 });
 
-// Force clients to update
+// Prevent service worker from going to sleep and causing refresh issues
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+  if (event.data && event.data.type === 'PING') {
+    // Respond to keep alive pings
+    event.ports[0].postMessage('PONG');
   }
 });

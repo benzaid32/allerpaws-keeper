@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading, savePetData } = useAuth();
@@ -33,11 +34,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     }
   }, [user, savePetData]);
   
-  // Show minimal loading state while checking auth - much shorter
+  // Show a proper loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary"></div>
+        <div className="flex flex-col items-center gap-3">
+          <LoadingSpinner />
+          <p className="text-sm text-muted-foreground">Loading your profile...</p>
+        </div>
       </div>
     );
   }

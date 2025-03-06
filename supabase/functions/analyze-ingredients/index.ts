@@ -11,10 +11,7 @@ serve(async (req) => {
         JSON.stringify({ 
           error: "Missing required parameters: ingredients and petId are required" 
         }),
-        { 
-          status: 400, 
-          headers: { 'Content-Type': 'application/json' } 
-        }
+        { status: 400 }
       );
     }
 
@@ -62,20 +59,14 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(analysisResult),
-      { 
-        status: 200, 
-        headers: { 'Content-Type': 'application/json' } 
-      }
+      { status: 200 }
     );
   } catch (error) {
     console.error("Error in analyze-ingredients function:", error);
     
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
-        headers: { 'Content-Type': 'application/json' } 
-      }
+      { status: 500 }
     );
   }
 });
