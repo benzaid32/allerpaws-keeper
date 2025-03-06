@@ -47,7 +47,7 @@ export const useReminderForm = () => {
       description: reminder.description || "",
       time: reminder.time,
       days: reminder.days,
-      petId: reminder.pet_id || "",
+      petId: reminder.petId || "",
       active: reminder.active,
     });
     setIsEditing(true);

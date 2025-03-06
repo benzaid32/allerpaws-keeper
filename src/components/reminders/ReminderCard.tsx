@@ -4,20 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Clock, Calendar, Edit, Trash2 } from "lucide-react";
+import { Reminder } from "@/lib/types";
 
 interface ReminderCardProps {
-  reminder: {
-    id: string;
-    title: string;
-    description: string | null;
-    time: string;
-    days: string[];
-    pet_id: string | null;
-    pet_name?: string;
-    active: boolean;
-  };
-  onEdit: (reminder: any) => void;
-  onToggleActive: (reminder: any) => void;
+  reminder: Reminder;
+  onEdit: (reminder: Reminder) => void;
+  onToggleActive: (reminder: Reminder) => void;
   onDelete: (id: string) => void;
 }
 
@@ -46,8 +38,8 @@ const ReminderCard: React.FC<ReminderCardProps> = ({
         <div className="flex justify-between items-start">
           <div className="space-y-1">
             <CardTitle>{reminder.title}</CardTitle>
-            {reminder.pet_name && (
-              <p className="text-sm text-muted-foreground">for {reminder.pet_name}</p>
+            {reminder.petName && (
+              <p className="text-sm text-muted-foreground">for {reminder.petName}</p>
             )}
           </div>
           <div className="flex items-center space-x-1">

@@ -5,11 +5,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Pet, Reminder } from "@/lib/types";
 
+// Define a simplified Pet type for what we need in this component
+interface SimplePet {
+  id: string;
+  name: string;
+}
+
 export const useRemindersData = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [pets, setPets] = useState<Pet[]>([]);
+  const [pets, setPets] = useState<SimplePet[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -47,9 +53,16 @@ export const useRemindersData = () => {
         
       if (remindersError) throw remindersError;
       
-      const formattedReminders = remindersData.map(reminder => ({
-        ...reminder,
-        pet_name: reminder.pets?.name,
+      // Map the database fields to our Reminder type
+      const formattedReminders: Reminder[] = remindersData.map(reminder => ({
+        id: reminder.id,
+        title: reminder.title,
+        description: reminder.description,
+        time: reminder.time,
+        days: reminder.days,
+        petId: reminder.pet_id,
+        petName: reminder.pets?.name,
+        active: reminder.active,
       }));
       
       setReminders(formattedReminders);
