@@ -12,7 +12,7 @@ interface ManageSubscriptionProps {
     planId: string;
     currentPeriodEnd: string;
     cancelAtPeriodEnd: boolean;
-  };
+  } | null;
   isLoading: boolean;
   onCancel: () => void;
   onResume: () => void;
@@ -38,6 +38,58 @@ const ManageSubscription: React.FC<ManageSubscriptionProps> = ({
   onUpgrade
 }) => {
   const { toast } = useToast();
+  
+  // Check if subscription is null, if so display upgrade option
+  if (!subscription) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>No Active Subscription</CardTitle>
+          <CardDescription>Upgrade to AllerPaws Premium for full access to all features</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Premium gives you access to all features including:
+          </p>
+          <ul className="space-y-2 text-sm">
+            <li className="flex items-center">
+              <span className="mr-2 h-4 w-4 text-primary">•</span>
+              <span>Unlimited pets</span>
+            </li>
+            <li className="flex items-center">
+              <span className="mr-2 h-4 w-4 text-primary">•</span>
+              <span>Detailed allergen analysis</span>
+            </li>
+            <li className="flex items-center">
+              <span className="mr-2 h-4 w-4 text-primary">•</span>
+              <span>Advanced food recommendations</span>
+            </li>
+            <li className="flex items-center">
+              <span className="mr-2 h-4 w-4 text-primary">•</span>
+              <span>Export health reports</span>
+            </li>
+          </ul>
+        </CardContent>
+        <CardFooter>
+          <Button 
+            onClick={onUpgrade} 
+            disabled={isLoading} 
+            variant="default" 
+            className="w-full"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : "Upgrade to Premium"}
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+  
+  // If we have a subscription, proceed with the existing code
   const { status, planId, currentPeriodEnd, cancelAtPeriodEnd } = subscription;
   
   const formattedDate = new Date(currentPeriodEnd).toLocaleDateString(undefined, {
