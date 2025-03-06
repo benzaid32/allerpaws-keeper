@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -24,6 +23,7 @@ const navItems = [
 ];
 
 const BottomNavigation = () => {
+  
   const navigate = useNavigate();
   const location = useLocation();
   const [currentPage, setCurrentPage] = useState(0);
@@ -84,6 +84,12 @@ const BottomNavigation = () => {
     if (newPage >= 0 && newPage < totalPages) {
       setCurrentPage(newPage);
     }
+  };
+
+  // Fix the navigation handler to properly navigate to home
+  const handleNavigation = (path: string) => {
+    // Use navigate function directly with the path
+    navigate(path);
   };
   
   return (
