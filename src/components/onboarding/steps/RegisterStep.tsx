@@ -2,10 +2,9 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, AlertCircleIcon } from "lucide-react";
 
 interface RegisterStepProps {
   fullName: string;
@@ -36,15 +35,18 @@ const RegisterStep: React.FC<RegisterStepProps> = ({
   return (
     <div className="space-y-4">
       <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold">Create Your Account</h3>
+        <h3 className="text-2xl font-semibold tracking-tight">Create Your Account</h3>
+        <p className="text-muted-foreground mb-2">
+          Sign up to manage your pet's health and allergies
+        </p>
         <p className="text-sm text-muted-foreground">
-          Sign up to save your pet's information
+          You can add your pets after signing up
         </p>
       </div>
       
       {registrationError && (
         <Alert variant="destructive" className="mb-4">
-          <InfoIcon className="h-4 w-4 mr-2" />
+          <AlertCircleIcon className="h-4 w-4 mr-2" />
           <AlertDescription>{registrationError}</AlertDescription>
         </Alert>
       )}
@@ -86,6 +88,7 @@ const RegisterStep: React.FC<RegisterStepProps> = ({
           disabled={isSubmitting}
           required
         />
+        <p className="text-xs text-muted-foreground">Password must be at least 6 characters</p>
       </div>
       
       <div className="space-y-2">
