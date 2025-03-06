@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { generateId } from "@/lib/helpers";
 import { Pet } from "@/lib/types";
-import { cn, storeTemporaryPetData } from "@/lib/utils";
+import { cn, storeTemporaryPetData, clearTemporaryPetData } from "@/lib/utils";
 import { ONBOARDING_STEPS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,10 @@ import PetInfoStep from "./onboarding/steps/PetInfoStep";
 import AllergiesStep from "./onboarding/steps/AllergiesStep";
 import SymptomsStep from "./onboarding/steps/SymptomsStep";
 import FoodDatabaseStep from "./onboarding/steps/FoodDatabaseStep";
+import RegisterStep from "./onboarding/steps/RegisterStep";
+
+// Extend the ONBOARDING_STEPS array to include Register step
+const EXTENDED_STEPS = [...ONBOARDING_STEPS, "Register"];
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
@@ -36,45 +40,65 @@ const Onboarding: React.FC = () => {
     species: "dog",
     knownAllergies: [],
   });
+  
+  // Registration form state
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
 
   // Update pet data
   const updatePet = (updates: Partial<Pet>) => {
     setPet(prev => ({ ...prev, ...updates }));
   };
 
-  // Handle the completion of the onboarding process
-  const completePetOnboarding = async () => {
-    if (!user) {
-      // Store pet data before redirecting to auth
-      storeTemporaryPetData(pet);
-      
+  // Handle user registration and pet data saving
+  const handleRegisterAndSavePet = async () => {
+    if (!email || !password || !fullName) {
       toast({
-        title: "Almost there!",
-        description: "Please sign up to save your pet's information",
+        title: "Missing fields",
+        description: "Please fill in all fields",
+        variant: "destructive",
       });
-      
-      navigate("/auth");
-      return;
+      return false;
     }
-
+    
     try {
       setIsSubmitting(true);
-
+      
+      // Register the user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
+      });
+      
+      if (authError) {
+        throw authError;
+      }
+      
+      if (!authData.user) {
+        throw new Error("Failed to create user account");
+      }
+      
       // Insert pet data into Supabase
-      const { data, error } = await supabase.from("pets").insert({
+      const { data: petData, error: petError } = await supabase.from("pets").insert({
         name: pet.name,
         species: pet.species,
-        user_id: user.id,
+        user_id: authData.user.id,
       }).select().single();
 
-      if (error) {
-        throw error;
+      if (petError) {
+        throw petError;
       }
 
       // Save pet allergies if any
       if (pet.knownAllergies.length > 0) {
         const allergiesData = pet.knownAllergies.map(allergen => ({
-          pet_id: data.id,
+          pet_id: petData.id,
           name: allergen,
         }));
 
@@ -88,26 +112,96 @@ const Onboarding: React.FC = () => {
       }
 
       toast({
-        title: "Pet added successfully",
-        description: `${pet.name} has been added to your account.`,
+        title: "Account created successfully",
+        description: `${pet.name} has been added to your account. Please check your email to confirm your registration.`,
       });
 
+      // Clear temporary data
+      clearTemporaryPetData();
+      
       // Navigate to dashboard after successful save
       navigate("/dashboard");
+      
+      return true;
     } catch (error: any) {
       toast({
-        title: "Error saving pet information",
+        title: "Error creating account",
         description: error.message,
         variant: "destructive",
       });
+      return false;
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Handle the completion of the onboarding process
+  const completePetOnboarding = async () => {
+    // If we're at the registration step
+    if (step === EXTENDED_STEPS.length - 1) {
+      return await handleRegisterAndSavePet();
+    }
+    
+    // For users who are already logged in
+    if (user) {
+      try {
+        setIsSubmitting(true);
+
+        // Insert pet data into Supabase
+        const { data, error } = await supabase.from("pets").insert({
+          name: pet.name,
+          species: pet.species,
+          user_id: user.id,
+        }).select().single();
+
+        if (error) {
+          throw error;
+        }
+
+        // Save pet allergies if any
+        if (pet.knownAllergies.length > 0) {
+          const allergiesData = pet.knownAllergies.map(allergen => ({
+            pet_id: data.id,
+            name: allergen,
+          }));
+
+          const { error: allergiesError } = await supabase
+            .from("allergies")
+            .insert(allergiesData);
+
+          if (allergiesError) {
+            console.error("Error saving allergies:", allergiesError);
+          }
+        }
+
+        toast({
+          title: "Pet added successfully",
+          description: `${pet.name} has been added to your account.`,
+        });
+
+        // Navigate to dashboard after successful save
+        navigate("/dashboard");
+        return true;
+      } catch (error: any) {
+        toast({
+          title: "Error saving pet information",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      // Move to registration step if user is not logged in
+      setStep(EXTENDED_STEPS.length - 1);
+      return true;
+    }
+  };
+
   // Move to the next step with animation
-  const nextStep = () => {
-    if (step < ONBOARDING_STEPS.length - 1) {
+  const nextStep = async () => {
+    if (step < EXTENDED_STEPS.length - 1) {
       setAnimating(true);
       setTimeout(() => {
         setStep((prev) => prev + 1);
@@ -115,7 +209,7 @@ const Onboarding: React.FC = () => {
       }, 300);
     } else {
       // Complete onboarding
-      completePetOnboarding();
+      await completePetOnboarding();
     }
   };
 
@@ -132,6 +226,13 @@ const Onboarding: React.FC = () => {
         return true;
       case 4: // Food Database
         return true;
+      case 5: // Register
+        return (
+          email.trim() !== "" && 
+          password.trim() !== "" && 
+          fullName.trim() !== "" &&
+          password.length >= 6
+        );
       default:
         return true;
     }
@@ -150,6 +251,18 @@ const Onboarding: React.FC = () => {
         return <SymptomsStep />;
       case 4:
         return <FoodDatabaseStep />;
+      case 5:
+        return (
+          <RegisterStep 
+            fullName={fullName}
+            setFullName={setFullName}
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            isSubmitting={isSubmitting}
+          />
+        );
       default:
         return <WelcomeStep />;
     }
@@ -161,7 +274,7 @@ const Onboarding: React.FC = () => {
       <OnboardingHeader />
       
       {/* Onboarding Steps */}
-      <OnboardingStepIndicator currentStep={step} />
+      <OnboardingStepIndicator currentStep={step} totalSteps={EXTENDED_STEPS.length} />
 
       {/* Step Content */}
       <Card className={cn(
@@ -176,6 +289,7 @@ const Onboarding: React.FC = () => {
       {/* Navigation */}
       <OnboardingFooter 
         currentStep={step} 
+        totalSteps={EXTENDED_STEPS.length}
         canProceed={canProceed()} 
         onNext={nextStep}
         isLoading={isSubmitting}

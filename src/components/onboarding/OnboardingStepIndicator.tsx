@@ -1,16 +1,19 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { ONBOARDING_STEPS } from "@/lib/constants";
 
 interface OnboardingStepIndicatorProps {
   currentStep: number;
+  totalSteps?: number;
 }
 
-const OnboardingStepIndicator: React.FC<OnboardingStepIndicatorProps> = ({ currentStep }) => {
+const OnboardingStepIndicator: React.FC<OnboardingStepIndicatorProps> = ({ 
+  currentStep, 
+  totalSteps = 5 
+}) => {
   return (
     <div className="flex justify-between mb-4">
-      {ONBOARDING_STEPS.map((_, index) => (
+      {Array.from({ length: totalSteps }).map((_, index) => (
         <div
           key={index}
           className={cn(
