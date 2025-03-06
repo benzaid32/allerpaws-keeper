@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,26 +23,17 @@ export const useSettings = () => {
     try {
       setLoading(true);
       
-      // Use a more direct query approach with explicit typing to avoid deep type instantiation
+      // Remove the is_setting filter since that column doesn't exist
       const { data, error } = await supabase
         .from("reminders")
         .select("id, title, time, active")
         .eq("user_id", user.id)
-        .eq("is_setting", true)
         .order("time");
         
       if (error) throw error;
       
-      // Use type assertion to avoid circular reference issues
-      const remindersData = data as Array<{
-        id: string;
-        title: string;
-        time: string;
-        active: boolean;
-      }> | null;
-      
       // Transform the data with simplified typing
-      const settings: ReminderSetting[] = remindersData ? remindersData.map(item => ({
+      const settings: ReminderSetting[] = data ? data.map(item => ({
         id: item.id,
         name: item.title,
         time: format(new Date(`2000-01-01T${item.time}`), 'h:mm a'),
