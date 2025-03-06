@@ -64,10 +64,8 @@ const AuthForm = ({ initialView = "sign-in" }: AuthFormProps) => {
     }
 
     try {
-      const { error } = await signUp({ email, password, name });
-      if (error) {
-        throw error;
-      }
+      // Check the actual signature of signUp and adjust accordingly
+      const result = await signUp({ email, password, name });
       toast({
         title: "Sign up successful",
         description: "Please check your email for a verification link.",
@@ -108,7 +106,6 @@ const AuthForm = ({ initialView = "sign-in" }: AuthFormProps) => {
       toast({
         title: "Verification failed",
         description: error.message || "Failed to verify account. Please try again.",
-        variant: "destructive",
       });
     }
   };

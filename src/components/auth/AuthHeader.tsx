@@ -3,7 +3,7 @@ import React from "react";
 import { Pet } from "@/lib/types";
 
 interface AuthHeaderProps {
-  tempPetData: Pet | null;
+  tempPetData?: Pet | null;
 }
 
 const AuthHeader: React.FC<AuthHeaderProps> = ({ tempPetData }) => {
