@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn, clearTemporaryPetData } from "@/lib/utils";
-import { ONBOARDING_STEPS } from "@/lib/constants";
+// Import other constants, but not ONBOARDING_STEPS since we define it locally
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
