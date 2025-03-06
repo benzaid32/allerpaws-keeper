@@ -34,6 +34,7 @@ const Onboarding: React.FC = () => {
   const [step, setStep] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [pet, setPet] = useState<Pet>({
     id: generateId(),
     name: "",
@@ -51,6 +52,30 @@ const Onboarding: React.FC = () => {
     setPet(prev => ({ ...prev, ...updates }));
   };
 
+  // Clear any registration errors when switching to the register step
+  useEffect(() => {
+    if (step === EXTENDED_STEPS.length - 1) {
+      setRegistrationError(null);
+    }
+  }, [step]);
+
+  // Helper to handle rate limiting errors
+  const handleRateLimitError = (error: any) => {
+    console.error("Registration error:", error);
+    
+    if (error.status === 429) {
+      setRegistrationError(
+        "Too many sign-up attempts. Please wait a moment before trying again."
+      );
+    } else if (error.message?.includes("over_email_send_rate_limit")) {
+      setRegistrationError(
+        "Too many email verification requests. Please wait a moment before trying again."
+      );
+    } else {
+      setRegistrationError(error.message || "An error occurred during registration");
+    }
+  };
+
   // Handle user registration and pet data saving
   const handleRegisterAndSavePet = async () => {
     if (!email || !password || !fullName) {
@@ -64,6 +89,7 @@ const Onboarding: React.FC = () => {
     
     try {
       setIsSubmitting(true);
+      setRegistrationError(null);
       
       // Register the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -77,11 +103,13 @@ const Onboarding: React.FC = () => {
       });
       
       if (authError) {
-        throw authError;
+        handleRateLimitError(authError);
+        return false;
       }
       
       if (!authData.user) {
-        throw new Error("Failed to create user account");
+        setRegistrationError("Failed to create user account");
+        return false;
       }
       
       // Insert pet data into Supabase
@@ -92,7 +120,9 @@ const Onboarding: React.FC = () => {
       }).select().single();
 
       if (petError) {
-        throw petError;
+        console.error("Error saving pet data:", petError);
+        setRegistrationError("Failed to save pet information");
+        return false;
       }
 
       // Save pet allergies if any
@@ -124,11 +154,7 @@ const Onboarding: React.FC = () => {
       
       return true;
     } catch (error: any) {
-      toast({
-        title: "Error creating account",
-        description: error.message,
-        variant: "destructive",
-      });
+      handleRateLimitError(error);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -261,6 +287,7 @@ const Onboarding: React.FC = () => {
             password={password}
             setPassword={setPassword}
             isSubmitting={isSubmitting}
+            registrationError={registrationError}
           />
         );
       default:

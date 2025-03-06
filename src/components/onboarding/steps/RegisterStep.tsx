@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 interface RegisterStepProps {
   fullName: string;
@@ -13,6 +15,7 @@ interface RegisterStepProps {
   password: string;
   setPassword: (password: string) => void;
   isSubmitting: boolean;
+  registrationError?: string | null;
 }
 
 const RegisterStep: React.FC<RegisterStepProps> = ({
@@ -22,7 +25,8 @@ const RegisterStep: React.FC<RegisterStepProps> = ({
   setEmail,
   password,
   setPassword,
-  isSubmitting
+  isSubmitting,
+  registrationError
 }) => {
   const { toast } = useToast();
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,6 +41,13 @@ const RegisterStep: React.FC<RegisterStepProps> = ({
           Sign up to save your pet's information
         </p>
       </div>
+      
+      {registrationError && (
+        <Alert variant="destructive" className="mb-4">
+          <InfoIcon className="h-4 w-4 mr-2" />
+          <AlertDescription>{registrationError}</AlertDescription>
+        </Alert>
+      )}
       
       <div className="space-y-2">
         <Label htmlFor="fullName">Full Name</Label>
