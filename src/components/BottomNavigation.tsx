@@ -39,6 +39,7 @@ const BottomNavigation = () => {
               key={item.path}
               icon={item.icon}
               label={item.label}
+              path={item.path}
               isActive={location.pathname === item.path}
               onClick={() => handleNavigation(item.path)}
             />
