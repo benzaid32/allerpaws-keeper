@@ -20,6 +20,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import Pricing from './pages/Pricing';
 import Reminders from './pages/Reminders';
+import Landing from './pages/Landing';
 import { LoadingSpinner } from './components/ui/loading-spinner';
 import { useToast } from './hooks/use-toast';
 
@@ -88,6 +89,7 @@ function App() {
               <Toaster />
               <Routes>
                 <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/landing" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<Navigate to="/" replace />} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
