@@ -1,8 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { PawPrint, Mail, Instagram, Twitter, Facebook, Linkedin, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { APP_NAME } from "@/lib/constants";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -51,7 +51,7 @@ const Footer = () => {
             <Link to="/" className="flex items-center mb-4">
               <PawPrint className="h-8 w-8 text-primary mr-2" />
               <span className="text-2xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                {APP_NAME}
+                AllerPaws
               </span>
             </Link>
             <p className="text-muted-foreground mb-4 max-w-md">
@@ -117,7 +117,7 @@ const Footer = () => {
         {/* Bottom bar */}
         <div className="border-t border-muted pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground mb-4 md:mb-0">
-            © {currentYear} <a href="https://allerpaws.app" target="_blank" rel="noopener noreferrer" className="hover:text-primary">allerpaws.app</a>. All rights reserved.
+            © {currentYear} AllerPaws.app. All rights reserved.
           </p>
           <div className="flex items-center text-sm text-muted-foreground">
             <span>Made with</span>
@@ -130,4 +130,4 @@ const Footer = () => {
   );
 };
 
-export default Footer;
+export default Footer; 

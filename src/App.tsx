@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { HelmetProvider } from "react-helmet-async";
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
@@ -31,6 +32,16 @@ import { Button } from './components/ui/button';
 import { isPlatform } from './lib/utils';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import InstallBanner from './components/pwa/InstallBanner';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
+import CookiePolicy from './pages/CookiePolicy';
+import FAQs from './pages/FAQs';
+import Help from './pages/Help';
+import Blog from './pages/Blog';
+import Careers from './pages/Careers';
+import Landing from './pages/Landing';
 
 // Create a stylish, mobile-friendly landing page using the components
 const OriginalLanding = () => {
@@ -87,6 +98,15 @@ const OriginalLanding = () => {
       </main>
       
       <LandingFooter />
+    </div>
+  );
+};
+
+// Layout component to wrap public pages with common elements
+const PublicPageLayout = ({ children }) => {
+  return (
+    <div className="min-h-screen bg-background">
+      {children}
     </div>
   );
 };
@@ -205,35 +225,51 @@ function App() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <ThemeProvider defaultTheme="light" storageKey="allerpaws-theme">
-        <BrowserRouter>
-          <AuthProvider>
-            <SubscriptionProvider>
-              <Toaster />
-              <InstallBanner />
-              <Routes>
-                <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/landing" element={<OriginalLanding />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/dashboard" element={<Navigate to="/" replace />} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                <Route path="/pets" element={<ProtectedRoute><ManagePets /></ProtectedRoute>} />
-                <Route path="/add-pet" element={<ProtectedRoute><AddPet /></ProtectedRoute>} />
-                <Route path="/edit-pet/:id" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
-                <Route path="/pet/:id" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
-                <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
-                <Route path="/symptom-diary" element={<ProtectedRoute><SymptomDiary /></ProtectedRoute>} />
-                <Route path="/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />
-                <Route path="/add-symptom" element={<ProtectedRoute><AddSymptomEntry /></ProtectedRoute>} />
-                <Route path="/edit-symptom/:id" element={<ProtectedRoute><EditSymptomEntry /></ProtectedRoute>} />
-                <Route path="/elimination-diet" element={<ProtectedRoute><EliminationDiet /></ProtectedRoute>} />
-                <Route path="/pricing" element={<Pricing />} />
-              </Routes>
-            </SubscriptionProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </ThemeProvider>
+      <HelmetProvider>
+        <ThemeProvider defaultTheme="light" storageKey="allerpaws-theme">
+          <BrowserRouter>
+            <AuthProvider>
+              <SubscriptionProvider>
+                <Toaster />
+                <InstallBanner />
+                <Routes>
+                  {/* Protected routes */}
+                  <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                  <Route path="/dashboard" element={<Navigate to="/" replace />} />
+                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  <Route path="/pets" element={<ProtectedRoute><ManagePets /></ProtectedRoute>} />
+                  <Route path="/add-pet" element={<ProtectedRoute><AddPet /></ProtectedRoute>} />
+                  <Route path="/edit-pet/:id" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
+                  <Route path="/pet/:id" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
+                  <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
+                  <Route path="/symptom-diary" element={<ProtectedRoute><SymptomDiary /></ProtectedRoute>} />
+                  <Route path="/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />
+                  <Route path="/add-symptom" element={<ProtectedRoute><AddSymptomEntry /></ProtectedRoute>} />
+                  <Route path="/edit-symptom/:id" element={<ProtectedRoute><EditSymptomEntry /></ProtectedRoute>} />
+                  <Route path="/elimination-diet" element={<ProtectedRoute><EliminationDiet /></ProtectedRoute>} />
+                  
+                  {/* Authentication */}
+                  <Route path="/auth" element={<Auth />} />
+                  
+                  {/* Public pages */}
+                  <Route path="/landing" element={<OriginalLanding />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/terms" element={<TermsAndConditions />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/cookies" element={<CookiePolicy />} />
+                  <Route path="/faqs" element={<FAQs />} />
+                  <Route path="/help" element={<Help />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/careers" element={<Careers />} />
+                </Routes>
+              </SubscriptionProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </ThemeProvider>
+      </HelmetProvider>
     </main>
   );
 }

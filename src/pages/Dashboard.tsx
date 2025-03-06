@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { usePets } from "@/hooks/use-pets";
 import BottomNavigation from "@/components/BottomNavigation";
-import { LogOut, BarChart2, Calendar, Activity, AlertTriangle, CheckCircle, Clock, PlusCircle, User, Settings, Crown, PawPrint, Sparkles, Heart } from "lucide-react";
+import { LogOut, BarChart2, Calendar, Activity, AlertTriangle, CheckCircle, Clock, PlusCircle, User, Settings, Crown, PawPrint, Sparkles, Heart, Loader2 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { 
   DropdownMenu, 
@@ -32,6 +32,8 @@ const Dashboard = () => {
   const [recentActivity, setRecentActivity] = useState<number>(0);
   const [symptomsThisWeek, setSymptomsThisWeek] = useState<number>(0);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
+  const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const userName = user?.user_metadata?.full_name || "Pet Parent";
   const firstName = userName.split(' ')[0];
   const isPremium = hasPremiumAccess;
@@ -76,13 +78,24 @@ const Dashboard = () => {
 
   const handleSignOut = async () => {
     try {
+      setIsSigningOut(true);
+      setDropdownOpen(false); // Close dropdown immediately
+      
+      // Show toast to indicate sign-out is in progress
+      toast({
+        title: "Signing out...",
+        description: "Please wait while we sign you out",
+      });
+      
       console.log("Dashboard: Initiating sign out process");
       await signOut();
+      
+      // The page will be redirected by the signOut function in AuthContext
+      // But we'll show a success toast anyway in case there's a delay
       toast({
         title: "Signed out successfully",
         description: "You have been signed out of your account",
       });
-      // The page will be redirected by the signOut function in AuthContext
     } catch (error: any) {
       console.error("Dashboard: Error during sign out:", error);
       toast({
@@ -90,6 +103,7 @@ const Dashboard = () => {
         title: "Sign out failed",
         description: error.message || "Could not sign out. Please try again.",
       });
+      setIsSigningOut(false); // Reset signing out state on error
     }
   };
 
@@ -101,6 +115,39 @@ const Dashboard = () => {
     const options: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'long', day: 'numeric' };
     return new Date().toLocaleDateString('en-US', options);
   };
+
+  // If signing out, show a full-screen loading indicator
+  if (isSigningOut) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-blue-50/30 to-primary/5">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex flex-col items-center">
+            <LoadingSpinner className="scale-125" />
+            <motion.p 
+              className="text-lg font-medium mt-6 mb-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              Signing out...
+            </motion.p>
+            <motion.p 
+              className="text-sm text-muted-foreground"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              Thank you for using AllerPaws!
+            </motion.p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (loading || isLoadingStats) {
     return (
@@ -232,7 +279,7 @@ const Dashboard = () => {
                     </div>
                   )}
                 </div>
-                <DropdownMenu>
+                <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                   <DropdownMenuTrigger asChild>
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       {user?.user_metadata?.avatar_url ? (
@@ -266,9 +313,22 @@ const Dashboard = () => {
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Sign out</span>
+                    <DropdownMenuItem 
+                      onClick={handleSignOut} 
+                      className="cursor-pointer text-destructive"
+                      disabled={isSigningOut}
+                    >
+                      {isSigningOut ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <span>Signing out...</span>
+                        </>
+                      ) : (
+                        <>
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Sign out</span>
+                        </>
+                      )}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
