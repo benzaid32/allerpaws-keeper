@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/BottomNavigation";
 import FoodAnalyzer from "@/components/FoodAnalyzer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +17,7 @@ import { FoodProduct } from "@/lib/types";
 
 const FoodDatabase = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<FoodProduct[]>([]);
@@ -25,6 +27,7 @@ const FoodDatabase = () => {
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
   const [pets, setPets] = useState<{ id: string; name: string }[]>([]);
   const [activeTab, setActiveTab] = useState<string>("search");
+  const [analyzerIngredients, setAnalyzerIngredients] = useState<string>("");
 
   useEffect(() => {
     if (user) {
@@ -76,17 +79,36 @@ const FoodDatabase = () => {
     try {
       setIsLoading(true);
       
-      const { data, error } = await supabase
-        .from("food_products")
-        .select("*")
-        .or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%,ingredients.cs.{${searchQuery}}`)
-        .limit(10);
+      // Use the Supabase Edge Function for searching
+      const { data, error } = await supabase.functions.invoke('search-food', {
+        body: { 
+          query: searchQuery,
+          petId: selectedPetId,
+          allergens: true
+        }
+      });
 
       if (error) throw error;
       
-      setSearchResults(data || []);
+      if (data && data.success) {
+        setSearchResults(data.data || []);
+        
+        if (data.data.length === 0) {
+          toast({
+            title: "No results found",
+            description: "Try a different search term or check our recommended foods.",
+          });
+        }
+      } else {
+        throw new Error(data?.error || "Failed to search food products");
+      }
     } catch (error: any) {
       console.error("Error searching foods:", error.message);
+      toast({
+        title: "Search error",
+        description: "There was a problem with your search. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -103,6 +125,12 @@ const FoodDatabase = () => {
 
   const handlePetChange = (petId: string) => {
     setSelectedPetId(petId);
+  };
+
+  const sendToAnalyzer = (ingredients: string[]) => {
+    setActiveTab("analyzer");
+    setProductDialogOpen(false);
+    setAnalyzerIngredients(ingredients.join(", "));
   };
 
   return (
@@ -205,16 +233,40 @@ const FoodDatabase = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer">
+                <div 
+                  className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer"
+                  onClick={() => {
+                    setSearchQuery("dry");
+                    handleSearch();
+                  }}
+                >
                   <h3 className="font-medium">Dry Food</h3>
                 </div>
-                <div className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer">
+                <div 
+                  className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer"
+                  onClick={() => {
+                    setSearchQuery("wet");
+                    handleSearch();
+                  }}
+                >
                   <h3 className="font-medium">Wet Food</h3>
                 </div>
-                <div className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer">
+                <div 
+                  className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer"
+                  onClick={() => {
+                    setSearchQuery("treat");
+                    handleSearch();
+                  }}
+                >
                   <h3 className="font-medium">Treats</h3>
                 </div>
-                <div className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer">
+                <div 
+                  className="p-4 border rounded-lg text-center hover:bg-accent/50 cursor-pointer"
+                  onClick={() => {
+                    setSearchQuery("supplement");
+                    handleSearch();
+                  }}
+                >
                   <h3 className="font-medium">Supplements</h3>
                 </div>
               </div>
@@ -246,7 +298,11 @@ const FoodDatabase = () => {
                   Paste ingredients from pet food packaging to check if they're safe for your pet.
                 </AlertDescription>
               </Alert>
-              <FoodAnalyzer petId={selectedPetId} petName={pets.find(p => p.id === selectedPetId)?.name || ""} />
+              <FoodAnalyzer 
+                petId={selectedPetId} 
+                petName={pets.find(p => p.id === selectedPetId)?.name || ""} 
+                initialIngredients={analyzerIngredients}
+              />
             </>
           ) : (
             <Card>
@@ -307,13 +363,7 @@ const FoodDatabase = () => {
                 <Button 
                   className="w-full" 
                   variant="outline" 
-                  onClick={() => {
-                    setActiveTab("analyzer");
-                    setProductDialogOpen(false);
-                    // Pass ingredients to analyzer
-                    const ingredientsStr = selectedProduct.ingredients.join(", ");
-                    // Would need to pass this to the FoodAnalyzer component
-                  }}
+                  onClick={() => sendToAnalyzer(selectedProduct.ingredients)}
                 >
                   Analyze Ingredients
                 </Button>
