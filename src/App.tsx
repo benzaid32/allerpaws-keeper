@@ -37,6 +37,7 @@ function App() {
                 <Route path="/pets" element={<ProtectedRoute><ManagePets /></ProtectedRoute>} />
                 <Route path="/add-pet" element={<ProtectedRoute><AddPet /></ProtectedRoute>} />
                 <Route path="/edit-pet/:id" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
+                <Route path="/pet/:id" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
                 <Route path="/symptom-diary" element={<ProtectedRoute><SymptomDiary /></ProtectedRoute>} />
                 <Route path="/add-symptom" element={<ProtectedRoute><AddSymptomEntry /></ProtectedRoute>} />
