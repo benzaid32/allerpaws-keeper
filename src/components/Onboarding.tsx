@@ -30,7 +30,7 @@ const EXTENDED_STEPS = [...ONBOARDING_STEPS, "Register"];
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, signIn } = useAuth();
   const [step, setStep] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -112,10 +112,24 @@ const Onboarding: React.FC = () => {
         return false;
       }
       
+      // Sign in immediately after registration to get a valid session
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (signInError) {
+        console.error("Error signing in after registration:", signInError);
+        // Continue anyway since we have the user ID from registration
+      }
+      
       // Insert pet data into Supabase
       const { data: petData, error: petError } = await supabase.from("pets").insert({
         name: pet.name,
         species: pet.species,
+        breed: pet.breed,
+        age: pet.age,
+        weight: pet.weight,
         user_id: authData.user.id,
       }).select().single();
 
@@ -124,6 +138,8 @@ const Onboarding: React.FC = () => {
         setRegistrationError("Failed to save pet information");
         return false;
       }
+
+      console.log("Pet saved successfully:", petData);
 
       // Save pet allergies if any
       if (pet.knownAllergies.length > 0) {
@@ -177,12 +193,17 @@ const Onboarding: React.FC = () => {
         const { data, error } = await supabase.from("pets").insert({
           name: pet.name,
           species: pet.species,
+          breed: pet.breed,
+          age: pet.age,
+          weight: pet.weight,
           user_id: user.id,
         }).select().single();
 
         if (error) {
           throw error;
         }
+
+        console.log("Pet saved successfully:", data);
 
         // Save pet allergies if any
         if (pet.knownAllergies.length > 0) {
