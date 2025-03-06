@@ -6,8 +6,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Pet } from "@/lib/types";
-import { LogOut, Plus, PawPrint } from "lucide-react";
+import { LogOut } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
+import PetDetailsView from "@/components/dashboard/PetDetailsView";
+import PetListView from "@/components/dashboard/PetListView";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -109,6 +112,11 @@ const Dashboard = () => {
     navigate("/pets");
   };
 
+  const handleBackToAllPets = () => {
+    setSelectedPet(null);
+    navigate("/");
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 pb-20">
       <div className="flex justify-between items-center mb-8">
@@ -126,118 +134,11 @@ const Dashboard = () => {
       </div>
 
       {selectedPet ? (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Pet Details: {selectedPet.name}</h3>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => {
-                setSelectedPet(null);
-                navigate("/");
-              }}
-            >
-              Back to All Pets
-            </Button>
-          </div>
-          
-          <div className="border rounded-lg p-6">
-            <h3 className="font-semibold text-lg">{selectedPet.name}</h3>
-            <p className="text-muted-foreground capitalize">{selectedPet.species}</p>
-            
-            {selectedPet.breed && (
-              <p className="mt-2">
-                <span className="text-sm text-muted-foreground">Breed: </span>
-                <span className="text-sm">{selectedPet.breed}</span>
-              </p>
-            )}
-            
-            {selectedPet.age && (
-              <p className="mt-2">
-                <span className="text-sm text-muted-foreground">Age: </span>
-                <span className="text-sm">{selectedPet.age} years</span>
-              </p>
-            )}
-            
-            {selectedPet.weight && (
-              <p className="mt-2">
-                <span className="text-sm text-muted-foreground">Weight: </span>
-                <span className="text-sm">{selectedPet.weight} kg</span>
-              </p>
-            )}
-            
-            {selectedPet.knownAllergies && selectedPet.knownAllergies.length > 0 && (
-              <div className="mt-4">
-                <h4 className="text-md font-medium">Known Allergies:</h4>
-                <ul className="list-disc list-inside mt-2">
-                  {selectedPet.knownAllergies.map((allergy, index) => (
-                    <li key={index} className="text-sm">{allergy}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            
-            <div className="mt-6 flex gap-3">
-              <Button 
-                onClick={() => navigate(`/edit-pet/${selectedPet.id}`)}
-                variant="outline"
-                size="sm"
-              >
-                Edit Details
-              </Button>
-              <Button 
-                onClick={() => navigate(`/symptom-diary?petId=${selectedPet.id}`)}
-                variant="outline"
-                size="sm"
-              >
-                Symptom Diary
-              </Button>
-            </div>
-          </div>
-        </div>
+        <PetDetailsView pet={selectedPet} onBack={handleBackToAllPets} />
       ) : loading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-        </div>
+        <LoadingSpinner />
       ) : (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Your Pets</h3>
-            <Button onClick={handleManagePets} size="sm">
-              <PawPrint className="h-4 w-4 mr-2" />
-              Manage Pets
-            </Button>
-          </div>
-          
-          {pets.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {pets.map((pet) => (
-                <div 
-                  key={pet.id}
-                  className="border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => navigate(`/pet/${pet.id}`)}
-                >
-                  <h3 className="font-semibold text-lg">{pet.name}</h3>
-                  <p className="text-muted-foreground capitalize">{pet.species}</p>
-                  {pet.knownAllergies && pet.knownAllergies.length > 0 && (
-                    <div className="mt-2">
-                      <span className="text-sm text-muted-foreground">Allergies: </span>
-                      <span className="text-sm">{pet.knownAllergies.join(", ")}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 border rounded-lg bg-muted/30">
-              <h3 className="text-lg font-medium mb-2">No pets yet</h3>
-              <p className="text-muted-foreground mb-6">
-                Start by adding your first pet to AllerPaws.
-              </p>
-              <Button onClick={handleManagePets}>Add Your Pet</Button>
-            </div>
-          )}
-        </div>
+        <PetListView pets={pets} onManagePets={handleManagePets} />
       )}
       
       <BottomNavigation />
