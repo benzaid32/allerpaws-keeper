@@ -27,7 +27,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Network-only strategy with properly handled CORS - avoid fetch() for external domains
+// Network-only strategy without CORS handling - only handle same-origin requests
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
@@ -54,7 +54,7 @@ self.addEventListener('fetch', (event) => {
       })
     );
   }
-  // For cross-origin requests, use default browser behavior (don't intercept)
+  // For cross-origin requests, don't intercept - let browser handle them natively
 });
 
 // Force clients to update
