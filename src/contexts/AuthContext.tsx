@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect } from "react";
 import {
   Session,
@@ -90,22 +91,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    setLoading(true);
     try {
       console.log("Attempting to sign out...");
-      await supabase.auth.signOut();
+      
+      // Set loading to true to show loading state during sign out
+      setLoading(true);
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Error signing out:", error.message);
+        throw error;
+      }
       
       // Clear local state after successful sign out
       setUser(null);
       setSession(null);
       
-      // Clear any stored data
+      // Clear any stored data in localStorage
       localStorage.removeItem('tempPetData');
       
       console.log("Sign out successful");
       
-      // Force page reload to clear any cached state
+      // Force page reload to clear any cached state and ensure complete logout
       window.location.href = "/";
+      
     } catch (error: any) {
       console.error("Error signing out:", error.message);
       throw error;

@@ -27,12 +27,15 @@ const HomeHeader = () => {
   
   const handleSignOut = async () => {
     try {
+      console.log("HomeHeader: Initiating sign out process");
       await signOut();
       toast({
         title: "Signed out successfully",
         description: "You have been signed out of your account",
       });
+      // The page will be redirected by the signOut function in AuthContext
     } catch (error: any) {
+      console.error("HomeHeader: Error during sign out:", error);
       toast({
         variant: "destructive",
         title: "Sign out failed",

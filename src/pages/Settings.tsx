@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,10 +17,11 @@ const Settings = () => {
 
   const handleSignOut = async () => {
     try {
+      console.log("Settings page: Initiating sign out process");
       await signOut();
-      navigate("/");
+      // The page will be redirected by the signOut function in AuthContext
     } catch (error) {
-      console.error("Error signing out:", error);
+      console.error("Settings page: Error during sign out:", error);
     }
   };
 
