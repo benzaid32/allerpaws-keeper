@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Pet } from "@/lib/types";
 import BottomNavigation from "@/components/BottomNavigation";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import PremiumFeatureLimit from "@/components/subscription/PremiumFeatureLimit";
 
 const ManagePets = () => {
@@ -17,7 +17,7 @@ const ManagePets = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { maxAllowedPets, isPremium } = useSubscription();
+  const { maxAllowedPets, isPremium } = useSubscriptionContext();
 
   useEffect(() => {
     const fetchPets = async () => {

@@ -3,19 +3,24 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-interface Subscription {
-  status: string;
-  planId: string;
-  currentPeriodEnd: string;
-  cancelAtPeriodEnd: boolean;
-}
+import { UserSubscription } from '@/types/subscriptions';
 
 export const useSubscription = () => {
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Derived properties based on subscription status
+  const isPremium = Boolean(
+    subscription && 
+    subscription.status === "active" && 
+    (subscription.plan_id === "monthly" || subscription.plan_id === "annual")
+  );
+  
+  const maxAllowedPets = isPremium ? Infinity : 2; // Free users get 2 pets
+  const maxEntriesPerMonth = isPremium ? Infinity : 30; // Free users get 30 entries per month
+  const canAccessAdvancedAnalysis = isPremium;
 
   const fetchSubscription = async () => {
     if (!user) {
@@ -41,13 +46,7 @@ export const useSubscription = () => {
       }
 
       if (data && data.length > 0) {
-        const subData = data[0];
-        setSubscription({
-          status: subData.status,
-          planId: subData.plan_id,
-          currentPeriodEnd: subData.current_period_end,
-          cancelAtPeriodEnd: subData.cancel_at_period_end,
-        });
+        setSubscription(data[0] as UserSubscription);
       } else {
         // No subscription found
         setSubscription(null);
@@ -85,7 +84,7 @@ export const useSubscription = () => {
       if (subscription) {
         setSubscription({
           ...subscription,
-          cancelAtPeriodEnd: true
+          cancel_at_period_end: true
         });
       }
       
@@ -119,7 +118,7 @@ export const useSubscription = () => {
       if (subscription) {
         setSubscription({
           ...subscription,
-          cancelAtPeriodEnd: false
+          cancel_at_period_end: false
         });
       }
       
@@ -146,6 +145,10 @@ export const useSubscription = () => {
   return {
     subscription,
     loading,
+    isPremium,
+    maxAllowedPets,
+    maxEntriesPerMonth,
+    canAccessAdvancedAnalysis,
     cancelSubscription,
     resumeSubscription,
     fetchSubscription

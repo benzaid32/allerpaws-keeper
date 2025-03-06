@@ -1,6 +1,6 @@
 
 import React, { ReactNode } from "react";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import PremiumFeatureLimit from "./PremiumFeatureLimit";
 
 interface PremiumFeatureProps {
@@ -18,7 +18,7 @@ const PremiumFeature = ({
   fallback,
   showUpgradeButton = true
 }: PremiumFeatureProps) => {
-  const { isPremium } = useSubscription();
+  const { isPremium } = useSubscriptionContext();
   
   if (isPremium) {
     return <>{children}</>;

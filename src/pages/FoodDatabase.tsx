@@ -9,7 +9,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import { FoodProduct } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import PremiumFeature from "@/components/subscription/PremiumFeature";
 
 const FoodDatabase = () => {
@@ -18,7 +18,7 @@ const FoodDatabase = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<FoodProduct[]>([]);
   const [loading, setLoading] = useState(false);
-  const { isPremium } = useSubscription();
+  const { isPremium } = useSubscriptionContext();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
