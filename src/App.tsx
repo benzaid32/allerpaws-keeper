@@ -27,9 +27,14 @@ import HeroSection from './components/home/welcome/HeroSection';
 import FeaturesSection from './components/home/welcome/FeaturesSection';
 import TestimonialsSection from './components/home/welcome/TestimonialsSection';
 import LandingFooter from './components/home/welcome/LandingFooter';
+import EnhancedDashboard from './components/dashboard/EnhancedDashboard';
 
 // Create a simplified landing page using the original components
 const OriginalLanding = () => {
+  const handleGetStarted = () => {
+    window.location.href = '/auth';
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <div className="flex justify-center items-center py-4 border-b">
@@ -43,7 +48,7 @@ const OriginalLanding = () => {
         </div>
       </div>
       <main className="flex-1">
-        <HeroSection />
+        <HeroSection onGetStarted={handleGetStarted} />
         <FeaturesSection />
         <TestimonialsSection />
       </main>
@@ -116,7 +121,7 @@ function App() {
             <SubscriptionProvider>
               <Toaster />
               <Routes>
-                <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/" element={<ProtectedRoute><EnhancedDashboard /></ProtectedRoute>} />
                 <Route path="/landing" element={<OriginalLanding />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<Navigate to="/" replace />} />
