@@ -51,6 +51,17 @@ const ReminderFormDialog: React.FC<ReminderFormDialogProps> = ({
       setIsEditing(true);
     } else {
       setIsEditing(false);
+      // Initialize with default values
+      setFormData({
+        id: "",
+        title: "",
+        description: "",
+        time: "08:00",
+        days: ["mon", "tue", "wed", "thu", "fri"],
+        petId: "none",
+        petName: undefined,
+        active: true
+      });
     }
   }, [reminderToEdit, setFormData, setIsEditing]);
 

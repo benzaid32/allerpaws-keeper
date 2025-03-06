@@ -1,4 +1,3 @@
-
 export const APP_NAME = "AllerPaws";
 export const APP_DESCRIPTION = "Track, manage and prevent pet food allergies";
 
@@ -147,21 +146,16 @@ export const NAVIGATION_ITEMS = [
   { name: "Settings", path: "/settings", icon: "settings" }
 ];
 
+// Update to include severity property
 export const COMMON_SYMPTOMS = [
-  { id: "1", name: "Itching", description: "Excessive scratching or licking", icon: "paw" },
-  { id: "2", name: "Ear Infection", description: "Redness, swelling, or discharge", icon: "ear" },
-  { id: "3", name: "Digestive Issues", description: "Vomiting, diarrhea, or flatulence", icon: "stomach" },
-  { id: "4", name: "Skin Rash", description: "Red, inflamed, or irritated skin", icon: "rash" },
-  { id: "5", name: "Hair Loss", description: "Patchy or general hair loss", icon: "hair" }
+  { id: "1", name: "Itching", description: "Excessive scratching or licking", severity: "moderate", icon: "paw" },
+  { id: "2", name: "Ear Infection", description: "Redness, swelling, or discharge", severity: "moderate", icon: "ear" },
+  { id: "3", name: "Digestive Issues", description: "Vomiting, diarrhea, or flatulence", severity: "moderate", icon: "stomach" },
+  { id: "4", name: "Skin Rash", description: "Red, inflamed, or irritated skin", severity: "moderate", icon: "rash" },
+  { id: "5", name: "Hair Loss", description: "Patchy or general hair loss", severity: "moderate", icon: "hair" }
 ];
 
+// Fix allergens to be strings instead of objects
 export const COMMON_ALLERGENS = [
-  { id: "1", name: "Beef", category: "protein" },
-  { id: "2", name: "Chicken", category: "protein" },
-  { id: "3", name: "Dairy", category: "protein" },
-  { id: "4", name: "Egg", category: "protein" },
-  { id: "5", name: "Wheat", category: "grain" },
-  { id: "6", name: "Corn", category: "grain" },
-  { id: "7", name: "Soy", category: "legume" },
-  { id: "8", name: "Fish", category: "protein" }
+  "Beef", "Chicken", "Dairy", "Egg", "Wheat", "Corn", "Soy", "Fish"
 ];
