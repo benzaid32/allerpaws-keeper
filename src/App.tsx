@@ -21,6 +21,8 @@ import EditPet from "./pages/EditPet";
 import AddPet from "./pages/AddPet";
 import FoodEntry from "./pages/FoodEntry";
 import Reminders from "./pages/Reminders";
+import Pricing from "./pages/Pricing";
+import SubscriptionCheckout from "./pages/SubscriptionCheckout";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +36,15 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route
+              path="/subscription/checkout"
+              element={
+                <ProtectedRoute>
+                  <SubscriptionCheckout />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/dashboard"
               element={

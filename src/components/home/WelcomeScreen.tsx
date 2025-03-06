@@ -33,6 +33,13 @@ const WelcomeScreen = ({ showOnboarding, onGetStarted }: WelcomeScreenProps) => 
               >
                 Sign In
               </Button>
+              <Button
+                onClick={() => navigate("/pricing")}
+                variant="ghost"
+                className="w-full"
+              >
+                View Pricing
+              </Button>
             </div>
           </div>
         )}

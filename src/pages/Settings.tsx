@@ -1,5 +1,6 @@
+
 import React, { useState } from "react";
-import { Bell, Download, LogOut, ChevronRight, BellOff } from "lucide-react";
+import { Bell, Download, LogOut, ChevronRight, BellOff, CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +10,10 @@ import { Switch } from "@/components/ui/switch";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useSettings } from "@/hooks/use-settings";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useSubscription } from "@/hooks/use-subscription";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import ManageSubscription from "@/components/subscription/ManageSubscription";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -23,7 +27,16 @@ const Settings = () => {
     requestPermission, 
     sendTestNotification
   } = useNotifications();
-
+  const {
+    subscription,
+    loading: subscriptionLoading,
+    isProcessing,
+    hasPremium,
+    cancelSubscription,
+    resumeSubscription
+  } = useSubscription();
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -45,6 +58,11 @@ const Settings = () => {
       setExporting(false);
     }
   };
+  
+  const handleCancelSubscription = async () => {
+    await cancelSubscription();
+    setShowCancelDialog(false);
+  };
 
   return (
     <div className="container pb-20">
@@ -52,6 +70,44 @@ const Settings = () => {
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-muted-foreground">Customize your experience</p>
       </div>
+      
+      {/* Subscription Card */}
+      <Card className="mb-6">
+        <CardHeader className="pb-2">
+          <div className="flex items-center">
+            <CreditCard className="h-5 w-5 mr-2" />
+            <CardTitle className="text-lg">Subscription</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {subscriptionLoading ? (
+            <div className="py-8 flex justify-center">
+              <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          ) : subscription ? (
+            <ManageSubscription
+              subscription={subscription}
+              isLoading={isProcessing}
+              onCancel={() => setShowCancelDialog(true)}
+              onResume={resumeSubscription}
+              onUpgrade={() => navigate("/pricing")}
+            />
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Upgrade to AllerPaws Premium to unlock advanced features and remove ads.
+              </p>
+              <Button 
+                onClick={() => navigate("/pricing")} 
+                className="w-full"
+              >
+                <CreditCard className="mr-2 h-4 w-4" />
+                View Premium Plans
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="mb-6">
         <CardHeader className="pb-2">
@@ -196,6 +252,39 @@ const Settings = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Cancel Subscription Confirmation Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Subscription</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel your AllerPaws Premium subscription?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm">
+              If you cancel, your subscription will remain active until the end of your current billing period on{" "}
+              {subscription ? new Date(subscription.currentPeriodEnd).toLocaleDateString() : ""}.
+            </p>
+            <p className="text-sm mt-2">
+              You'll lose access to premium features after that date.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
+              Keep Subscription
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleCancelSubscription}
+              disabled={isProcessing}
+            >
+              {isProcessing ? "Processing..." : "Cancel Subscription"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <BottomNavigation />
     </div>
