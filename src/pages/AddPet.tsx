@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Plus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import BottomNavigation from "@/components/BottomNavigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { SEVERITY_LEVELS } from "@/lib/constants";
+import MobileLayout from "@/components/layout/MobileLayout";
+import MobileCard from "@/components/ui/mobile-card";
 
 interface PetFormData {
   name: string;
@@ -37,6 +36,9 @@ const AddPet = () => {
   });
   const [currentAllergy, setCurrentAllergy] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -48,48 +50,80 @@ const AddPet = () => {
   };
 
   const addAllergy = () => {
-    if (!currentAllergy.trim()) return;
-    
-    // Check if already exists
-    if (formData.allergies.includes(currentAllergy.trim())) {
-      toast({
-        title: "Allergen already added",
-        description: "This allergen is already in the list",
-        variant: "destructive",
-      });
-      return;
+    if (currentAllergy.trim() && !formData.allergies.includes(currentAllergy.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        allergies: [...prev.allergies, currentAllergy.trim()]
+      }));
+      setCurrentAllergy("");
     }
-    
-    setFormData(prev => ({
-      ...prev,
-      allergies: [...prev.allergies, currentAllergy.trim()]
-    }));
-    setCurrentAllergy("");
   };
 
   const removeAllergy = (allergyToRemove: string) => {
     setFormData(prev => ({
       ...prev,
-      allergies: prev.allergies.filter(a => a !== allergyToRemove)
+      allergies: prev.allergies.filter(allergy => allergy !== allergyToRemove)
     }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!user) {
       toast({
-        title: "Authentication error",
+        title: "Error",
         description: "You must be logged in to add a pet",
         variant: "destructive",
       });
       return;
     }
-    
+
+    if (!formData.name || !formData.species) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide at least a name and species for your pet",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+
     try {
-      setSubmitting(true);
-      
-      // Add pet info
+      // Upload image if provided
+      let imageUrl = null;
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+        const filePath = `pet-images/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('pet-images')
+          .upload(filePath, imageFile);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('pet-images')
+          .getPublicUrl(filePath);
+
+        imageUrl = urlData.publicUrl;
+      }
+
+      // Convert string values to appropriate types for database
+      const age = formData.age ? parseFloat(formData.age) : null;
+      const weight = formData.weight ? parseFloat(formData.weight) : null;
+
+      // Insert pet data with proper types
       const { data: petData, error: petError } = await supabase
         .from("pets")
         .insert({
@@ -97,43 +131,45 @@ const AddPet = () => {
           name: formData.name,
           species: formData.species,
           breed: formData.breed || null,
-          age: formData.age ? parseInt(formData.age) : null,
-          weight: formData.weight ? parseFloat(formData.weight) : null,
+          age: age,
+          weight: weight,
+          image_url: imageUrl,
         })
-        .select()
-        .single();
-        
-      if (petError) throw petError;
-      
-      // Add allergies if any
-      if (formData.allergies.length > 0) {
-        // Use the first severity level (mild) as default
-        const severity = SEVERITY_LEVELS[0];
-        
-        const allergiesToInsert = formData.allergies.map(name => ({
-          pet_id: petData.id,
-          name,
-          severity, // Using the correct severity value from constants
-        }));
-        
-        const { error: allergiesError } = await supabase
-          .from("allergies")
-          .insert(allergiesToInsert);
-          
-        if (allergiesError) throw allergiesError;
+        .select();
+
+      if (petError) {
+        throw petError;
       }
-      
+
+      // Insert allergies if any
+      if (formData.allergies.length > 0 && petData && petData[0]) {
+        const petId = petData[0].id;
+        const allergyRecords = formData.allergies.map(allergy => ({
+          pet_id: petId,
+          name: allergy,
+          severity: SEVERITY_LEVELS[0], // Use the first severity level (mild)
+        }));
+
+        const { error: allergyError } = await supabase
+          .from("allergies")
+          .insert(allergyRecords);
+
+        if (allergyError) {
+          throw allergyError;
+        }
+      }
+
       toast({
-        title: "Pet added",
-        description: `${formData.name} has been added to your pets`,
+        title: "Success",
+        description: "Your pet has been added successfully",
       });
-      
-      navigate(`/pet/${petData.id}`);
+
+      navigate("/manage-pets");
     } catch (error: any) {
       console.error("Error adding pet:", error.message);
       toast({
         title: "Error",
-        description: "Failed to add pet",
+        description: "Failed to add your pet",
         variant: "destructive",
       });
     } finally {
@@ -141,166 +177,241 @@ const AddPet = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-background/95">
-      <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none z-0"></div>
-      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full filter blur-3xl -z-10"></div>
-      <div className="absolute bottom-0 left-0 w-72 h-72 bg-accent/5 rounded-full filter blur-3xl -z-10"></div>
-      
-      <div className="container pt-6 pb-20">
-        <div className="flex items-center mb-4">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mr-2">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center">
-            <img 
-              src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
-              alt="AllerPaws" 
-              className="w-6 h-6 mr-2" 
-            />
-            <h1 className="text-2xl font-bold">Add New Pet</h1>
-          </div>
-        </div>
+  const nextStep = () => {
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <Card className="border-border/50 shadow-elegant backdrop-blur-sm bg-card/95">
-            <CardHeader>
-              <CardTitle>Enter Pet Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Pet Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="species">Species</Label>
-                  <Select
-                    value={formData.species}
-                    onValueChange={(value) => handleSelectChange("species", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select species" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dog">Dog</SelectItem>
-                      <SelectItem value="cat">Cat</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="breed">Breed (Optional)</Label>
-                  <Input
-                    id="breed"
-                    name="breed"
-                    value={formData.breed}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="age">Age in Years (Optional)</Label>
-                    <Input
-                      id="age"
-                      name="age"
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={formData.age}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="weight">Weight in lbs (Optional)</Label>
-                    <Input
-                      id="weight"
-                      name="weight"
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={formData.weight}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Known Allergies or Sensitivities</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={currentAllergy}
-                      onChange={(e) => setCurrentAllergy(e.target.value)}
-                      placeholder="Add an allergen"
-                      className="flex-1"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addAllergy();
-                        }
-                      }}
-                    />
-                    <Button type="button" onClick={addAllergy} size="icon">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  {formData.allergies.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {formData.allergies.map((allergy) => (
-                        <Badge key={allergy} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1">
-                          <span>{allergy}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-4 w-4 ml-1 hover:bg-muted"
-                            onClick={() => removeAllergy(allergy)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                      ))}
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <MobileCard className="mb-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Pet Name *</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter your pet's name"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="species">Species *</Label>
+                <Select
+                  value={formData.species}
+                  onValueChange={(value) => handleSelectChange("species", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select species" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dog">Dog</SelectItem>
+                    <SelectItem value="cat">Cat</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="breed">Breed</Label>
+                <Input
+                  id="breed"
+                  name="breed"
+                  value={formData.breed}
+                  onChange={handleInputChange}
+                  placeholder="Enter breed (optional)"
+                />
+              </div>
+            </div>
+          </MobileCard>
+        );
+      case 2:
+        return (
+          <MobileCard className="mb-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="age">Age</Label>
+                <Input
+                  id="age"
+                  name="age"
+                  value={formData.age}
+                  onChange={handleInputChange}
+                  placeholder="Enter age (optional)"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="weight">Weight (kg)</Label>
+                <Input
+                  id="weight"
+                  name="weight"
+                  value={formData.weight}
+                  onChange={handleInputChange}
+                  placeholder="Enter weight (optional)"
+                  type="number"
+                  step="0.1"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="image">Pet Photo</Label>
+                <div className="flex flex-col items-center space-y-3">
+                  {imagePreview && (
+                    <div className="relative w-32 h-32 rounded-full overflow-hidden mb-2">
+                      <img 
+                        src={imagePreview} 
+                        alt="Pet preview" 
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-0 right-0 h-6 w-6 rounded-full"
+                        onClick={() => {
+                          setImageFile(null);
+                          setImagePreview(null);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
                     </div>
                   )}
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all" 
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Adding Pet...
-                    </>
-                  ) : (
-                    "Add Pet"
+                  <Input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className={imagePreview ? "hidden" : ""}
+                  />
+                  {!imagePreview && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => document.getElementById('image')?.click()}
+                    >
+                      Choose Photo
+                    </Button>
                   )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </motion.div>
+                </div>
+              </div>
+            </div>
+          </MobileCard>
+        );
+      case 3:
+        return (
+          <MobileCard className="mb-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="allergies">Known Allergies</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="currentAllergy"
+                    value={currentAllergy}
+                    onChange={(e) => setCurrentAllergy(e.target.value)}
+                    placeholder="Add an allergy"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addAllergy();
+                      }
+                    }}
+                  />
+                  <Button type="button" onClick={addAllergy} variant="outline">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
 
-        <BottomNavigation />
+              {formData.allergies.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.allergies.map((allergy, index) => (
+                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                      {allergy}
+                      <button
+                        type="button"
+                        onClick={() => removeAllergy(allergy)}
+                        className="ml-1 text-xs"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </MobileCard>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <MobileLayout 
+      title="Add Pet" 
+      showBackButton={true}
+      onBack={() => navigate("/manage-pets")}
+    >
+      <div className="space-y-4">
+        {/* Progress indicator */}
+        <div className="flex justify-between mb-4">
+          {[1, 2, 3].map((step) => (
+            <div 
+              key={step}
+              className={`h-2 flex-1 mx-1 rounded-full ${
+                currentStep >= step ? "bg-primary" : "bg-gray-200"
+              }`}
+            />
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {renderStepContent()}
+
+          <div className="flex justify-between mt-6">
+            {currentStep > 1 ? (
+              <Button type="button" variant="outline" onClick={prevStep}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
+            ) : (
+              <Button type="button" variant="outline" onClick={() => navigate("/manage-pets")}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+            )}
+
+            {currentStep < 3 ? (
+              <Button type="button" onClick={nextStep}>
+                Next
+              </Button>
+            ) : (
+              <Button type="submit" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Pet"
+                )}
+              </Button>
+            )}
+          </div>
+        </form>
       </div>
-    </div>
+    </MobileLayout>
   );
 };
 

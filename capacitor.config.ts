@@ -1,4 +1,3 @@
-
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -14,7 +13,17 @@ const config: CapacitorConfig = {
       smallIcon: "ic_stat_icon_config_sample",
       iconColor: "#488AFF",
       sound: "beep.wav",
-    },
+      vibrate: true,
+      importance: "high",
+      visibility: "public",
+      foreground: true
+    }
+  },
+  android: {
+    allowMixedContent: true
+  },
+  ios: {
+    contentInset: "always"
   }
 };
 

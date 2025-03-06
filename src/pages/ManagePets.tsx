@@ -1,172 +1,215 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { usePets } from "@/hooks/use-pets";
+import MobileLayout from "@/components/layout/MobileLayout";
+import MobileCard from "@/components/ui/mobile-card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Pet } from "@/lib/types";
-import BottomNavigation from "@/components/BottomNavigation";
-import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
-import PremiumFeatureLimit from "@/components/subscription/PremiumFeatureLimit";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { 
+  PlusCircle, 
+  Pencil, 
+  Trash, 
+  MoreVertical,
+  PawPrint
+} from "lucide-react";
+import { 
+  DropdownMenu, 
+  DropdownMenuTrigger, 
+  DropdownMenuContent, 
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const ManagePets = () => {
-  const { user } = useAuth();
-  const [pets, setPets] = useState<Pet[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { pets, loading, deletePet } = usePets();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { maxAllowedPets, isPremium } = useSubscriptionContext();
+  const [deletingPetId, setDeletingPetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    const fetchPets = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from("pets")
-          .select("*")
-          .eq("user_id", user?.id)
-          .order("created_at", { ascending: false });
+  const handleAddPet = () => {
+    navigate("/add-pet");
+  };
 
-        if (error) {
-          throw error;
-        }
+  const handleEditPet = (petId: string) => {
+    navigate(`/edit-pet/${petId}`);
+  };
 
-        // Transform the pet data to match our Pet type
-        const transformedPets = (data || []).map((pet) => ({
-          id: pet.id,
-          name: pet.name,
-          species: pet.species as "dog" | "cat" | "other",
-          breed: pet.breed || undefined,
-          age: pet.age || undefined,
-          weight: pet.weight || undefined,
-          knownAllergies: [], // Fetch allergies separately if needed
-          imageUrl: pet.image_url || undefined,
-        } as Pet));
-
-        setPets(transformedPets);
-      } catch (error: any) {
-        console.error("Error fetching pets:", error.message);
-        toast({
-          title: "Error",
-          description: "Failed to load your pets",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPets();
-  }, [user?.id, toast]);
+  const handleViewPet = (petId: string) => {
+    navigate(`/edit-pet/${petId}`);
+  };
 
   const handleDeletePet = async (petId: string) => {
     try {
-      setLoading(true);
-      const { error } = await supabase
-        .from("pets")
-        .delete()
-        .eq("id", petId);
-
-      if (error) {
-        throw error;
-      }
-
-      setPets(pets.filter((pet) => pet.id !== petId));
-      toast({
-        title: "Success",
-        description: "Pet deleted successfully",
-      });
-    } catch (error: any) {
-      console.error("Error deleting pet:", error.message);
-      toast({
-        title: "Error",
-        description: "Failed to delete the pet",
-        variant: "destructive",
-      });
+      setDeletingPetId(petId);
+      setIsDeleting(true);
+      await deletePet(petId);
+    } catch (error) {
+      console.error("Error deleting pet:", error);
     } finally {
-      setLoading(false);
+      setDeletingPetId(null);
+      setIsDeleting(false);
     }
   };
 
+  if (loading) {
+    return (
+      <MobileLayout title="Your Pets">
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      </MobileLayout>
+    );
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8 pb-20">
-      <div className="flex items-center mb-6">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mr-2">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-2xl font-bold">Manage Pets</h1>
-      </div>
-
+    <MobileLayout title="Your Pets">
       <div className="space-y-6">
-        {!isPremium && pets.length >= maxAllowedPets && (
-          <PremiumFeatureLimit
-            title="Pet Limit Reached"
-            description={`Free accounts are limited to ${maxAllowedPets} pets. Upgrade to Premium for unlimited pet profiles.`}
-          />
-        )}
+        {/* Add Pet Button */}
+        <Button 
+          onClick={handleAddPet} 
+          className="w-full"
+        >
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add New Pet
+        </Button>
 
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        ) : pets.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Pet List */}
+        {pets.length > 0 ? (
+          <div className="space-y-4">
             {pets.map((pet) => (
-              <Card key={pet.id}>
-                <CardHeader>
-                  <CardTitle>{pet.name}</CardTitle>
-                  <CardDescription className="capitalize">{pet.species}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-between items-center">
-                  <div>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => navigate(`/edit-pet/${pet.id}`)}
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </Button>
+              <MobileCard
+                key={pet.id}
+                onClick={() => handleViewPet(pet.id)}
+                className="hover:border-primary/30"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12">
+                      {pet.imageUrl ? (
+                        <AvatarImage src={pet.imageUrl} alt={pet.name} />
+                      ) : (
+                        <AvatarFallback>{pet.name.charAt(0)}</AvatarFallback>
+                      )}
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-lg">{pet.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="capitalize">
+                          {pet.species}
+                        </Badge>
+                        {pet.breed && (
+                          <span className="text-xs text-muted-foreground">
+                            {pet.breed}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeletePet(pet.id)}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </Button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewPet(pet.id);
+                      }}>
+                        <PawPrint className="mr-2 h-4 w-4" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditPet(pet.id);
+                      }}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onSelect={(e) => {
+                              e.preventDefault();
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Trash className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Pet</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete {pet.name}? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeletePet(pet.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              disabled={isDeleting && deletingPetId === pet.id}
+                            >
+                              {isDeleting && deletingPetId === pet.id ? "Deleting..." : "Delete"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                
+                {pet.knownAllergies && pet.knownAllergies.length > 0 && (
+                  <div className="mt-3 pt-3 border-t">
+                    <span className="text-sm text-muted-foreground block mb-2">Allergies: </span>
+                    <div className="flex flex-wrap gap-1">
+                      {pet.knownAllergies.map((allergy, idx) => (
+                        <Badge key={idx} variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                          {allergy}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                )}
+              </MobileCard>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 border rounded-lg bg-muted/30">
-            <h3 className="text-lg font-medium mb-2">No pets yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Start by adding your first pet to AllerPaws.
-            </p>
-          </div>
+          <MobileCard className="border-dashed border-muted-foreground/30">
+            <div className="flex flex-col items-center justify-center py-6">
+              <div className="rounded-full bg-primary/10 p-3 mb-3">
+                <PawPrint className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-medium text-lg mb-1">No pets yet</h3>
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                Add your first pet to start tracking their allergies and symptoms
+              </p>
+              <Button onClick={handleAddPet}>
+                Add Your First Pet
+              </Button>
+            </div>
+          </MobileCard>
         )}
-
-        <Button 
-          onClick={() => navigate("/add-pet")} 
-          className="w-full" 
-          disabled={!isPremium && pets.length >= maxAllowedPets}
-        >
-          <Plus className="mr-2 h-4 w-4" /> 
-          Add New Pet
-        </Button>
       </div>
-
-      <BottomNavigation />
-    </div>
+    </MobileLayout>
   );
 };
 

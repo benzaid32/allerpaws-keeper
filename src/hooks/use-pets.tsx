@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -90,11 +89,53 @@ export function usePets() {
     setSelectedPet(null);
   };
 
+  const deletePet = async (petId: string) => {
+    try {
+      // First delete allergies associated with the pet
+      const { error: allergiesError } = await supabase
+        .from("allergies")
+        .delete()
+        .eq("pet_id", petId);
+      
+      if (allergiesError) {
+        throw allergiesError;
+      }
+      
+      // Then delete the pet
+      const { error: petError } = await supabase
+        .from("pets")
+        .delete()
+        .eq("id", petId);
+      
+      if (petError) {
+        throw petError;
+      }
+      
+      // Update local state
+      setPets(pets.filter(pet => pet.id !== petId));
+      
+      toast({
+        title: "Success",
+        description: "Pet has been deleted successfully",
+      });
+      
+    } catch (error: any) {
+      console.error("Error deleting pet:", error.message);
+      toast({
+        title: "Error",
+        description: "Failed to delete pet",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   return {
     pets,
     loading,
     selectedPet,
     setSelectedPet,
-    clearSelectedPet
+    clearSelectedPet,
+    deletePet
   };
 }

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -27,7 +26,11 @@ import HeroSection from './components/home/welcome/HeroSection';
 import FeaturesSection from './components/home/welcome/FeaturesSection';
 import TestimonialsSection from './components/home/welcome/TestimonialsSection';
 import LandingFooter from './components/home/welcome/LandingFooter';
-import EnhancedDashboard from './components/dashboard/EnhancedDashboard';
+import { useNavigate } from 'react-router-dom';
+import { Button } from './components/ui/button';
+import { isPlatform } from './lib/utils';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import InstallBanner from './components/pwa/InstallBanner';
 
 // Create a stylish, mobile-friendly landing page using the components
 const OriginalLanding = () => {
@@ -88,30 +91,82 @@ const OriginalLanding = () => {
   );
 };
 
-// Need to add the import for useNavigate and Button
-import { useNavigate } from 'react-router-dom';
-import { Button } from './components/ui/button';
-
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  // Register service worker for PWA
+  useEffect(() => {
+    const registerServiceWorker = async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.register('/service-worker.js', {
+            scope: '/'
+          });
+          console.log('Service Worker registered with scope:', registration.scope);
+        } catch (error) {
+          console.error('Service Worker registration failed:', error);
+        }
+      }
+    };
+
+    registerServiceWorker();
+  }, []);
+
+  // Request notification permissions early
+  useEffect(() => {
+    const requestNotificationPermissions = async () => {
+      try {
+        // Only request on mobile devices
+        if (isPlatform('capacitor')) {
+          console.log("App: Requesting notification permissions on startup");
+          
+          // Request permissions
+          const { display } = await LocalNotifications.requestPermissions();
+          console.log("App: Initial notification permission result:", display);
+          
+          // Try to register for notifications
+          try {
+            // Schedule a silent test notification to verify permissions
+            const testId = Math.floor(Math.random() * 10000);
+            await LocalNotifications.schedule({
+              notifications: [{
+                id: testId,
+                title: "Permission Test",
+                body: "Testing notification permissions",
+                schedule: { at: new Date(Date.now() + 3600000) }, // Far in the future
+                sound: null,
+                smallIcon: "ic_stat_icon_config_sample",
+                iconColor: '#488AFF'
+              }]
+            });
+            
+            // If we get here, notifications are allowed
+            console.log("App: Notification permission test successful");
+            
+            // Cancel the test notification
+            await LocalNotifications.cancel({ notifications: [{ id: testId }] });
+          } catch (error) {
+            console.error("App: Error testing notification permissions:", error);
+          }
+        }
+      } catch (error) {
+        console.error("App: Error requesting notification permissions:", error);
+      }
+    };
+    
+    requestNotificationPermissions();
+  }, []);
 
   // Unregister any existing service workers to prevent caching issues
   useEffect(() => {
     const cleanupServiceWorker = async () => {
       try {
-        // Unregister any existing service workers to prevent caching issues
-        if ('serviceWorker' in navigator) {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          for (const registration of registrations) {
-            await registration.unregister();
-            console.log('Service worker unregistered to prevent caching issues');
-          }
-        }
+        // We no longer unregister service workers since we want PWA functionality
+        console.log("App initialized");
+        setIsLoading(false);
       } catch (error) {
-        console.error('Service worker cleanup error:', error);
-      } finally {
-        console.log("App initialized, service worker cleanup complete");
+        console.error('Service worker error:', error);
         setIsLoading(false);
       }
     };
@@ -155,8 +210,9 @@ function App() {
           <AuthProvider>
             <SubscriptionProvider>
               <Toaster />
+              <InstallBanner />
               <Routes>
-                <Route path="/" element={<ProtectedRoute><EnhancedDashboard /></ProtectedRoute>} />
+                <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/landing" element={<OriginalLanding />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<Navigate to="/" replace />} />
@@ -165,7 +221,7 @@ function App() {
                 <Route path="/pets" element={<ProtectedRoute><ManagePets /></ProtectedRoute>} />
                 <Route path="/add-pet" element={<ProtectedRoute><AddPet /></ProtectedRoute>} />
                 <Route path="/edit-pet/:id" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
-                <Route path="/pet/:id" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/pet/:id" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
                 <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
                 <Route path="/symptom-diary" element={<ProtectedRoute><SymptomDiary /></ProtectedRoute>} />
                 <Route path="/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />

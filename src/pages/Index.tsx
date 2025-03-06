@@ -4,14 +4,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useHomeData } from "@/hooks/use-home-data";
 import BottomNavigation from "@/components/BottomNavigation";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import PatternBackground from "@/components/ui/pattern-background";
+import FeaturedImage from "@/components/ui/featured-image";
 
 // Import the components
 import HomeHeader from "@/components/home/HomeHeader";
-import QuickLogButton from "@/components/home/QuickLogButton";
 import RecentLogsCard from "@/components/home/RecentLogsCard";
 import RemindersCard from "@/components/home/RemindersCard";
 import WelcomeScreen from "@/components/home/WelcomeScreen";
-import AddPetButton from "@/components/home/AddPetButton";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -28,6 +31,7 @@ const Index = () => {
           const { data, error, count } = await supabase
             .from("pets")
             .select("id", { count: 'exact' })
+            .eq("user_id", user.id)
             .limit(1);
             
           if (error) {
@@ -61,6 +65,10 @@ const Index = () => {
     navigate("/symptom-diary/new");
   };
 
+  const handleAddPet = () => {
+    navigate("/add-pet");
+  };
+
   // If not authenticated, immediately show welcome screen
   if (!user) {
     return <WelcomeScreen showOnboarding={showOnboarding} onGetStarted={handleGetStarted} />;
@@ -70,43 +78,49 @@ const Index = () => {
   if (dataLoading || checkingPets) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-2"></div>
-        <p className="text-sm text-muted-foreground">Loading your data...</p>
+        <LoadingSpinner />
+        <p className="text-sm text-muted-foreground mt-4">Loading your data...</p>
       </div>
     );
   }
 
-  // Show the dashboard for authenticated users with enhanced background
+  // Show the dashboard for authenticated users
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-blue-50/60 dark:from-background dark:to-blue-950/20">
-      {/* Enhanced pet image background with proper styling and positioning */}
-      <div className="absolute top-0 right-0 w-full h-96 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background dark:to-background z-10"></div>
-        <div 
-          className="absolute top-0 right-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?auto=format&fit=crop&w=800&q=80')] 
-                    bg-no-repeat bg-right-top bg-cover opacity-20 dark:opacity-10
-                    transform scale-110 motion-safe:animate-pulse-gentle"
-          style={{ 
-            filter: 'saturate(1.2) contrast(1.1)',
-            animationDuration: '8s'
-          }}
-        ></div>
-      </div>
-      
-      <div className="container relative pb-20 z-20">
-        <HomeHeader />
-        
-        {/* Always show the pet management button, but with different text based on whether user has pets */}
-        <AddPetButton hasPets={hasPets} />
-        
-        <div className="space-y-6">
-          <RecentLogsCard recentLogs={recentLogs || []} onAddFirstLog={handleQuickLog} />
-          <RemindersCard reminders={reminders || []} />
+    <PatternBackground color="primary" opacity={0.03}>
+      <div className="min-h-screen">
+        <div className="container relative pb-20 pt-4">
+          <HomeHeader />
+          
+          {/* Add Pet CTA if user has no pets */}
+          {!hasPets && (
+            <div className="my-6 p-4 bg-primary/5 rounded-lg border border-primary/10 text-center">
+              <FeaturedImage 
+                name="happyDogOwner"
+                height={160}
+                className="mx-auto mb-4"
+              />
+              <h2 className="text-lg font-semibold mb-2">Welcome to AllerPaws!</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Start by adding your first pet to track allergies and symptoms
+              </p>
+              <Button onClick={handleAddPet}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Your First Pet
+              </Button>
+            </div>
+          )}
+          
+          <div className="space-y-6">
+            <RecentLogsCard recentLogs={recentLogs || []} onAddFirstLog={handleQuickLog} />
+            {reminders && reminders.length > 0 && (
+              <RemindersCard reminders={reminders} />
+            )}
+          </div>
+          
+          <BottomNavigation />
         </div>
-        <QuickLogButton />
-        <BottomNavigation />
       </div>
-    </div>
+    </PatternBackground>
   );
 };
 
