@@ -7,12 +7,17 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function isPlatform(platform: 'capacitor' | 'web'): boolean {
-  // Check if we're running in Capacitor
+  // Improved detection of Capacitor environment
   if (platform === 'capacitor') {
-    return typeof window !== 'undefined' && 
-           'Capacitor' in window && 
-           (window as any).Capacitor && 
-           (window as any).Capacitor.isNativePlatform();
+    try {
+      return typeof window !== 'undefined' && 
+             window.hasOwnProperty('Capacitor') && 
+             (window as any).Capacitor && 
+             (window as any).Capacitor.isNativePlatform();
+    } catch (error) {
+      console.error("Error checking Capacitor platform:", error);
+      return false;
+    }
   }
   
   // Default to web platform
