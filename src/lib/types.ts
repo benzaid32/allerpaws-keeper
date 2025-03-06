@@ -1,4 +1,3 @@
-
 export type Pet = {
   id: string;
   name: string;
@@ -62,6 +61,18 @@ export type EliminationPhase = {
   duration: number; // in days
   tips: string[];
   recommendedFoods?: string[];
+};
+
+// New type for Reminders
+export type Reminder = {
+  id: string;
+  title: string;
+  description?: string;
+  time: string;
+  days: string[];
+  petId?: string;
+  petName?: string;
+  active: boolean;
 };
 
 export type OnboardingStep = {

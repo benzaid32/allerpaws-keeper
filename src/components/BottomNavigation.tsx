@@ -7,7 +7,8 @@ import {
   ClipboardList, 
   BookOpen, 
   Database, 
-  Settings
+  Settings,
+  Bell
 } from "lucide-react";
 
 const navItems = [
@@ -15,6 +16,7 @@ const navItems = [
   { path: "/symptom-diary", label: "Symptoms", icon: ClipboardList },
   { path: "/elimination-diet", label: "Diet Guide", icon: BookOpen },
   { path: "/food-database", label: "Foods", icon: Database },
+  { path: "/reminders", label: "Reminders", icon: Bell },
   { path: "/settings", label: "Settings", icon: Settings },
 ];
 
