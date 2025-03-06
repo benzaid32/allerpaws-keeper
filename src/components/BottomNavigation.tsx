@@ -1,55 +1,36 @@
 
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { navItems } from "@/components/navigation/navigationData";
-import NavigationItem from "@/components/navigation/NavigationItem";
-import NavigationPageIndicator from "@/components/navigation/NavigationPageIndicator";
-import NavigationPageControls from "@/components/navigation/NavigationPageControls";
+import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import NavigationItem from "./navigation/NavigationItem";
+import { navItems } from "./navigation/navigationData";
 
 const BottomNavigation = () => {
-  const [currentPage, setCurrentPage] = useState(0);
-  const location = useLocation();
   const navigate = useNavigate();
-  
-  // Find the active index based on the current location
-  const activeIndex = navItems.findIndex(item => item.path === location.pathname);
-  
-  const handleNavigation = (path: string) => {
-    console.log("Navigation to:", path);
+  const location = useLocation();
+
+  const handleNavigate = (path: string) => {
     navigate(path);
   };
-  
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-    handleNavigation(navItems[newPage].path);
-  };
+
+  // Get the current path to determine which tab is active
+  const currentPath = location.pathname === "/dashboard" ? "/" : location.pathname;
 
   return (
-    <div className="fixed bottom-0 inset-x-0 bg-background z-50 border-t">
-      <div className="container max-w-md mx-auto relative pb-1">
-        <NavigationPageControls
-          totalPages={navItems.length}
-          currentPage={activeIndex !== -1 ? activeIndex : currentPage}
-          onPageChange={handlePageChange}
-        />
-        
-        <div className="flex justify-around items-center h-14">
-          {navItems.map((item, index) => (
-            <NavigationItem
-              key={item.path}
-              icon={item.icon}
-              label={item.label}
-              path={item.path}
-              isActive={location.pathname === item.path}
-              onClick={() => handleNavigation(item.path)}
-            />
-          ))}
-        </div>
-        
-        <NavigationPageIndicator
-          totalPages={navItems.length}
-          currentPage={activeIndex !== -1 ? activeIndex : currentPage}
-        />
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-t border-border/50 shadow-elegant-up safe-bottom">
+      <div className="flex h-16 items-center justify-around px-2 py-2">
+        {navItems.slice(0, 5).map((item) => (
+          <NavigationItem
+            key={item.path}
+            path={item.path}
+            label={item.label}
+            icon={item.icon}
+            isActive={
+              currentPath === item.path ||
+              (item.path === "/" && currentPath === "/dashboard")
+            }
+            onClick={handleNavigate}
+          />
+        ))}
       </div>
     </div>
   );

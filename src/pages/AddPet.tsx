@@ -1,6 +1,6 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -142,141 +142,164 @@ const AddPet = () => {
   };
 
   return (
-    <div className="container pt-6 pb-20">
-      <div className="flex items-center mb-4">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mr-2">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-2xl font-bold">Add New Pet</h1>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background to-background/95">
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none z-0"></div>
+      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full filter blur-3xl -z-10"></div>
+      <div className="absolute bottom-0 left-0 w-72 h-72 bg-accent/5 rounded-full filter blur-3xl -z-10"></div>
+      
+      <div className="container pt-6 pb-20">
+        <div className="flex items-center mb-4">
+          <Button variant="ghost" onClick={() => navigate(-1)} className="mr-2">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center">
+            <img 
+              src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
+              alt="AllerPaws" 
+              className="w-6 h-6 mr-2" 
+            />
+            <h1 className="text-2xl font-bold">Add New Pet</h1>
+          </div>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Enter Pet Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Pet Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="species">Species</Label>
-              <Select
-                value={formData.species}
-                onValueChange={(value) => handleSelectChange("species", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select species" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dog">Dog</SelectItem>
-                  <SelectItem value="cat">Cat</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="breed">Breed (Optional)</Label>
-              <Input
-                id="breed"
-                name="breed"
-                value={formData.breed}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="age">Age in Years (Optional)</Label>
-                <Input
-                  id="age"
-                  name="age"
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={formData.age}
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="weight">Weight in lbs (Optional)</Label>
-                <Input
-                  id="weight"
-                  name="weight"
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  value={formData.weight}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Known Allergies or Sensitivities</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={currentAllergy}
-                  onChange={(e) => setCurrentAllergy(e.target.value)}
-                  placeholder="Add an allergen"
-                  className="flex-1"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addAllergy();
-                    }
-                  }}
-                />
-                <Button type="button" onClick={addAllergy} size="icon">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              {formData.allergies.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {formData.allergies.map((allergy) => (
-                    <Badge key={allergy} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1">
-                      <span>{allergy}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-4 w-4 ml-1 hover:bg-muted"
-                        onClick={() => removeAllergy(allergy)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  ))}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card className="border-border/50 shadow-elegant backdrop-blur-sm bg-card/95">
+            <CardHeader>
+              <CardTitle>Enter Pet Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Pet Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
-              )}
-            </div>
-            
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding Pet...
-                </>
-              ) : (
-                "Add Pet"
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="species">Species</Label>
+                  <Select
+                    value={formData.species}
+                    onValueChange={(value) => handleSelectChange("species", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select species" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dog">Dog</SelectItem>
+                      <SelectItem value="cat">Cat</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="breed">Breed (Optional)</Label>
+                  <Input
+                    id="breed"
+                    name="breed"
+                    value={formData.breed}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="age">Age in Years (Optional)</Label>
+                    <Input
+                      id="age"
+                      name="age"
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={formData.age}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="weight">Weight in lbs (Optional)</Label>
+                    <Input
+                      id="weight"
+                      name="weight"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={formData.weight}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Known Allergies or Sensitivities</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={currentAllergy}
+                      onChange={(e) => setCurrentAllergy(e.target.value)}
+                      placeholder="Add an allergen"
+                      className="flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addAllergy();
+                        }
+                      }}
+                    />
+                    <Button type="button" onClick={addAllergy} size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {formData.allergies.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {formData.allergies.map((allergy) => (
+                        <Badge key={allergy} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1">
+                          <span>{allergy}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4 ml-1 hover:bg-muted"
+                            onClick={() => removeAllergy(allergy)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all" 
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Adding Pet...
+                    </>
+                  ) : (
+                    "Add Pet"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-      <BottomNavigation />
+        <BottomNavigation />
+      </div>
     </div>
   );
 };

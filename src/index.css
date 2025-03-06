@@ -156,4 +156,48 @@
       linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
   }
+  
+  /* Shadow styles */
+  .shadow-elegant {
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  }
+  
+  .shadow-elegant-up {
+    box-shadow: 0 -4px 20px -2px rgba(0, 0, 0, 0.06), 0 -2px 4px -1px rgba(0, 0, 0, 0.04);
+  }
+  
+  /* No scrollbar utility */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Animation utilities */
+  @keyframes pulse-gentle {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.03);
+    }
+  }
+  
+  .animate-pulse-gentle {
+    animation: pulse-gentle 3s ease-in-out infinite;
+  }
+  
+  /* Hover utilities */
+  .hover-scale {
+    @apply transition-transform duration-200;
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.03);
+  }
 }

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -87,6 +86,7 @@ const EliminationDiet = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-blue-50 dark:from-background dark:to-blue-950/20">
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none z-0"></div>
       <div className="absolute top-0 right-0 w-full h-64 bg-[url('https://images.unsplash.com/photo-1594149937478-a8c7a34d9d4a?auto=format&fit=crop&w=800&q=80')] bg-no-repeat bg-right-top bg-contain opacity-10 dark:opacity-5 z-0"></div>
       
       <div className="container relative pb-20 pt-4">
@@ -99,7 +99,14 @@ const EliminationDiet = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold flex-1">Elimination Diet Guide</h1>
+          <div className="flex items-center">
+            <img 
+              src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
+              alt="AllerPaws" 
+              className="w-6 h-6 mr-2" 
+            />
+            <h1 className="text-2xl font-bold">Elimination Diet Guide</h1>
+          </div>
         </div>
 
         <motion.div 
@@ -110,25 +117,31 @@ const EliminationDiet = () => {
           <p>A step-by-step guide to identify your pet's food allergies through dietary management</p>
         </motion.div>
 
-        <div className="grid grid-cols-4 gap-2 mb-6 overflow-x-auto px-1 py-2 no-scrollbar">
-          {ELIMINATION_PHASES.map((phase) => (
-            <motion.div
-              key={phase.id}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setActivePhaseId(phase.id)}
-              className={`cursor-pointer rounded-lg p-3 transition-all ${
-                activePhaseId === phase.id 
-                  ? "bg-primary text-primary-foreground shadow-md" 
-                  : "bg-muted/50 hover:bg-muted/80"
-              }`}
-            >
-              <div className="text-center">
-                <div className="font-semibold text-sm truncate">{phase.name}</div>
-                <div className="text-xs mt-1 opacity-80">{phase.duration}</div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <motion.div
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="grid grid-cols-4 gap-2 mb-6 overflow-x-auto px-1 py-2 no-scrollbar">
+            {ELIMINATION_PHASES.map((phase) => (
+              <motion.div
+                key={phase.id}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setActivePhaseId(phase.id)}
+                className={`cursor-pointer rounded-lg p-3 transition-all ${
+                  activePhaseId === phase.id 
+                    ? "bg-primary text-primary-foreground shadow-md" 
+                    : "bg-muted/50 hover:bg-muted/80"
+                }`}
+              >
+                <div className="text-center">
+                  <div className="font-semibold text-sm truncate">{phase.name}</div>
+                  <div className="text-xs mt-1 opacity-80">{phase.duration}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
         {activePhase && (
           <motion.div
