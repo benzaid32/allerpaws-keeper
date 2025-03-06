@@ -23,6 +23,10 @@ import FoodEntry from "./pages/FoodEntry";
 import Reminders from "./pages/Reminders";
 import Pricing from "./pages/Pricing";
 import SubscriptionCheckout from "./pages/SubscriptionCheckout";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +41,13 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/pricing" element={<Pricing />} />
+            
+            {/* Public pages */}
+            <Route path="/terms" element={<TermsAndConditions />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            
             <Route
               path="/subscription/checkout"
               element={
