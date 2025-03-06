@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Search, ChevronRight, Loader2, AlertTriangle, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -28,6 +27,14 @@ const mapToFoodProduct = (dbProduct: any): FoodProduct => {
     imageUrl: dbProduct.image_url
   };
 };
+
+// Define the type for search parameters
+interface SearchParams {
+  query?: string;
+  petId?: string | null;
+  allergens?: boolean;
+  type?: string;
+}
 
 const FoodDatabase = () => {
   const { user } = useAuth();
@@ -98,18 +105,17 @@ const FoodDatabase = () => {
       // Check if this is a category search
       const isCategory = ["dry", "wet", "treat", "supplement"].includes(searchQuery.toLowerCase());
       
-      let queryParams = { 
-        query: searchQuery,
+      // Create the query parameters with the correct TypeScript interface
+      const queryParams: SearchParams = { 
         petId: selectedPetId,
         allergens: true
       };
       
-      // If it's a category search, set the type parameter instead
+      // If it's a category search, set the type parameter, otherwise set the query parameter
       if (isCategory) {
-        queryParams = {
-          ...queryParams,
-          type: searchQuery.toLowerCase()
-        };
+        queryParams.type = searchQuery.toLowerCase();
+      } else {
+        queryParams.query = searchQuery;
       }
       
       // Use the Supabase Edge Function for searching
