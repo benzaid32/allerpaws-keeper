@@ -1,11 +1,21 @@
 
-import React from "react";
+import React, { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  DropdownMenu, 
+  DropdownMenuTrigger, 
+  DropdownMenuContent, 
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { LogOut, User, Settings } from "lucide-react";
 
 const HomeHeader = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const userName = user?.user_metadata?.full_name || "Pet Parent";
   
   // Get the first name only
@@ -13,6 +23,22 @@ const HomeHeader = () => {
   
   const handleProfileClick = () => {
     navigate("/profile");
+  };
+  
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Sign out failed",
+        description: error.message || "Could not sign out. Please try again.",
+      });
+    }
   };
   
   return (
@@ -25,27 +51,40 @@ const HomeHeader = () => {
           <p className="text-muted-foreground">Track and manage your pet's food allergies</p>
         </div>
         
-        {user?.user_metadata?.avatar_url ? (
-          <div 
-            className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-primary/20 cursor-pointer hover:ring-primary transition-all"
-            onClick={handleProfileClick}
-          >
-            <img 
-              src={user.user_metadata.avatar_url} 
-              alt="Profile" 
-              className="h-full w-full object-cover"
-            />
-          </div>
-        ) : (
-          <div 
-            className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center ring-2 ring-primary/20 cursor-pointer hover:ring-primary transition-all"
-            onClick={handleProfileClick}
-          >
-            <span className="text-primary font-semibold text-sm">
-              {firstName.charAt(0)}
-            </span>
-          </div>
-        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {user?.user_metadata?.avatar_url ? (
+              <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-primary/20 cursor-pointer hover:ring-primary transition-all">
+                <img 
+                  src={user.user_metadata.avatar_url} 
+                  alt="Profile" 
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center ring-2 ring-primary/20 cursor-pointer hover:ring-primary transition-all">
+                <span className="text-primary font-semibold text-sm">
+                  {firstName.charAt(0)}
+                </span>
+              </div>
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer">
+              <User className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sign out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

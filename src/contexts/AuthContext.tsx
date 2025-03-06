@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
 import {
   Session,
@@ -94,11 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(true);
     try {
       console.log("Attempting to sign out...");
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Supabase signOut error:", error);
-        throw error;
-      }
+      await supabase.auth.signOut();
       
       // Clear local state after successful sign out
       setUser(null);
@@ -108,6 +103,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.removeItem('tempPetData');
       
       console.log("Sign out successful");
+      
+      // Force page reload to clear any cached state
+      window.location.href = "/";
     } catch (error: any) {
       console.error("Error signing out:", error.message);
       throw error;
@@ -156,7 +154,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
   
-  // Add a function to save pet data to the database
   const savePetData = async (petData: Pet): Promise<boolean> => {
     if (!user) return false;
     
