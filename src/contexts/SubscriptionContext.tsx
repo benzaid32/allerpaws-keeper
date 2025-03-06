@@ -40,6 +40,15 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
     });
   }, []);
 
+  // Log state updates when relevant values change
+  useEffect(() => {
+    console.log('SubscriptionProvider state updated:', {
+      isLoading,
+      subscription,
+      isPremium,
+    });
+  }, [isLoading, subscription, isPremium]);
+
   return (
     <SubscriptionContext.Provider
       value={{

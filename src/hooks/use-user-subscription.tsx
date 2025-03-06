@@ -20,6 +20,7 @@ export function useUserSubscription() {
 
     try {
       setLoading(true);
+      console.log("useSubscription: fetching subscription for user", user.id);
       
       const { data, error } = await supabase
         .from("user_subscriptions")
@@ -49,6 +50,7 @@ export function useUserSubscription() {
 
   // Fetch subscription on mount and when user changes
   useEffect(() => {
+    console.log("useSubscription: user changed, fetching subscription", user?.id);
     fetchSubscription();
   }, [user?.id]);
 
