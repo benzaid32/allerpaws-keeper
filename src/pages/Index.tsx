@@ -1,9 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHomeData } from "@/hooks/use-home-data";
 import BottomNavigation from "@/components/BottomNavigation";
+import { supabase } from "@/integrations/supabase/client";
 
 // Import the components
 import HomeHeader from "@/components/home/HomeHeader";
@@ -17,7 +18,37 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [hasPets, setHasPets] = useState(false);
+  const [checkingPets, setCheckingPets] = useState(true);
   const { recentLogs, reminders, loading: dataLoading, fetchData } = useHomeData();
+
+  useEffect(() => {
+    const checkPets = async () => {
+      if (user) {
+        try {
+          const { data, error, count } = await supabase
+            .from("pets")
+            .select("id", { count: 'exact' })
+            .limit(1);
+            
+          if (error) {
+            throw error;
+          }
+          
+          setHasPets(count !== null && count > 0);
+        } catch (error) {
+          console.error("Error checking pets:", error);
+          setHasPets(false);
+        } finally {
+          setCheckingPets(false);
+        }
+      } else {
+        setCheckingPets(false);
+      }
+    };
+    
+    checkPets();
+  }, [user]);
 
   const handleGetStarted = () => {
     if (user) {
@@ -37,7 +68,7 @@ const Index = () => {
   }
 
   // Show minimal loading indicator if data is still loading (auth is confirmed)
-  if (dataLoading) {
+  if (dataLoading || checkingPets) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-2"></div>
@@ -45,9 +76,6 @@ const Index = () => {
       </div>
     );
   }
-
-  // Determine if user has pets by checking if recentLogs could have been populated
-  const hasPets = recentLogs && recentLogs.length > 0;
 
   // Show the dashboard for authenticated users with a stylish background
   return (

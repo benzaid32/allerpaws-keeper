@@ -2,13 +2,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PawPrint, Plus } from "lucide-react";
+import { PawPrint } from "lucide-react";
 
 const AddPetButton: React.FC = () => {
   const navigate = useNavigate();
 
   const handleAddPet = () => {
-    navigate("/add-pet");
+    navigate("/pets"); // Changed from /add-pet to /pets
   };
 
   return (

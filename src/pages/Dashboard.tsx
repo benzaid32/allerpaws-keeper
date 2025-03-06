@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Pet } from "@/lib/types";
-import { LogOut, Plus } from "lucide-react";
+import { LogOut, Plus, PawPrint } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 
 const Dashboard = () => {
@@ -88,9 +87,8 @@ const Dashboard = () => {
     }
   };
 
-  const handleAddPet = () => {
-    console.log("Navigating to add pet page");
-    navigate("/pet/add");
+  const handleManagePets = () => {
+    navigate("/pets");
   };
 
   return (
@@ -117,9 +115,9 @@ const Dashboard = () => {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium">Your Pets</h3>
-            <Button onClick={handleAddPet} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Pet
+            <Button onClick={handleManagePets} size="sm">
+              <PawPrint className="h-4 w-4 mr-2" />
+              Manage Pets
             </Button>
           </div>
           
@@ -148,7 +146,7 @@ const Dashboard = () => {
               <p className="text-muted-foreground mb-6">
                 Start by adding your first pet to AllerPaws.
               </p>
-              <Button onClick={handleAddPet}>Add Your Pet</Button>
+              <Button onClick={handleManagePets}>Add Your Pet</Button>
             </div>
           )}
         </div>

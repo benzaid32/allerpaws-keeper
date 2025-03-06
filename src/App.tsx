@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,7 +26,8 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import Profile from "./pages/Profile"; // Import the new Profile page
+import Profile from "./pages/Profile"; 
+import ManagePets from "./pages/ManagePets"; // Import the new ManagePets page
 
 const queryClient = new QueryClient();
 
@@ -70,6 +70,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pets"
+              element={
+                <ProtectedRoute>
+                  <ManagePets />
                 </ProtectedRoute>
               }
             />
