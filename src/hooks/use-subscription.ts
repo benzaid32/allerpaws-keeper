@@ -20,6 +20,7 @@ export const useSubscription = () => {
   const fetchSubscription = async () => {
     if (!user) {
       setLoading(false);
+      setSubscription(null);
       return;
     }
 
@@ -33,7 +34,10 @@ export const useSubscription = () => {
         .limit(1);
 
       if (error) {
-        throw error;
+        // If it's not a "no rows" error, throw it
+        if (!error.message?.includes('no rows')) {
+          throw error;
+        }
       }
 
       if (data && data.length > 0) {
@@ -48,10 +52,12 @@ export const useSubscription = () => {
         // No subscription found
         setSubscription(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching subscription:', error);
-      // Don't show error toast for 404/406 errors which are expected when no subscription exists
-      if (!(error.message && error.message.includes('JSON object requested, multiple (or no) rows returned'))) {
+      // Don't show error toast for expected errors
+      if (!(error.message && 
+          (error.message.includes('JSON object requested, multiple (or no) rows returned') ||
+           error.message.includes('no rows')))) {
         toast({
           title: 'Failed to load subscription',
           description: 'Please try again or contact support',

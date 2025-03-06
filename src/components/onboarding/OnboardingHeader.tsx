@@ -1,12 +1,15 @@
 
 import React from "react";
-import { Rabbit } from "lucide-react";
 
 const OnboardingHeader: React.FC = () => {
   return (
     <div className="text-center mb-8 animate-fade-in">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-        <Rabbit className="w-8 h-8 text-primary" />
+      <div className="inline-flex items-center justify-center mb-4">
+        <img 
+          src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
+          alt="AllerPaws Logo" 
+          className="w-24 h-24"
+        />
       </div>
       <h1 className="text-3xl font-bold tracking-tight">AllerPaws</h1>
       <p className="text-muted-foreground mt-2">

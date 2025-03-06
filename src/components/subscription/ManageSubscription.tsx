@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CreditCard, Calendar } from "lucide-react";
+import { Loader2, CreditCard, Calendar, Check } from "lucide-react";
 
 interface ManageSubscriptionProps {
   subscription: {
@@ -42,30 +42,39 @@ const ManageSubscription: React.FC<ManageSubscriptionProps> = ({
   // Check if subscription is null, if so display upgrade option
   if (!subscription) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>No Active Subscription</CardTitle>
-          <CardDescription>Upgrade to AllerPaws Premium for full access to all features</CardDescription>
+      <Card className="border-primary/20">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl">Upgrade to Premium</CardTitle>
+              <CardDescription>Unlock all AllerPaws features</CardDescription>
+            </div>
+            <img 
+              src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
+              alt="AllerPaws Logo" 
+              className="w-12 h-12"
+            />
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-4">
           <p className="text-sm text-muted-foreground mb-4">
             Premium gives you access to all features including:
           </p>
           <ul className="space-y-2 text-sm">
             <li className="flex items-center">
-              <span className="mr-2 h-4 w-4 text-primary">•</span>
+              <Check className="mr-2 h-4 w-4 text-primary" />
               <span>Unlimited pets</span>
             </li>
             <li className="flex items-center">
-              <span className="mr-2 h-4 w-4 text-primary">•</span>
+              <Check className="mr-2 h-4 w-4 text-primary" />
               <span>Detailed allergen analysis</span>
             </li>
             <li className="flex items-center">
-              <span className="mr-2 h-4 w-4 text-primary">•</span>
+              <Check className="mr-2 h-4 w-4 text-primary" />
               <span>Advanced food recommendations</span>
             </li>
             <li className="flex items-center">
-              <span className="mr-2 h-4 w-4 text-primary">•</span>
+              <Check className="mr-2 h-4 w-4 text-primary" />
               <span>Export health reports</span>
             </li>
           </ul>
@@ -75,7 +84,7 @@ const ManageSubscription: React.FC<ManageSubscriptionProps> = ({
             onClick={onUpgrade} 
             disabled={isLoading} 
             variant="default" 
-            className="w-full"
+            className="w-full bg-gradient-to-r from-primary to-primary/80"
           >
             {isLoading ? (
               <>
@@ -112,14 +121,21 @@ const ManageSubscription: React.FC<ManageSubscriptionProps> = ({
   };
   
   return (
-    <Card>
+    <Card className="border-primary/20">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Your Subscription</CardTitle>
             <CardDescription>Manage your AllerPaws Premium subscription</CardDescription>
           </div>
-          {getStatusBadge()}
+          <div className="flex items-center">
+            {getStatusBadge()}
+            <img 
+              src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
+              alt="AllerPaws Logo" 
+              className="w-10 h-10 ml-3"
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -152,7 +168,7 @@ const ManageSubscription: React.FC<ManageSubscriptionProps> = ({
               onClick={onResume} 
               disabled={isLoading} 
               variant="default" 
-              className="w-full"
+              className="w-full bg-gradient-to-r from-primary to-primary/80"
             >
               {isLoading ? (
                 <>
@@ -181,7 +197,7 @@ const ManageSubscription: React.FC<ManageSubscriptionProps> = ({
             onClick={onUpgrade} 
             disabled={isLoading} 
             variant="default" 
-            className="w-full"
+            className="w-full bg-gradient-to-r from-primary to-primary/80"
           >
             {isLoading ? (
               <>
