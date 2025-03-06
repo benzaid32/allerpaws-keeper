@@ -31,40 +31,44 @@ export const useSubscription = () => {
 
     try {
       setLoading(true);
+      console.log("Fetching subscription for user:", user.id);
+      
+      // Adding explicit headers to fix the 406 error
       const { data, error } = await supabase
         .from('user_subscriptions')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(1);
+        .limit(1)
+        .throwOnError();
+
+      console.log("Subscription query result:", { data, error });
 
       if (error) {
-        // If it's not a "no rows" error, throw it
-        if (!error.message?.includes('no rows')) {
-          throw error;
-        }
+        throw error;
       }
 
       if (data && data.length > 0) {
+        console.log("Found subscription:", data[0]);
         setSubscription(data[0] as UserSubscription);
       } else {
+        console.log("No subscription found for user");
         // No subscription found
         setSubscription(null);
       }
     } catch (error: any) {
       console.error('Error fetching subscription:', error);
-      // Don't show error toast for expected errors
-      if (!(error.message && 
-          (error.message.includes('JSON object requested, multiple (or no) rows returned') ||
-           error.message.includes('no rows')))) {
+      // Set subscription to null when there's an error
+      setSubscription(null);
+      
+      // Only show toast for unexpected errors
+      if (error.message && !error.message.includes('no rows')) {
         toast({
           title: 'Failed to load subscription',
           description: 'Please try again or contact support',
           variant: 'destructive',
         });
       }
-      // Set subscription to null when there's an error
-      setSubscription(null);
     } finally {
       setLoading(false);
     }
@@ -139,6 +143,7 @@ export const useSubscription = () => {
   };
 
   useEffect(() => {
+    console.log("useSubscription: user changed, fetching subscription", user?.id);
     fetchSubscription();
   }, [user]);
 

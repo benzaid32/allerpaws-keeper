@@ -9,4 +9,6 @@ export interface SubscriptionContextType {
   maxEntriesPerMonth: number;
   canAccessAdvancedAnalysis: boolean;
   refreshSubscription: () => Promise<void>;
+  cancelSubscription: () => Promise<void>;
+  resumeSubscription: () => Promise<void>;
 }

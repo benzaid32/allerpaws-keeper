@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, ReactNode } from "react";
-import { useSubscription as useSubscriptionHook } from "@/hooks/use-subscription";
+import { useSubscription } from "@/hooks/use-subscription";
 import { SubscriptionContextType } from "@/types/subscription-context";
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -13,8 +13,10 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     maxAllowedPets,
     maxEntriesPerMonth,
     canAccessAdvancedAnalysis,
-    fetchSubscription: refreshSubscription
-  } = useSubscriptionHook();
+    fetchSubscription: refreshSubscription,
+    cancelSubscription,
+    resumeSubscription
+  } = useSubscription();
 
   const value: SubscriptionContextType = {
     isLoading,
@@ -23,8 +25,16 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     maxAllowedPets,
     maxEntriesPerMonth,
     canAccessAdvancedAnalysis,
-    refreshSubscription
+    refreshSubscription,
+    cancelSubscription,
+    resumeSubscription
   };
+
+  console.log("SubscriptionProvider rendering with value:", { 
+    isLoading, 
+    hasSubscription: Boolean(subscription),
+    isPremium 
+  });
 
   return (
     <SubscriptionContext.Provider value={value}>
