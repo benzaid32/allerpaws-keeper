@@ -15,11 +15,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted }) => {
     <div className="max-w-3xl mx-auto">
       <div className="text-center mb-16 animate-fade-in">
         <div className="flex justify-center items-center mb-6">
-          <img 
-            src="/lovable-uploads/99366c55-0fea-4b0d-8084-4d3b93e79046.png" 
-            alt="AllerPaws Logo" 
-            className="w-32 h-32 drop-shadow-md"
-          />
+          <div className="rounded-full bg-gradient-to-r from-primary/10 to-accent/10 p-3">
+            <img 
+              src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
+              alt="AllerPaws Logo" 
+              className="w-32 h-32 drop-shadow-md"
+            />
+          </div>
         </div>
         <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-sm mb-4">{APP_NAME}</h1>
         <p className="text-xl text-muted-foreground mb-6">{APP_DESCRIPTION}</p>
@@ -29,7 +31,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted }) => {
         </p>
       </div>
       
-      <div className="space-y-4 bg-card/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-border/50 animate-slide-up max-w-md mx-auto mb-16">
+      <div className="space-y-4 bg-card/80 backdrop-blur-sm p-6 rounded-xl shadow-elegant border border-border/50 animate-slide-up max-w-md mx-auto mb-16">
         <Button 
           onClick={onGetStarted} 
           className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all duration-300 text-lg"

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { Twitter, Facebook, Instagram, Github } from "lucide-react";
@@ -10,11 +11,13 @@ const LandingFooter: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="mb-6 md:mb-0">
             <div className="flex items-center">
-              <img 
-                src="/lovable-uploads/99366c55-0fea-4b0d-8084-4d3b93e79046.png" 
-                alt="AllerPaws Logo" 
-                className="w-10 h-10 mr-3"
-              />
+              <div className="rounded-full bg-gradient-to-r from-primary/10 to-accent/10 p-1 mr-3">
+                <img 
+                  src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
+                  alt="AllerPaws Logo" 
+                  className="w-10 h-10"
+                />
+              </div>
               <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-sm">{APP_NAME}</span>
             </div>
             <p className="text-sm text-muted-foreground mt-2">© {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
