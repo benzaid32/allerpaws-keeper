@@ -47,7 +47,8 @@ const HomeHeader = () => {
     }
   };
   
-  const isPremium = hasPremiumAccess();
+  // No longer calling hasPremiumAccess as a function
+  const isPremium = hasPremiumAccess;
   
   return (
     <div className="pt-6 pb-6">
