@@ -19,10 +19,10 @@ const WelcomeScreen = ({ showOnboarding, onGetStarted }: WelcomeScreenProps) => 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-blue-50 dark:from-background dark:to-blue-950/20 overflow-x-hidden">
       {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&fit=crop&w=800&q=80')] bg-no-repeat bg-right bg-contain opacity-20 dark:opacity-10 z-0"></div>
+      <div className="absolute top-0 right-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&fit=crop&w=800&q=80')] bg-no-repeat bg-right bg-contain opacity-15 dark:opacity-10 z-0"></div>
       
-      {/* Hero section */}
-      <div className="container mx-auto px-4 py-12 relative z-10 flex-grow">
+      {/* Content */}
+      <div className="container mx-auto px-4 py-16 relative z-10 flex-grow">
         <HeroSection onGetStarted={onGetStarted} />
         <FeaturesSection />
         <TestimonialsSection />
