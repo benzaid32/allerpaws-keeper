@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -76,11 +77,24 @@ const Index = () => {
     );
   }
 
-  // Show the dashboard for authenticated users with a stylish background
+  // Show the dashboard for authenticated users with enhanced background
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-blue-50 dark:from-background dark:to-blue-950/20">
-      <div className="absolute top-0 right-0 w-full h-64 bg-[url('https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?auto=format&fit=crop&w=800&q=80')] bg-no-repeat bg-right-top bg-contain opacity-30 dark:opacity-15"></div>
-      <div className="container relative pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-background to-blue-50/60 dark:from-background dark:to-blue-950/20">
+      {/* Enhanced pet image background with proper styling and positioning */}
+      <div className="absolute top-0 right-0 w-full h-96 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background dark:to-background z-10"></div>
+        <div 
+          className="absolute top-0 right-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?auto=format&fit=crop&w=800&q=80')] 
+                    bg-no-repeat bg-right-top bg-cover opacity-20 dark:opacity-10
+                    transform scale-110 motion-safe:animate-pulse-gentle"
+          style={{ 
+            filter: 'saturate(1.2) contrast(1.1)',
+            animationDuration: '8s'
+          }}
+        ></div>
+      </div>
+      
+      <div className="container relative pb-20 z-20">
         <HomeHeader />
         
         {/* Always show the pet management button, but with different text based on whether user has pets */}
