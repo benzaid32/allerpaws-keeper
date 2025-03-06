@@ -1,10 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { generateId } from "@/lib/helpers";
 import { Pet } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, storeTemporaryPetData } from "@/lib/utils";
 import { ONBOARDING_STEPS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,11 +45,14 @@ const Onboarding: React.FC = () => {
   // Handle the completion of the onboarding process
   const completePetOnboarding = async () => {
     if (!user) {
+      // Store pet data before redirecting to auth
+      storeTemporaryPetData(pet);
+      
       toast({
-        title: "Authentication required",
-        description: "Please sign in to save your pet's information",
-        variant: "destructive",
+        title: "Almost there!",
+        description: "Please sign up to save your pet's information",
       });
+      
       navigate("/auth");
       return;
     }

@@ -3,6 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Onboarding from "@/components/Onboarding";
+import { getTemporaryPetData } from "@/lib/utils";
 
 interface WelcomeScreenProps {
   showOnboarding: boolean;
@@ -11,6 +12,7 @@ interface WelcomeScreenProps {
 
 const WelcomeScreen = ({ showOnboarding, onGetStarted }: WelcomeScreenProps) => {
   const navigate = useNavigate();
+  const tempPetData = getTemporaryPetData();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -26,9 +28,20 @@ const WelcomeScreen = ({ showOnboarding, onGetStarted }: WelcomeScreenProps) => 
               <Button onClick={onGetStarted} className="w-full">
                 Get Started
               </Button>
-              <Button onClick={() => navigate("/auth")} variant="outline" className="w-full">
+              <Button 
+                onClick={() => navigate("/auth")} 
+                variant="outline" 
+                className="w-full"
+              >
                 Sign In
               </Button>
+              
+              {tempPetData && (
+                <div className="mt-4 p-3 bg-primary/10 rounded-md text-sm">
+                  <p className="font-medium">You have unfinished pet setup for {tempPetData.name}</p>
+                  <p className="text-muted-foreground">Sign in to continue setup</p>
+                </div>
+              )}
             </div>
           </div>
         )}

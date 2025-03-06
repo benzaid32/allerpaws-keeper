@@ -26,6 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
     // Get initial session
@@ -52,8 +53,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAuthError(error.message || "Authentication error");
       } finally {
         setIsLoading(false);
+        setHasInitialized(true);
       }
     };
+
+    // Add a timeout to prevent endless loading
+    const timeoutId = setTimeout(() => {
+      if (!hasInitialized) {
+        console.log("Auth initialization timed out");
+        setIsLoading(false);
+        setAuthError("Authentication initialization timed out");
+      }
+    }, 5000);
 
     initializeAuth();
 
@@ -67,15 +78,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       subscription.unsubscribe();
+      clearTimeout(timeoutId);
     };
-  }, []);
+  }, [hasInitialized]);
 
   const signOut = async () => {
     try {
+      setIsLoading(true);
       await supabase.auth.signOut();
+      setIsLoading(false);
     } catch (error: any) {
       console.error("Error signing out:", error);
       setAuthError(error.message);
+      setIsLoading(false);
     }
   };
 
