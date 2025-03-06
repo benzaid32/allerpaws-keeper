@@ -1,9 +1,7 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn, clearTemporaryPetData } from "@/lib/utils";
-// Import other constants, but not ONBOARDING_STEPS since we define it locally
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -24,123 +22,96 @@ const ONBOARDING_STEPS = [
 ];
 
 const Onboarding: React.FC = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user, signUp } = useAuth();
   const [step, setStep] = useState(0);
   const [animating, setAnimating] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [registrationError, setRegistrationError] = useState<string | null>(null);
-  
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { signUp } = useAuth();
+
   // Registration form state
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
 
-  // Check if the user is logged in
-  React.useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
+  const nextStep = () => {
+    setAnimating(true);
+    setTimeout(() => {
+      setStep((curr) => curr + 1);
+      setAnimating(false);
+    }, 300);
+  };
 
-  // Clear any registration errors when switching to the register step
-  React.useEffect(() => {
-    if (step === 1) {
-      setRegistrationError(null);
-    }
-  }, [step]);
+  const prevStep = () => {
+    setAnimating(true);
+    setTimeout(() => {
+      setStep((curr) => curr - 1);
+      setAnimating(false);
+    }, 300);
+  };
 
-  // Handle user registration
-  const handleRegister = async () => {
-    if (!email || !password || !fullName) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return false;
-    }
-    
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setRegistrationError(null);
+
     try {
-      setIsSubmitting(true);
-      setRegistrationError(null);
-      
-      // Clean up any existing temporary pet data
-      clearTemporaryPetData();
-      
-      // Register the user
-      const { error, needsEmailConfirmation } = await signUp(email, password, {
-        full_name: fullName,
-      });
-      
-      if (error) {
-        setRegistrationError(error.message || "Failed to create user account");
-        return false;
+      if (step === 1) {
+        const { error } = await signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+            },
+            redirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+
+        if (error) {
+          setRegistrationError(error.message);
+          toast({
+            title: "Registration failed",
+            description: "There was an error creating your account",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Check your email",
+            description: "We've sent you a link to verify your account",
+          });
+          clearTemporaryPetData();
+          navigate("/auth/verify-email");
+        }
       }
-      
-      // If email confirmation is needed, navigate to auth page with a flag
-      if (needsEmailConfirmation) {
-        navigate("/auth?verifyEmail=true");
-        return true;
-      }
-      
-      // Navigate to dashboard or auth page as appropriate
-      navigate(user ? "/dashboard" : "/auth");
-      return true;
     } catch (error: any) {
       console.error("Registration error:", error);
-      setRegistrationError(error.message || "An error occurred during registration");
-      return false;
+      setRegistrationError(error.message || "An unexpected error occurred");
+      toast({
+        title: "Registration failed",
+        description: error.message || "There was an error creating your account",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Complete onboarding - just register the user
-  const completeOnboarding = async () => {
-    return await handleRegister();
-  };
-
-  // Move to the next step with animation
-  const nextStep = async () => {
-    if (step < ONBOARDING_STEPS.length - 1) {
-      setAnimating(true);
-      setTimeout(() => {
-        setStep((prev) => prev + 1);
-        setAnimating(false);
-      }, 300);
-    } else {
-      // Complete onboarding
-      await completeOnboarding();
-    }
-  };
-
-  // Validation for current step
   const canProceed = () => {
-    switch (step) {
-      case 0: // Welcome
-        return true;
-      case 1: // Register
-        return (
-          email.trim() !== "" && 
-          password.trim() !== "" && 
-          fullName.trim() !== "" &&
-          password.length >= 6
-        );
-      default:
-        return true;
+    if (step === 0) return true;
+    if (step === 1) {
+      return fullName.length > 0 && email.length > 0 && password.length >= 6;
     }
+    return false;
   };
 
-  // Render the current step content
   const renderStepContent = () => {
     switch (step) {
       case 0:
         return <WelcomeStep />;
       case 1:
         return (
-          <RegisterStep 
+          <RegisterStep
             fullName={fullName}
             setFullName={setFullName}
             email={email}
@@ -152,7 +123,7 @@ const Onboarding: React.FC = () => {
           />
         );
       default:
-        return <WelcomeStep />;
+        return null;
     }
   };
 

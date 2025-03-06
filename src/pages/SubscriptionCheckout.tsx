@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { UserSubscription } from "@/types/subscriptions";
 
 const SubscriptionCheckout = () => {
   const [searchParams] = useSearchParams();
@@ -72,17 +73,17 @@ const SubscriptionCheckout = () => {
       // In a real implementation, this would be handled by a webhook from Stripe/payment processor
       
       // Create a record of the subscription in the database
+      const subscriptionData: Partial<UserSubscription> = {
+        user_id: user?.id,
+        plan_id: planId,
+        status: "active",
+        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        cancel_at_period_end: false,
+      };
+      
       const { error } = await supabase
         .from("user_subscriptions")
-        .upsert({
-          user_id: user?.id,
-          plan_id: planId,
-          status: "active",
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          cancel_at_period_end: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
+        .upsert(subscriptionData as any);
       
       if (error) throw error;
       

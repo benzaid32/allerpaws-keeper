@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { UserSubscription } from "@/types/subscriptions";
 
 export interface Subscription {
   id: string;
@@ -45,12 +46,13 @@ export const useSubscription = () => {
       }
 
       if (data) {
+        const subData = data as unknown as UserSubscription;
         setSubscription({
-          id: data.id,
-          status: data.status,
-          planId: data.plan_id,
-          currentPeriodEnd: data.current_period_end,
-          cancelAtPeriodEnd: data.cancel_at_period_end,
+          id: subData.id,
+          status: subData.status,
+          planId: subData.plan_id,
+          currentPeriodEnd: subData.current_period_end,
+          cancelAtPeriodEnd: subData.cancel_at_period_end,
         });
       } else {
         setSubscription(null);
@@ -83,7 +85,7 @@ export const useSubscription = () => {
         .update({
           cancel_at_period_end: true,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", subscription.id);
       
       if (error) throw error;
@@ -126,7 +128,7 @@ export const useSubscription = () => {
         .update({
           cancel_at_period_end: false,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", subscription.id);
       
       if (error) throw error;

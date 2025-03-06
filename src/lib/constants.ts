@@ -1,191 +1,90 @@
+// Any constant values that were previously defined in this file (other than ONBOARDING_STEPS)
+import { format } from "date-fns";
 
-import { Symptom, EliminationPhase, OnboardingStep, NavigationItem } from "./types";
+// App information
+export const APP_NAME = "AllerPaws";
+export const APP_DESCRIPTION = "Track and manage your pet's food allergies";
 
-export const COMMON_SYMPTOMS: Symptom[] = [
-  {
-    id: "itchy-skin",
-    name: "Itchy Skin",
-    description: "Frequent scratching, licking, or chewing of the skin",
-    severity: "moderate",
-    icon: "paw-print"
-  },
-  {
-    id: "ear-infection",
-    name: "Ear Infection",
-    description: "Red, inflamed ears with discharge or odor",
-    severity: "moderate",
-    icon: "ear"
-  },
-  {
-    id: "vomiting",
-    name: "Vomiting",
-    description: "Throwing up food or bile",
-    severity: "moderate",
-    icon: "thermometer"
-  },
-  {
-    id: "diarrhea",
-    name: "Diarrhea",
-    description: "Loose or watery stool",
-    severity: "moderate",
-    icon: "poop"
-  },
-  {
-    id: "gas",
-    name: "Gas",
-    description: "Excessive flatulence",
-    severity: "mild",
-    icon: "wind"
-  },
-  {
-    id: "rash",
-    name: "Rash",
-    description: "Red, inflamed skin with or without bumps",
-    severity: "moderate",
-    icon: "activity"
-  },
-  {
-    id: "hair-loss",
-    name: "Hair Loss",
-    description: "Patches of missing fur",
-    severity: "moderate",
-    icon: "scissors"
-  },
-  {
-    id: "paw-licking",
-    name: "Paw Licking",
-    description: "Excessive licking or chewing of paws",
-    severity: "moderate",
-    icon: "footprints"
-  }
+// Navigation
+export const NAVIGATION_ITEMS = [
+  { name: "Dashboard", href: "/dashboard" },
+  { name: "Pets", href: "/pets" },
+  { name: "Food Diary", href: "/food-diary" },
+  { name: "Progress", href: "/progress" },
+  { name: "Settings", href: "/settings" },
 ];
 
-export const COMMON_ALLERGENS: string[] = [
-  "Beef",
-  "Chicken",
-  "Dairy",
-  "Egg",
-  "Fish",
-  "Wheat",
-  "Soy",
-  "Corn",
-  "Lamb",
-  "Pork",
-  "Turkey",
-  "Rabbit",
-  "Duck",
-  "Venison",
-  "Potato",
-  "Rice"
+// Pet species options
+export const PET_SPECIES = [
+  { value: "dog", label: "Dog" },
+  { value: "cat", label: "Cat" },
+  { value: "other", label: "Other" },
 ];
 
-export const ELIMINATION_PHASES: EliminationPhase[] = [
-  {
-    id: "preparation",
-    name: "Preparation",
-    description: "Prepare for the elimination diet by gathering necessary supplies and selecting an appropriate novel protein diet.",
-    duration: 7,
-    tips: [
-      "Consult with your veterinarian before starting",
-      "Select a novel protein your pet hasn't been exposed to",
-      "Remove all treats, table scraps, and flavored medications"
-    ]
-  },
-  {
-    id: "strict-elimination",
-    name: "Strict Elimination",
-    description: "Feed only the selected novel protein diet with no other foods, treats, or supplements.",
-    duration: 56, // 8 weeks
-    tips: [
-      "Be consistent - feed only the elimination diet",
-      "Monitor and record symptoms daily",
-      "Don't introduce any new foods during this phase",
-      "Wash food bowls thoroughly to avoid contamination"
-    ]
-  },
-  {
-    id: "challenge",
-    name: "Challenge Phase",
-    description: "Slowly reintroduce potential allergens one at a time while monitoring for reactions.",
-    duration: 42, // 6 weeks
-    tips: [
-      "Introduce one ingredient at a time",
-      "Wait 1-2 weeks before introducing another ingredient",
-      "If symptoms return, remove the ingredient immediately",
-      "Keep detailed notes of reactions"
-    ]
-  },
-  {
-    id: "maintenance",
-    name: "Maintenance",
-    description: "Maintain a diet that excludes identified allergens while providing complete nutrition.",
-    duration: 30, // ongoing
-    tips: [
-      "Create a sustainable diet plan",
-      "Continue to monitor for new symptoms",
-      "Consider periodic rechecks with your vet",
-      "Read all ingredient labels carefully"
-    ]
-  }
+// Common symptoms for pets
+export const COMMON_SYMPTOMS = [
+  { id: "itching", name: "Itching/Scratching", description: "Excessive scratching or licking" },
+  { id: "redness", name: "Skin Redness", description: "Red, inflamed skin" },
+  { id: "vomiting", name: "Vomiting", description: "Throwing up food" },
+  { id: "diarrhea", name: "Diarrhea", description: "Loose or watery stool" },
+  { id: "ear_infection", name: "Ear Infection", description: "Inflammation of the ear" },
+  { id: "gas", name: "Excessive Gas", description: "Flatulence or bloating" },
 ];
 
-export const ONBOARDING_STEPS: OnboardingStep[] = [
-  {
-    id: "welcome",
-    title: "Welcome to AllerPaws",
-    description: "Your companion for managing your pet's food allergies and sensitivities."
-  },
-  {
-    id: "pet-info",
-    title: "Tell Us About Your Pet",
-    description: "Let's set up a profile for your furry friend so we can personalize your experience."
-  },
-  {
-    id: "allergy-info",
-    title: "Allergy Information",
-    description: "Share what you know about your pet's allergies to get started."
-  },
-  {
-    id: "track-symptoms",
-    title: "Track Symptoms",
-    description: "Monitor your pet's symptoms to identify patterns and triggers."
-  },
-  {
-    id: "explore-foods",
-    title: "Explore Safe Foods",
-    description: "Find suitable food options based on your pet's specific needs."
-  }
+// Severity levels for symptoms
+export const SEVERITY_LEVELS = [
+  { value: "mild", label: "Mild" },
+  { value: "moderate", label: "Moderate" },
+  { value: "severe", label: "Severe" },
 ];
 
-export const NAVIGATION_ITEMS: NavigationItem[] = [
-  {
-    name: "Dashboard",
-    path: "/dashboard",
-    icon: "layout-dashboard"
-  },
-  {
-    name: "Symptoms",
-    path: "/symptoms",
-    icon: "clipboard-list"
-  },
-  {
-    name: "Food Log",
-    path: "/food",
-    icon: "utensils"
-  },
-  {
-    name: "Diet Plan",
-    path: "/diet",
-    icon: "calendar"
-  },
-  {
-    name: "Food Database",
-    path: "/database",
-    icon: "database"
-  },
-  {
-    name: "Education",
-    path: "/education",
-    icon: "book-open"
-  }
+// Food types
+export const FOOD_TYPES = [
+  { value: "kibble", label: "Kibble" },
+  { value: "wet_food", label: "Wet Food" },
+  { value: "raw", label: "Raw Food" },
+  { value: "homemade", label: "Homemade" },
+  { value: "treats", label: "Treats" },
+  { value: "supplement", label: "Supplement" },
+  { value: "other", label: "Other" },
 ];
+
+// Common food allergens for pets
+export const COMMON_ALLERGENS = [
+  { value: "chicken", label: "Chicken" },
+  { value: "beef", label: "Beef" },
+  { value: "dairy", label: "Dairy" },
+  { value: "wheat", label: "Wheat" },
+  { value: "soy", label: "Soy" },
+  { value: "corn", label: "Corn" },
+  { value: "egg", label: "Egg" },
+  { value: "fish", label: "Fish" },
+  { value: "lamb", label: "Lamb" },
+  { value: "pork", label: "Pork" },
+];
+
+// Date formatting functions
+export const formatDate = (date: Date | string): string => {
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  return format(dateObj, "MMM d, yyyy");
+};
+
+export const formatDateTime = (date: Date | string): string => {
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  return format(dateObj, "MMM d, yyyy h:mm a");
+};
+
+// Define supported subscription plan types
+export const SUBSCRIPTION_PLANS = {
+  MONTHLY: "monthly",
+  ANNUAL: "annual"
+};
+
+// Define subscription statuses
+export const SUBSCRIPTION_STATUS = {
+  ACTIVE: "active",
+  CANCELED: "canceled",
+  PAST_DUE: "past_due",
+  INCOMPLETE: "incomplete",
+  TRIALING: "trialing"
+};
