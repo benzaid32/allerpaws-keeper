@@ -1,143 +1,137 @@
 
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { NotificationSettings } from "@/lib/types";
+import { LocalNotifications, PermissionState } from '@capacitor/local-notifications';
+import { useToast } from "./use-toast";
+import { isPlatform } from "@/lib/utils";
 
 export const useNotifications = () => {
+  const [permissionState, setPermissionState] = useState<PermissionState | "denied" | "granted" | "default">("default");
+  const [isNotificationsSupported, setIsNotificationsSupported] = useState(false);
   const { toast } = useToast();
-  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
-    enabled: false,
-    lastUpdated: new Date()
-  });
-  const [permissionState, setPermissionState] = useState<NotificationPermission | "unsupported">("default");
-  
-  // Check if notifications are supported
-  const isSupported = () => {
-    return 'Notification' in window;
-  };
 
-  // Initialize permissions on component mount
   useEffect(() => {
-    if (!isSupported()) {
-      setPermissionState("unsupported");
-      return;
-    }
-
-    // Check if permission is already granted
-    setPermissionState(Notification.permission);
-    
-    // Load saved settings from localStorage
-    const savedSettings = localStorage.getItem('notificationSettings');
-    if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings);
-        setNotificationSettings({
-          ...parsed,
-          lastUpdated: new Date(parsed.lastUpdated)
-        });
-      } catch (error) {
-        console.error("Error parsing notification settings", error);
+    const checkSupport = async () => {
+      // Check if we're on a mobile device with Capacitor
+      if (isPlatform('capacitor')) {
+        setIsNotificationsSupported(true);
+        
+        try {
+          // Check permission state
+          const { display } = await LocalNotifications.checkPermissions();
+          setPermissionState(display);
+        } catch (error) {
+          console.error("Error checking notification permissions:", error);
+        }
+      } else {
+        // Web fallback
+        setIsNotificationsSupported('Notification' in window);
+        
+        if ('Notification' in window) {
+          setPermissionState(Notification.permission);
+        }
       }
-    }
+    };
+    
+    checkSupport();
   }, []);
 
-  // Save settings to localStorage when they change
-  useEffect(() => {
-    localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
-  }, [notificationSettings]);
-
-  // Request notification permission
   const requestPermission = async () => {
-    if (!isSupported()) {
+    try {
+      if (isPlatform('capacitor')) {
+        // Capacitor API
+        const { display } = await LocalNotifications.requestPermissions();
+        setPermissionState(display);
+        return display === 'granted';
+      } else {
+        // Web fallback
+        if ('Notification' in window) {
+          const permission = await Notification.requestPermission();
+          setPermissionState(permission);
+          return permission === 'granted';
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error("Error requesting notification permissions:", error);
       toast({
-        title: "Notifications not supported",
-        description: "Your browser doesn't support notifications",
-        variant: "destructive"
+        title: "Error",
+        description: "Could not request notification permissions",
+        variant: "destructive",
       });
       return false;
     }
+  };
 
-    if (Notification.permission === "granted") {
-      setPermissionState("granted");
-      setNotificationSettings({ enabled: true, lastUpdated: new Date() });
-      return true;
-    }
-
+  const scheduleNotification = async (
+    id: number, 
+    title: string, 
+    body: string, 
+    timeInMillis: number
+  ) => {
     try {
-      const permission = await Notification.requestPermission();
-      setPermissionState(permission);
-      
-      if (permission === "granted") {
-        setNotificationSettings({ enabled: true, lastUpdated: new Date() });
-        toast({
-          title: "Notifications enabled",
-          description: "You'll now receive reminders as notifications"
+      if (isPlatform('capacitor')) {
+        await LocalNotifications.schedule({
+          notifications: [{
+            id,
+            title,
+            body,
+            schedule: { at: new Date(timeInMillis) },
+            sound: 'beep.wav',
+            smallIcon: 'ic_stat_icon_config_sample',
+            iconColor: '#488AFF'
+          }]
         });
         return true;
       } else {
-        toast({
-          title: "Notifications disabled",
-          description: "Please enable notifications in your browser settings to receive reminders",
-          variant: "destructive"
-        });
-        return false;
+        // Web fallback
+        if (permissionState === 'granted') {
+          const timeUntilNotification = timeInMillis - Date.now();
+          if (timeUntilNotification > 0) {
+            setTimeout(() => {
+              new Notification(title, {
+                body,
+                icon: '/favicon.ico'
+              });
+            }, timeUntilNotification);
+          }
+          return true;
+        }
       }
+      return false;
     } catch (error) {
-      console.error("Error requesting notification permission:", error);
+      console.error("Error scheduling notification:", error);
       toast({
-        title: "Error enabling notifications",
-        description: "Failed to request notification permission",
-        variant: "destructive"
+        title: "Error",
+        description: "Could not schedule notification",
+        variant: "destructive",
       });
       return false;
     }
   };
 
-  // Send a test notification
   const sendTestNotification = async () => {
-    if (permissionState !== "granted") {
-      const granted = await requestPermission();
-      if (!granted) return;
-    }
-
-    try {
-      new Notification("Test Notification", {
-        body: "This is a test reminder notification",
-        icon: "/favicon.ico"
-      });
-    } catch (error) {
-      console.error("Error sending test notification:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send test notification",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Schedule a notification
-  const scheduleNotification = (title: string, body?: string, delay = 0) => {
-    if (permissionState !== "granted") return;
+    const notificationTime = Date.now() + 5000; // 5 seconds from now
     
-    setTimeout(() => {
-      try {
-        new Notification(title, {
-          body,
-          icon: "/favicon.ico"
-        });
-      } catch (error) {
-        console.error("Error sending notification:", error);
-      }
-    }, delay);
+    const success = await scheduleNotification(
+      999,
+      "Test Notification",
+      "This is a test notification from Allerpaws Keeper!",
+      notificationTime
+    );
+    
+    if (success) {
+      toast({
+        title: "Test notification sent",
+        description: "You should receive a notification in 5 seconds",
+      });
+    }
   };
 
   return {
-    isNotificationsSupported: isSupported(),
+    isNotificationsSupported,
     permissionState,
-    notificationSettings,
     requestPermission,
-    sendTestNotification,
     scheduleNotification,
-    setNotificationSettings
+    sendTestNotification
   };
 };

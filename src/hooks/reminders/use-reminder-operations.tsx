@@ -1,70 +1,155 @@
 
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Reminder } from "@/lib/types";
-import { ReminderFormData } from "./use-reminder-form";
+import { ReminderFormData } from "@/hooks/reminders/use-reminder-form";
 import { useNotifications } from "@/hooks/use-notifications";
+import { v4 as uuidv4 } from "uuid";
 
 interface UseReminderOperationsProps {
   fetchData: () => Promise<void>;
   setReminders: React.Dispatch<React.SetStateAction<Reminder[]>>;
-  setOpen: (open: boolean) => void;
-  setSubmitting: (submitting: boolean) => void;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setSubmitting: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const useReminderOperations = ({
   fetchData,
   setReminders,
   setOpen,
-  setSubmitting
+  setSubmitting,
 }: UseReminderOperationsProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { permissionState, scheduleNotification } = useNotifications();
-
-  const handleSubmit = async (e: React.FormEvent, formData: ReminderFormData, isEditing: boolean) => {
+  const { 
+    permissionState, 
+    requestPermission, 
+    scheduleNotification 
+  } = useNotifications();
+  
+  // Helper functions
+  const parseTime = (timeString: string): { hours: number; minutes: number } => {
+    const [hours, minutes] = timeString.split(":").map(Number);
+    return { hours, minutes };
+  };
+  
+  const calculateNextOccurrence = (
+    time: string, 
+    days: string[]
+  ): Date | null => {
+    if (!days.length) return null;
+    
+    const daysMap: { [key: string]: number } = {
+      sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6
+    };
+    
+    const { hours, minutes } = parseTime(time);
+    const now = new Date();
+    const todayDay = now.getDay();
+    const nowHours = now.getHours();
+    const nowMinutes = now.getMinutes();
+    
+    // Sort days by proximity to today
+    const sortedDays = [...days].sort((a, b) => {
+      const dayA = daysMap[a];
+      const dayB = daysMap[b];
+      
+      const distanceA = (dayA - todayDay + 7) % 7;
+      const distanceB = (dayB - todayDay + 7) % 7;
+      
+      return distanceA - distanceB;
+    });
+    
+    for (const day of sortedDays) {
+      const targetDay = daysMap[day];
+      let daysToAdd = (targetDay - todayDay + 7) % 7;
+      
+      // If it's today, check if the time has already passed
+      if (daysToAdd === 0) {
+        const isPastOrPresent = 
+          nowHours > hours || 
+          (nowHours === hours && nowMinutes >= minutes);
+        
+        if (isPastOrPresent) {
+          // If time has passed, move to the next week
+          daysToAdd = 7;
+        }
+      }
+      
+      const nextDate = new Date(now);
+      nextDate.setDate(now.getDate() + daysToAdd);
+      nextDate.setHours(hours, minutes, 0, 0);
+      
+      return nextDate;
+    }
+    
+    return null;
+  };
+  
+  const scheduleReminderNotification = async (
+    reminder: ReminderFormData
+  ): Promise<boolean> => {
+    if (permissionState !== "granted") {
+      const granted = await requestPermission();
+      if (!granted) {
+        toast({
+          title: "Notification permission required",
+          description: "Notifications won't be sent for this reminder",
+        });
+        return false;
+      }
+    }
+    
+    // Calculate when to send the notification
+    const nextOccurrence = calculateNextOccurrence(reminder.time, reminder.days);
+    if (!nextOccurrence) return false;
+    
+    // Use numerical ID for notifications
+    const numericId = parseInt(reminder.id.replace(/\D/g, '').slice(0, 9)) || Math.floor(Math.random() * 1000000);
+    
+    // Create notification content
+    const title = reminder.title;
+    let body = reminder.description || "Reminder from Allerpaws Keeper";
+    
+    // If reminder is for a specific pet, include their name
+    if (reminder.petId !== "none" && reminder.petName) {
+      body = `For ${reminder.petName}: ${body}`;
+    }
+    
+    // Schedule the notification
+    return scheduleNotification(
+      numericId,
+      title,
+      body,
+      nextOccurrence.getTime()
+    );
+  };
+  
+  const handleSubmit = async (
+    e: React.FormEvent,
+    formData: ReminderFormData,
+    isEditing: boolean
+  ) => {
     e.preventDefault();
-    
-    if (!user) {
-      toast({
-        title: "Authentication error",
-        description: "You must be logged in to manage reminders",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!formData.title.trim()) {
-      toast({
-        title: "Title required",
-        description: "Please enter a title for the reminder",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (formData.days.length === 0) {
-      toast({
-        title: "Days required",
-        description: "Please select at least one day for the reminder",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!user) return;
     
     try {
       setSubmitting(true);
       
+      // Format data for database
       const reminderData = {
-        user_id: user.id,
-        title: formData.title.trim(),
-        description: formData.description.trim() || null,
+        title: formData.title,
+        description: formData.description,
         time: formData.time,
         days: formData.days,
-        pet_id: formData.petId === "none" ? null : formData.petId || null,
+        pet_id: formData.petId === "none" ? null : formData.petId,
         active: formData.active,
+        user_id: user.id
       };
+      
+      let reminderId = formData.id;
       
       if (isEditing) {
         // Update existing reminder
@@ -77,164 +162,141 @@ export const useReminderOperations = ({
         
         toast({
           title: "Reminder updated",
-          description: "Your reminder has been updated",
+          description: "Your reminder has been updated successfully",
         });
       } else {
-        // Create new reminder
+        // Create new reminder with generated ID
+        reminderId = uuidv4();
+        
         const { error } = await supabase
           .from("reminders")
-          .insert(reminderData);
+          .insert({
+            ...reminderData,
+            id: reminderId
+          });
           
         if (error) throw error;
         
         toast({
           title: "Reminder created",
-          description: "Your new reminder has been set",
+          description: "Your new reminder has been created successfully",
         });
-
-        // Schedule next notification if permissions are granted
-        if (permissionState === "granted" && formData.active) {
-          scheduleNextNotification(formData);
-        }
       }
       
-      // Refresh reminders list
-      await fetchData();
+      // Close the dialog and refresh data
       setOpen(false);
+      await fetchData();
+      
+      // Only schedule notification if reminder is active
+      if (formData.active) {
+        const fullReminder = {
+          ...formData,
+          id: reminderId
+        };
+        
+        const notificationScheduled = await scheduleReminderNotification(fullReminder);
+        
+        if (notificationScheduled) {
+          console.log("Notification scheduled successfully");
+        } else {
+          console.log("Failed to schedule notification");
+        }
+      }
     } catch (error: any) {
       console.error("Error saving reminder:", error.message);
       toast({
         title: "Error",
-        description: "Failed to save reminder",
+        description: "Failed to save reminder. Please try again.",
         variant: "destructive",
       });
     } finally {
       setSubmitting(false);
     }
   };
-
+  
   const handleToggleActive = async (reminder: Reminder) => {
+    if (!user) return;
+    
     try {
+      const newActiveState = !reminder.active;
+      
+      // Update in the database
       const { error } = await supabase
         .from("reminders")
-        .update({ active: !reminder.active })
+        .update({ active: newActiveState })
         .eq("id", reminder.id);
         
       if (error) throw error;
       
-      // Update local state
-      setReminders(prev => 
-        prev.map(r => r.id === reminder.id ? { ...r, active: !r.active } : r)
+      // Update local state for immediate UI feedback
+      setReminders(prev =>
+        prev.map(r =>
+          r.id === reminder.id ? { ...r, active: newActiveState } : r
+        )
       );
       
-      toast({
-        title: reminder.active ? "Reminder paused" : "Reminder activated",
-        description: `${reminder.title} has been ${reminder.active ? "paused" : "activated"}`,
-      });
-
-      // Schedule next notification if activating and permissions are granted
-      if (!reminder.active && permissionState === "granted") {
-        scheduleNextNotification({
+      // Schedule notification if activated
+      if (newActiveState) {
+        const reminderFormData: ReminderFormData = {
           id: reminder.id,
           title: reminder.title,
           description: reminder.description || "",
           time: reminder.time,
           days: reminder.days,
           petId: reminder.petId || "none",
+          petName: reminder.petName,
           active: true
-        });
+        };
+        
+        await scheduleReminderNotification(reminderFormData);
       }
+      
+      toast({
+        title: newActiveState ? "Reminder activated" : "Reminder deactivated",
+        description: `Your reminder has been ${newActiveState ? "activated" : "deactivated"} successfully`,
+      });
     } catch (error: any) {
       console.error("Error toggling reminder:", error.message);
       toast({
         title: "Error",
-        description: "Failed to update reminder",
+        description: "Failed to update reminder. Please try again.",
         variant: "destructive",
       });
     }
   };
-
-  const handleDelete = async (id: string) => {
+  
+  const handleDelete = async (reminder: Reminder) => {
+    if (!user) return;
+    
     try {
+      // Delete from database
       const { error } = await supabase
         .from("reminders")
         .delete()
-        .eq("id", id);
+        .eq("id", reminder.id);
         
       if (error) throw error;
       
-      // Update local state
-      setReminders(prev => prev.filter(r => r.id !== id));
+      // Update local state for immediate UI feedback
+      setReminders(prev => prev.filter(r => r.id !== reminder.id));
       
       toast({
         title: "Reminder deleted",
-        description: "Your reminder has been removed",
+        description: "Your reminder has been deleted successfully",
       });
+      
+      // Refresh data to ensure everything is in sync
+      await fetchData();
     } catch (error: any) {
       console.error("Error deleting reminder:", error.message);
       toast({
         title: "Error",
-        description: "Failed to delete reminder",
+        description: "Failed to delete reminder. Please try again.",
         variant: "destructive",
       });
     }
   };
-
-  // Helper function to schedule the next notification for a reminder
-  const scheduleNextNotification = (reminder: ReminderFormData) => {
-    if (!reminder.active || permissionState !== "granted") return;
-    
-    try {
-      const now = new Date();
-      const [hours, minutes] = reminder.time.split(':').map(Number);
-      
-      // Get day of week as number (0 = Sunday, 1 = Monday, etc.)
-      const today = now.getDay();
-      const daysMap: Record<string, number> = {
-        'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6
-      };
-      
-      // Convert reminder days to day numbers
-      const reminderDays = reminder.days.map(day => daysMap[day]);
-      
-      // Set target time for today
-      const targetTime = new Date();
-      targetTime.setHours(hours, minutes, 0, 0);
-      
-      // If target time is in the past, we need to find the next occurrence
-      if (targetTime <= now) {
-        targetTime.setDate(targetTime.getDate() + 1); // Move to tomorrow at least
-      }
-      
-      // Find the next day that matches one of the reminder days
-      let daysToAdd = 0;
-      while (!reminderDays.includes((today + daysToAdd) % 7) && daysToAdd < 7) {
-        daysToAdd++;
-      }
-      
-      if (daysToAdd > 0) {
-        targetTime.setDate(targetTime.getDate() + daysToAdd);
-      }
-      
-      // Calculate delay in milliseconds
-      const delay = targetTime.getTime() - now.getTime();
-      
-      // Only schedule if it's within the next 24 hours (for demo purposes)
-      if (delay <= 24 * 60 * 60 * 1000) {
-        const petText = reminder.petId !== "none" ? ` for ${reminder.petName || "your pet"}` : "";
-        scheduleNotification(
-          reminder.title,
-          `${reminder.description || "Time for your scheduled reminder"}${petText}`,
-          delay
-        );
-        
-        console.log(`Notification scheduled for ${targetTime.toLocaleString()} (in ${Math.round(delay/1000/60)} minutes)`);
-      }
-    } catch (error) {
-      console.error("Error scheduling notification:", error);
-    }
-  };
-
+  
   return {
     handleSubmit,
     handleToggleActive,
