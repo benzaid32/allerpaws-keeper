@@ -18,6 +18,11 @@ const NotFound = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
+        <img 
+          src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
+          alt="AllerPaws Logo" 
+          className="w-24 h-24 mx-auto mb-4"
+        />
         <h1 className="text-6xl font-bold text-primary mb-4">404</h1>
         <p className="text-xl text-gray-600 mb-6">Oops! Page not found</p>
         <p className="text-gray-500 mb-8">
