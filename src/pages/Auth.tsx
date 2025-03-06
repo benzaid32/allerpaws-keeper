@@ -54,8 +54,8 @@ const Auth = () => {
             await savePetData(petData);
           }
           
-          // Always redirect to dashboard after checking for pet data
-          navigate("/dashboard");
+          // Always redirect to home page after checking for pet data
+          navigate("/");
         }
       } catch (error) {
         console.error("Error in Auth page initialization:", error);
@@ -76,8 +76,8 @@ const Auth = () => {
             await savePetData(petData);
           }
           
-          // Always navigate to dashboard after auth state change resulting in a session
-          navigate("/dashboard");
+          // Always navigate to home page after auth state change resulting in a session
+          navigate("/");
         }
       }
     );
