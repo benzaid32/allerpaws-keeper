@@ -50,7 +50,7 @@ const ManageSubscription: React.FC<ManageSubscriptionProps> = ({
               <CardDescription>Unlock all AllerPaws features</CardDescription>
             </div>
             <img 
-              src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
+              src="/lovable-uploads/99366c55-0fea-4b0d-8084-4d3b93e79046.png" 
               alt="AllerPaws Logo" 
               className="w-12 h-12"
             />
@@ -131,7 +131,7 @@ const ManageSubscription: React.FC<ManageSubscriptionProps> = ({
           <div className="flex items-center">
             {getStatusBadge()}
             <img 
-              src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
+              src="/lovable-uploads/99366c55-0fea-4b0d-8084-4d3b93e79046.png" 
               alt="AllerPaws Logo" 
               className="w-10 h-10 ml-3"
             />
