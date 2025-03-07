@@ -58,7 +58,7 @@ const PetImageUploader: React.FC<PetImageUploaderProps> = ({
 
   const clearImage = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent form submission
-    setImagePreview(initialImageUrl);
+    setImagePreview(null);
     onImageSelected(null);
   };
 

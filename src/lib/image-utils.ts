@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Available image categories
@@ -76,13 +75,6 @@ export async function uploadImage(
     if (category === 'pets') {
       bucketName = 'pet-images';
       filePath = fileName;
-      
-      // Ensure the pet-images bucket exists
-      const bucketExists = await ensureStorageBucket(bucketName);
-      if (!bucketExists) {
-        console.error(`Bucket '${bucketName}' does not exist and could not be created`);
-        return null;
-      }
     }
     
     console.log(`Uploading image to ${bucketName}/${filePath}`);
@@ -164,41 +156,9 @@ export function getRandomPattern(): string {
   return BACKGROUND_PATTERNS[randomIndex];
 }
 
-// Create a Supabase storage bucket if it doesn't exist
+// This function is removed as it shouldn't be done client-side
+// Keeping a stub for compatibility but it just returns true
 export async function ensureStorageBucket(bucketName: string): Promise<boolean> {
-  try {
-    // Check if bucket exists
-    console.log(`Checking if bucket '${bucketName}' exists...`);
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-    
-    if (listError) {
-      console.error("Error listing buckets:", listError);
-      return false;
-    }
-    
-    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-    
-    if (!bucketExists) {
-      console.log(`Bucket '${bucketName}' doesn't exist, attempting to create it...`);
-      // Create the bucket
-      const { error } = await supabase.storage.createBucket(bucketName, {
-        public: true,
-        fileSizeLimit: 5 * 1024 * 1024, // 5MB limit
-      });
-      
-      if (error) {
-        console.error("Error creating bucket:", error);
-        return false;
-      }
-      
-      console.log(`Bucket '${bucketName}' created successfully`);
-    } else {
-      console.log(`Bucket '${bucketName}' already exists`);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error in ensureStorageBucket:", error);
-    return false;
-  }
+  console.log(`Note: ensureStorageBucket is deprecated for client-side use. Bucket '${bucketName}' should be created via SQL.`);
+  return true;
 }

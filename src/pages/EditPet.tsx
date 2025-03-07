@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SEVERITY_LEVELS } from "@/lib/constants";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { uploadImage, ensureStorageBucket } from "@/lib/image-utils";
+import { uploadImage } from "@/lib/image-utils";
 import PetFormSection from "@/components/pet/PetFormSection";
 import PetImageUploader from "@/components/pet/PetImageUploader";
 import PetAllergyEditor from "@/components/pet/PetAllergyEditor";
@@ -42,9 +42,6 @@ const EditPet = () => {
 
   useEffect(() => {
     if (!id) return;
-
-    // Ensure the pet-images bucket exists
-    ensureStorageBucket('pet-images');
 
     const fetchPet = async () => {
       try {
@@ -142,6 +139,10 @@ const EditPet = () => {
         
         imageUrl = uploadedImageUrl;
         console.log("Pet image uploaded successfully:", imageUrl);
+      } else if (imageUrl === null && originalImageUrl) {
+        // If image was cleared (imageFile is null) but there was an original image
+        // This means the user removed the image
+        imageUrl = null;
       }
 
       // Convert string values to appropriate types for database
