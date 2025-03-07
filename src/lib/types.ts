@@ -1,3 +1,4 @@
+
 export type Pet = {
   id: string;
   name: string;
@@ -20,7 +21,9 @@ export type Symptom = {
 export type SymptomEntry = {
   id: string;
   petId: string;
+  petName?: string; // Added missing property
   date: string;
+  time?: string; // Added missing property
   symptoms: {
     symptomId: string;
     name?: string;

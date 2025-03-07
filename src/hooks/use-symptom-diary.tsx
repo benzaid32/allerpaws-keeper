@@ -68,6 +68,44 @@ export const useSymptomDiary = () => {
     }
   };
 
+  // Function to delete a symptom entry
+  const deleteEntry = async (entryId: string) => {
+    if (!user) return;
+
+    try {
+      // First delete related symptom details
+      const { error: detailsError } = await supabase
+        .from("symptom_details")
+        .delete()
+        .eq("entry_id", entryId);
+
+      if (detailsError) throw detailsError;
+
+      // Then delete the entry itself
+      const { error: entryError } = await supabase
+        .from("symptom_entries")
+        .delete()
+        .eq("id", entryId);
+
+      if (entryError) throw entryError;
+
+      // Update local state by removing the deleted entry
+      setEntries(entries.filter(entry => entry.id !== entryId));
+
+      toast({
+        title: "Success",
+        description: "Symptom entry deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting symptom entry:", error.message);
+      toast({
+        title: "Error",
+        description: "Failed to delete symptom entry",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchEntries();
@@ -77,6 +115,7 @@ export const useSymptomDiary = () => {
   return {
     entries,
     loading,
-    fetchEntries
+    fetchEntries,
+    deleteEntry
   };
 };
