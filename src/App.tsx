@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { HelmetProvider } from "react-helmet-async";
@@ -27,7 +27,6 @@ import HeroSection from './components/home/welcome/HeroSection';
 import FeaturesSection from './components/home/welcome/FeaturesSection';
 import TestimonialsSection from './components/home/welcome/TestimonialsSection';
 import LandingFooter from './components/home/welcome/LandingFooter';
-import { useNavigate } from 'react-router-dom';
 import { Button } from './components/ui/button';
 import { isPlatform } from './lib/utils';
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -109,6 +108,26 @@ const PublicPageLayout = ({ children }) => {
       {children}
     </div>
   );
+};
+
+// Component to handle redirects from 404 page
+const RedirectHandler = () => {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Check if there's a redirect path stored in localStorage
+    const redirectPath = localStorage.getItem('redirectAfterLoad');
+    if (redirectPath) {
+      // Clear the stored path
+      localStorage.removeItem('redirectAfterLoad');
+      
+      // Navigate to the stored path
+      console.log('Redirecting to:', redirectPath);
+      navigate(redirectPath);
+    }
+  }, [navigate]);
+  
+  return null;
 };
 
 function App() {
@@ -232,6 +251,7 @@ function App() {
               <SubscriptionProvider>
                 <Toaster />
                 <InstallBanner />
+                <RedirectHandler />
                 <Routes>
                   {/* Protected routes */}
                   <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

@@ -12,6 +12,35 @@ const PRECACHE_ASSETS = [
   '/icons/maskable-icon.png'
 ];
 
+// Routes that should be handled by the SPA
+const SPA_ROUTES = [
+  '/landing',
+  '/auth',
+  '/dashboard',
+  '/settings',
+  '/profile',
+  '/pets',
+  '/add-pet',
+  '/edit-pet',
+  '/pet',
+  '/food-database',
+  '/symptom-diary',
+  '/reminders',
+  '/add-symptom',
+  '/edit-symptom',
+  '/elimination-diet',
+  '/pricing',
+  '/about',
+  '/contact',
+  '/terms',
+  '/privacy',
+  '/cookies',
+  '/faqs',
+  '/help',
+  '/blog',
+  '/careers'
+];
+
 // Install event - cache core assets
 self.addEventListener('install', (event) => {
   console.log('Service Worker: Installing...');
@@ -54,6 +83,15 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Helper function to check if a request is for an SPA route
+function isSpaRoute(url) {
+  const urlObj = new URL(url);
+  const pathname = urlObj.pathname;
+  
+  // Check if the pathname starts with any of our SPA routes
+  return SPA_ROUTES.some(route => pathname.startsWith(route));
+}
+
 // Fetch event - network-first strategy with fallback to cache
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests and browser extensions
@@ -70,8 +108,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // For HTML pages - network first, then cache
-  if (event.request.headers.get('accept')?.includes('text/html')) {
+  // For HTML pages or SPA routes - network first, then cache, fallback to index.html
+  if (
+    event.request.headers.get('accept')?.includes('text/html') ||
+    isSpaRoute(event.request.url)
+  ) {
     event.respondWith(
       fetch(event.request)
         .then(response => {
@@ -84,9 +125,21 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           // If network fails, try the cache
-          return caches.match(event.request).then(cachedResponse => {
-            return cachedResponse || caches.match('/');
-          });
+          return caches.match(event.request)
+            .then(cachedResponse => {
+              // If we have a cached response, use it
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              
+              // For SPA routes, return the index.html
+              if (isSpaRoute(event.request.url)) {
+                return caches.match('/index.html');
+              }
+              
+              // Fallback to root
+              return caches.match('/');
+            });
         })
     );
     return;
