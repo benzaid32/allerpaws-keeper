@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { SEVERITY_LEVELS } from "@/lib/constants";
 import MobileLayout from "@/components/layout/MobileLayout";
 import MobileCard from "@/components/ui/mobile-card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { uploadImage } from "@/lib/image-utils";
 
 interface PetFormData {
   name: string;
@@ -337,10 +339,12 @@ const EditPet = () => {
                         variant="destructive"
                         size="icon"
                         className="absolute top-0 right-0 h-6 w-6 rounded-full"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault(); // Prevent form submission
                           setImageFile(null);
                           setImagePreview(originalImageUrl);
                         }}
+                        type="button" // Explicitly set as button type
                       >
                         <X className="h-3 w-3" />
                       </Button>
@@ -352,11 +356,16 @@ const EditPet = () => {
                     accept="image/*"
                     onChange={handleImageChange}
                     className={imagePreview ? "hidden" : ""}
+                    onClick={(e) => e.stopPropagation()} // Prevent event bubbling
                   />
                   {!imagePreview && (
                     <Button 
                       variant="outline" 
-                      onClick={() => document.getElementById('image')?.click()}
+                      onClick={(e) => {
+                        e.preventDefault(); // Prevent form submission
+                        document.getElementById('image')?.click();
+                      }}
+                      type="button" // Explicitly set as button type
                     >
                       Choose Photo
                     </Button>
