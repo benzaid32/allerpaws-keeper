@@ -7,6 +7,11 @@ import { isPlatform } from "@/lib/utils";
 // Define our own type that combines both web and Capacitor permission states
 type CombinedPermissionState = "denied" | "granted" | "default" | "prompt";
 
+// Create a custom interface that extends NotificationOptions with vibrate
+interface ExtendedNotificationOptions extends NotificationOptions {
+  vibrate?: number[];
+}
+
 export const useNotifications = () => {
   const [permissionState, setPermissionState] = useState<CombinedPermissionState>("default");
   const [isNotificationsSupported, setIsNotificationsSupported] = useState(false);
@@ -253,12 +258,15 @@ export const useNotifications = () => {
             if (timeUntilNotification > 0) {
               setTimeout(() => {
                 // Use vibrate array pattern: [vibrate, pause, vibrate]
-                registration.showNotification(title, {
+                // Cast to any to bypass TypeScript checking for vibrate property
+                const options: ExtendedNotificationOptions = {
                   body,
                   icon: '/favicon.ico',
                   // This is the correct way to specify vibration pattern
                   vibrate: [300, 100, 300]
-                });
+                };
+                
+                registration.showNotification(title, options);
                 console.log("Web notification displayed using service worker");
               }, timeUntilNotification);
             }
@@ -375,12 +383,15 @@ export const useNotifications = () => {
         try {
           const registration = await navigator.serviceWorker.ready;
           if (registration.showNotification) {
-            await registration.showNotification("Test Notification", {
+            // Cast to any to bypass TypeScript checking for vibrate property
+            const options: ExtendedNotificationOptions = {
               body: "This is a test notification from Allerpaws Keeper!",
               icon: '/favicon.ico',
               // This is the correct way to specify vibration pattern
               vibrate: [300, 100, 300]
-            });
+            };
+            
+            await registration.showNotification("Test Notification", options);
             
             console.log("Test notification sent via service worker");
             
