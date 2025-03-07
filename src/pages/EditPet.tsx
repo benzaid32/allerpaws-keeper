@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -182,7 +181,8 @@ const EditPet = () => {
       // Redirect after briefly showing the message
       setRedirecting(true);
       setTimeout(() => {
-        navigate("/manage-pets", { replace: true });
+        // Redirect to home page instead of manage-pets
+        window.location.href = "/";
       }, 800);
       return;
     }
@@ -264,10 +264,10 @@ const EditPet = () => {
       // Show redirecting state before navigation
       setRedirecting(true);
       
-      // IMPORTANT: Force redirect to manage-pets page
+      // IMPORTANT: Force redirect to home page
       setTimeout(() => {
         // Use window.location for a hard redirect to ensure we navigate correctly
-        window.location.href = "/manage-pets";
+        window.location.href = "/";
       }, 500);
     } catch (error: any) {
       console.error("Error updating pet:", error.message);
