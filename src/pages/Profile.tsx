@@ -12,6 +12,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User, Mail, Camera, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isPlatform } from "@/lib/utils";
+import { ensureStorageBucket } from "@/lib/image-utils";
 
 const Profile = () => {
   const { user, refreshUser } = useAuth();
@@ -34,6 +35,9 @@ const Profile = () => {
     
     // Check if we're on a mobile device
     setIsMobileDevice(isPlatform('capacitor') || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    
+    // Ensure the storage bucket exists
+    ensureStorageBucket('user-content');
   }, [user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,19 +90,30 @@ const Profile = () => {
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
       
+      console.log("Uploading avatar to path:", filePath);
+      
       // Upload the file to Supabase Storage
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data } = await supabase.storage
         .from('user-content')
-        .upload(filePath, avatarFile);
+        .upload(filePath, avatarFile, {
+          cacheControl: '3600',
+          upsert: true
+        });
         
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Error uploading avatar:", uploadError);
+        throw uploadError;
+      }
+      
+      console.log("Upload successful, getting public URL");
       
       // Get the public URL
-      const { data } = supabase.storage
+      const { data: urlData } = supabase.storage
         .from('user-content')
         .getPublicUrl(filePath);
         
-      return data.publicUrl;
+      console.log("Public URL:", urlData.publicUrl);
+      return urlData.publicUrl;
     } catch (error) {
       console.error("Error uploading avatar:", error);
       toast({
@@ -119,6 +134,9 @@ const Profile = () => {
       let newAvatarUrl = avatarUrl;
       if (avatarFile) {
         newAvatarUrl = await uploadAvatar();
+        if (!newAvatarUrl) {
+          throw new Error("Failed to upload avatar");
+        }
       }
       
       // Update user profile using Supabase Auth API

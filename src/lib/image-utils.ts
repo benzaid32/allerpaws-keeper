@@ -72,7 +72,10 @@ export async function uploadImage(
     // Upload the file
     const { error: uploadError } = await supabase.storage
       .from('app-images')
-      .upload(filePath, file);
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
       
     if (uploadError) {
       console.error("Error uploading image:", uploadError);
@@ -146,19 +149,31 @@ export function getRandomPattern(): string {
 export async function ensureStorageBucket(bucketName: string): Promise<boolean> {
   try {
     // Check if bucket exists
-    const { data: buckets } = await supabase.storage.listBuckets();
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error("Error listing buckets:", listError);
+      return false;
+    }
+    
     const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
     
     if (!bucketExists) {
+      console.log(`Bucket '${bucketName}' doesn't exist, attempting to create it...`);
       // Create the bucket
       const { error } = await supabase.storage.createBucket(bucketName, {
-        public: true
+        public: true,
+        fileSizeLimit: 5 * 1024 * 1024, // 5MB limit
       });
       
       if (error) {
         console.error("Error creating bucket:", error);
         return false;
       }
+      
+      console.log(`Bucket '${bucketName}' created successfully`);
+    } else {
+      console.log(`Bucket '${bucketName}' already exists`);
     }
     
     return true;
@@ -166,4 +181,4 @@ export async function ensureStorageBucket(bucketName: string): Promise<boolean> 
     console.error("Error in ensureStorageBucket:", error);
     return false;
   }
-} 
+}
