@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +34,17 @@ const EditPet = () => {
     weight: "",
     allergies: [],
   });
+  
+  // Store original form data to check for changes
+  const [originalFormData, setOriginalFormData] = useState<PetFormData>({
+    name: "",
+    species: "dog",
+    breed: "",
+    age: "",
+    weight: "",
+    allergies: [],
+  });
+  
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -66,14 +77,18 @@ const EditPet = () => {
         if (allergiesError) throw allergiesError;
 
         // Set form data
-        setFormData({
+        const fetchedFormData = {
           name: petData.name || "",
           species: petData.species || "dog",
           breed: petData.breed || "",
           age: petData.age ? String(petData.age) : "",
           weight: petData.weight ? String(petData.weight) : "",
           allergies: allergiesData.map(a => a.name) || [],
-        });
+        };
+        
+        setFormData(fetchedFormData);
+        // Store original data for change detection
+        setOriginalFormData(fetchedFormData);
 
         // Set image preview if available
         if (petData.image_url) {
@@ -94,6 +109,38 @@ const EditPet = () => {
 
     fetchPet();
   }, [id, navigate, toast]);
+
+  // Check if form data has changed
+  const hasChanges = useCallback(() => {
+    // Check for changes in text fields
+    if (
+      formData.name !== originalFormData.name ||
+      formData.species !== originalFormData.species ||
+      formData.breed !== originalFormData.breed ||
+      formData.age !== originalFormData.age ||
+      formData.weight !== originalFormData.weight
+    ) {
+      return true;
+    }
+    
+    // Check for changes in allergies
+    if (formData.allergies.length !== originalFormData.allergies.length) {
+      return true;
+    }
+    
+    for (let i = 0; i < formData.allergies.length; i++) {
+      if (!originalFormData.allergies.includes(formData.allergies[i])) {
+        return true;
+      }
+    }
+    
+    // Check for image changes
+    if (imageFile !== null) {
+      return true;
+    }
+    
+    return false;
+  }, [formData, originalFormData, imageFile]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -122,6 +169,21 @@ const EditPet = () => {
         description: "Please provide at least a name and species for your pet",
         variant: "destructive",
       });
+      return;
+    }
+    
+    // Check if anything has changed
+    if (!hasChanges()) {
+      toast({
+        title: "No Changes",
+        description: "No changes were made to your pet's information",
+      });
+      
+      // Redirect after briefly showing the message
+      setRedirecting(true);
+      setTimeout(() => {
+        navigate("/manage-pets");
+      }, 800);
       return;
     }
 
