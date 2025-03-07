@@ -250,11 +250,12 @@ export const useNotifications = () => {
           const timeUntilNotification = timeInMillis - Date.now();
           if (timeUntilNotification > 0) {
             setTimeout(() => {
-              // Create the notification
+              // Create the notification with appropriate options for web
+              // TypeScript fix: remove 'vibrate' from NotificationOptions and use navigator.vibrate instead
               const notification = new Notification(title, {
                 body,
-                icon: '/favicon.ico',
-                vibrate: [200, 100, 200] // Add vibration pattern for web notifications
+                icon: '/favicon.ico'
+                // vibrate property removed as it's not in the standard NotificationOptions type
               });
               
               // Try to vibrate using the Vibration API if available
@@ -335,21 +336,27 @@ export const useNotifications = () => {
         
         return true;
       } else {
-        // Web fallback - schedule for 5 seconds from now
-        const notificationTime = Date.now() + 5000;
-        
-        const success = await scheduleNotification(
-          999,
-          "Test Notification",
-          "This is a test notification from Allerpaws Keeper!",
-          notificationTime
-        );
-        
-        if (success) {
+        // Web fallback - create and show a notification immediately
+        if (permissionState === 'granted') {
+          console.log("Sending immediate test web notification");
+          
+          // Create the notification without the vibrate property
+          const notification = new Notification("Test Notification", {
+            body: "This is a test notification from Allerpaws Keeper!",
+            icon: '/favicon.ico'
+            // vibrate property removed as it's not in the standard NotificationOptions type
+          });
+          
+          // Use the Vibration API separately
+          if ('vibrate' in navigator) {
+            navigator.vibrate([300, 100, 300]);
+          }
+          
           toast({
             title: "Test notification sent",
-            description: "You should receive a notification in 5 seconds",
+            description: "You should see a notification now",
           });
+          
           return true;
         }
       }
