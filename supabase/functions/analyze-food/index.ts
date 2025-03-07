@@ -4,7 +4,17 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+  
   try {
     if (!openAIApiKey) {
       throw new Error('OPENAI_API_KEY is not set in environment variables');
@@ -17,7 +27,7 @@ serve(async (req) => {
         JSON.stringify({ 
           error: "Missing or invalid 'ingredients' parameter. Expected an array of strings." 
         }),
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -25,26 +35,68 @@ serve(async (req) => {
     console.log(`Analyzing ingredients: ${ingredients.join(', ')}`);
     console.log(`Pet allergies: ${petAllergies ? petAllergies.join(', ') : 'none'}`);
 
-    // Create the prompt for GPT
+    // Enhanced prompt for GPT with more detailed nutritional analysis
     const systemPrompt = `
       You are an expert veterinary nutritionist specializing in pet food analysis. Your job is to analyze ingredients 
-      in pet food products and provide a detailed nutritional analysis.
+      in pet food products and provide a comprehensive nutritional assessment.
       
-      Analyze the nutritional value and potential issues with these pet food ingredients. Focus on:
-      1. Identify any common allergens or potentially harmful ingredients
-      2. Rate the overall quality of the ingredients (high, medium, low)
-      3. Identify key nutritional benefits
-      4. Provide any warnings about specific ingredients
-      5. List alternative ingredients if there are problematic ones
+      Analyze the nutritional value and potential issues with these pet food ingredients in depth. Focus on:
       
-      If specific pet allergies are provided, check if any of the ingredients could trigger these allergies.
+      1. DETAILED NUTRITIONAL PROFILE:
+         - Macronutrient breakdown (protein, fat, carbohydrate percentages)
+         - Micronutrient assessment (vitamins, minerals)
+         - Omega fatty acids content and balance
+         - Fiber content and digestibility
+         - Caloric density estimation
+      
+      2. ALLERGENS AND SENSITIVITIES:
+         - Identify common allergens present in ingredients
+         - Grade severity of allergenic potential (high/medium/low)
+         - Note cross-reactivity concerns
+      
+      3. INGREDIENT QUALITY ASSESSMENT:
+         - Identify high-quality vs. filler ingredients
+         - Note any artificial additives, preservatives, or colors
+         - Identify any processed ingredients and their impact
+         - Note whole food ingredients and their benefits
+      
+      4. SAFETY ASSESSMENT:
+         - Flag any potentially harmful ingredients
+         - Identify ingredients with recall history
+         - Note any controversial ingredients
+         - Assign a safety score from 1-10 (10 being safest)
+      
+      5. DIGESTIBILITY ASSESSMENT:
+         - Rate overall digestibility (high/medium/low)
+         - Identify ingredients that may cause digestive upset
+      
+      6. LIFESTAGE APPROPRIATENESS:
+         - Indicate if ingredients are suitable for puppies/kittens, adults, or seniors
+         - Note special considerations for growing animals or seniors
+      
+      7. COMPARATIVE QUALITY:
+         - Rate the overall ingredient quality compared to market standards (premium/standard/economy)
+      
+      If specific pet allergies are provided, thoroughly check if any of the ingredients could trigger these allergies,
+      including ingredients that might cross-react or contain hidden forms of the allergen.
       
       Format your response as a structured JSON with the following fields:
       {
-        "overall_quality": "high/medium/low",
+        "overall_quality_score": number (1-10),
+        "safety_score": number (1-10),
+        "nutritional_profile": {
+          "protein_quality": "high/medium/low",
+          "fat_quality": "high/medium/low",
+          "carbohydrate_quality": "high/medium/low",
+          "fiber_content": "high/medium/low",
+          "vitamin_mineral_balance": "excellent/good/fair/poor"
+        },
         "nutritional_benefits": ["benefit1", "benefit2", ...],
-        "problematic_ingredients": [{"name": "ingredient", "reason": "why it's problematic"}],
+        "problematic_ingredients": [{"name": "ingredient", "reason": "why it's problematic", "severity": "high/medium/low"}],
         "allergy_warnings": ["warning1", "warning2"],
+        "digestibility": "high/medium/low",
+        "suitable_for": ["puppies", "adults", "seniors"],
+        "artificial_additives": ["additive1", "additive2"],
         "suggestions": ["suggestion1", "suggestion2"],
         "summary": "A concise 2-3 sentence summary"
       }
@@ -103,7 +155,7 @@ serve(async (req) => {
         analysis: parsedResult,
         timestamp: new Date().toISOString()
       }),
-      { status: 200 }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error("Error in analyze-food function:", error);
@@ -112,7 +164,7 @@ serve(async (req) => {
       JSON.stringify({ 
         error: error.message || "An unexpected error occurred during food analysis" 
       }),
-      { status: 500 }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
