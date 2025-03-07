@@ -252,9 +252,11 @@ export const useNotifications = () => {
             const timeUntilNotification = timeInMillis - Date.now();
             if (timeUntilNotification > 0) {
               setTimeout(() => {
+                // Use vibrate array pattern: [vibrate, pause, vibrate]
                 registration.showNotification(title, {
                   body,
                   icon: '/favicon.ico',
+                  // This is the correct way to specify vibration pattern
                   vibrate: [300, 100, 300]
                 });
                 console.log("Web notification displayed using service worker");
@@ -276,13 +278,13 @@ export const useNotifications = () => {
         if (timeUntilNotification > 0) {
           setTimeout(() => {
             try {
-              // Create the notification with appropriate options for web
+              // Create the notification without the vibrate property
               const notification = new Notification(title, {
                 body,
                 icon: '/favicon.ico'
               });
               
-              // Try to vibrate using the Vibration API if available
+              // Try to vibrate using the Vibration API separately
               if ('vibrate' in navigator) {
                 navigator.vibrate([300, 100, 300]);
               }
@@ -376,6 +378,7 @@ export const useNotifications = () => {
             await registration.showNotification("Test Notification", {
               body: "This is a test notification from Allerpaws Keeper!",
               icon: '/favicon.ico',
+              // This is the correct way to specify vibration pattern
               vibrate: [300, 100, 300]
             });
             
