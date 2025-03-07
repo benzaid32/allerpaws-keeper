@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Available image categories
@@ -67,26 +68,44 @@ export async function uploadImage(
       fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
     }
     
-    const filePath = `${category}/${fileName}`;
+    // Determine which bucket to use based on category
+    let bucketName = 'app-images';
+    let filePath = `${category}/${fileName}`;
+    
+    // Use the pet-images bucket for pet images
+    if (category === 'pets') {
+      bucketName = 'pet-images';
+      filePath = fileName;
+      
+      // Ensure the pet-images bucket exists
+      const bucketExists = await ensureStorageBucket(bucketName);
+      if (!bucketExists) {
+        console.error(`Bucket '${bucketName}' does not exist and could not be created`);
+        return null;
+      }
+    }
+    
+    console.log(`Uploading image to ${bucketName}/${filePath}`);
     
     // Upload the file
     const { error: uploadError } = await supabase.storage
-      .from('app-images')
+      .from(bucketName)
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: true
       });
       
     if (uploadError) {
-      console.error("Error uploading image:", uploadError);
+      console.error(`Error uploading image to ${bucketName}:`, uploadError);
       return null;
     }
     
     // Get the public URL
     const { data: urlData } = supabase.storage
-      .from('app-images')
+      .from(bucketName)
       .getPublicUrl(filePath);
       
+    console.log(`Successfully uploaded image, public URL: ${urlData.publicUrl}`);
     return urlData.publicUrl;
   } catch (error) {
     console.error("Error in uploadImage:", error);
@@ -149,6 +168,7 @@ export function getRandomPattern(): string {
 export async function ensureStorageBucket(bucketName: string): Promise<boolean> {
   try {
     // Check if bucket exists
+    console.log(`Checking if bucket '${bucketName}' exists...`);
     const { data: buckets, error: listError } = await supabase.storage.listBuckets();
     
     if (listError) {

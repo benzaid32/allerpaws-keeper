@@ -13,7 +13,7 @@ import { SEVERITY_LEVELS } from "@/lib/constants";
 import MobileLayout from "@/components/layout/MobileLayout";
 import MobileCard from "@/components/ui/mobile-card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { uploadImage } from "@/lib/image-utils";
+import { uploadImage, ensureStorageBucket } from "@/lib/image-utils";
 
 interface PetFormData {
   name: string;
@@ -46,6 +46,9 @@ const EditPet = () => {
 
   useEffect(() => {
     if (!id) return;
+
+    // Ensure the pet-images bucket exists
+    ensureStorageBucket('pet-images');
 
     const fetchPet = async () => {
       try {
@@ -128,8 +131,36 @@ const EditPet = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      // Validate file size
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+      
+      // Create a preview URL that complies with CSP
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // Using data URL instead of blob URL to avoid CSP issues
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -152,23 +183,15 @@ const EditPet = () => {
       // Upload new image if provided
       let imageUrl = originalImageUrl;
       if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-        const filePath = `pet-images/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('pet-images')
-          .upload(filePath, imageFile);
-
-        if (uploadError) {
-          throw uploadError;
+        console.log("Uploading pet image...");
+        const uploadedImageUrl = await uploadImage(imageFile, "pets");
+        
+        if (!uploadedImageUrl) {
+          throw new Error("Failed to upload pet image");
         }
-
-        const { data: urlData } = supabase.storage
-          .from('pet-images')
-          .getPublicUrl(filePath);
-
-        imageUrl = urlData.publicUrl;
+        
+        imageUrl = uploadedImageUrl;
+        console.log("Pet image uploaded successfully:", imageUrl);
       }
 
       // Convert string values to appropriate types for database
