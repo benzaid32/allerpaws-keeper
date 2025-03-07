@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +12,7 @@ import PetImageUploader from "@/components/pet/PetImageUploader";
 import PetAllergyEditor from "@/components/pet/PetAllergyEditor";
 import PetFormNavigation from "@/components/pet/PetFormNavigation";
 import PetFormProgress from "@/components/pet/PetFormProgress";
+import { usePets } from "@/hooks/use-pets";
 
 interface PetFormData {
   name: string;
@@ -25,6 +27,7 @@ const EditPet = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { fetchPets } = usePets(); // Get the fetchPets function to refresh data after updates
   const [formData, setFormData] = useState<PetFormData>({
     name: "",
     species: "dog",
@@ -255,6 +258,9 @@ const EditPet = () => {
           throw allergyError;
         }
       }
+
+      // Make sure to refresh the pets data in the hook
+      await fetchPets();
 
       toast({
         title: "Success",

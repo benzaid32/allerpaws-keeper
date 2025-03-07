@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePets } from "@/hooks/use-pets";
 import MobileLayout from "@/components/layout/MobileLayout";
@@ -34,10 +34,15 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const ManagePets = () => {
-  const { pets, loading, deletePet } = usePets();
+  const { pets, loading, deletePet, fetchPets } = usePets();
   const navigate = useNavigate();
   const [deletingPetId, setDeletingPetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Force fetch pets data when component mounts
+  useEffect(() => {
+    fetchPets();
+  }, [fetchPets]);
 
   const handleAddPet = () => {
     navigate("/add-pet");
@@ -99,10 +104,18 @@ const ManagePets = () => {
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
                       {pet.imageUrl ? (
-                        <AvatarImage src={pet.imageUrl} alt={pet.name} />
+                        <AvatarImage 
+                          src={pet.imageUrl} 
+                          alt={pet.name} 
+                          onError={(e) => {
+                            // If image fails to load, show fallback
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
                       ) : (
                         <AvatarFallback>{pet.name.charAt(0)}</AvatarFallback>
                       )}
+                      <AvatarFallback>{pet.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
                       <h3 className="font-semibold text-lg">{pet.name}</h3>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ const DASHBOARD_BG_IMAGE = "https://whspcnovvaqeztgtcsjl.supabase.co/storage/v1/
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
-  const { pets, loading } = usePets();
+  const { pets, loading, fetchPets } = usePets(); // Get the fetchPets function
   const navigate = useNavigate();
   const { toast } = useToast();
   const { hasPremiumAccess } = useUserSubscription();
@@ -37,6 +38,26 @@ const Dashboard = () => {
   const userName = user?.user_metadata?.full_name || "Pet Parent";
   const firstName = userName.split(' ')[0];
   const isPremium = hasPremiumAccess;
+
+  // Force fetch fresh data when the dashboard is loaded or focused
+  useEffect(() => {
+    // Fetch pets directly from Supabase when component mounts
+    fetchPets();
+    
+    // Also set up a listener for when the user navigates back to this page
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchPets();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Clean up the event listener
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchPets]);
 
   useEffect(() => {
     // TODO: Replace with real data fetching from Supabase
@@ -426,7 +447,12 @@ const Dashboard = () => {
               <PawPrint className="h-5 w-5 text-primary mr-2" />
               <h3 className="text-lg font-medium">Your Pets</h3>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/pets')} className="text-primary hover:bg-primary/10">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/manage-pets')} 
+              className="text-primary hover:bg-primary/10"
+            >
               Manage
             </Button>
           </div>
@@ -449,7 +475,16 @@ const Dashboard = () => {
                         <div className="flex items-center gap-3">
                           <div className="h-14 w-14 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden shadow-sm">
                             {pet.imageUrl ? (
-                              <img src={pet.imageUrl} alt={pet.name} className="h-full w-full object-cover" />
+                              <img 
+                                src={pet.imageUrl} 
+                                alt={pet.name} 
+                                className="h-full w-full object-cover" 
+                                onError={(e) => {
+                                  // If image fails to load, fallback to the first letter
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.parentElement!.innerHTML = `<span class="text-lg font-bold">${pet.name.charAt(0)}</span>`;
+                                }}
+                              />
                             ) : (
                               <span className="text-lg font-bold">{pet.name.charAt(0)}</span>
                             )}

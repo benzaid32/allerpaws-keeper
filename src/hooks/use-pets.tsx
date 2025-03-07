@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,79 +12,83 @@ export function usePets() {
   const { id: petId } = useParams<{ id?: string }>();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchPets = async () => {
-      try {
-        // Fetch pets
-        const { data: petsData, error: petsError } = await supabase
-          .from("pets")
-          .select("*")
-          .order("created_at", { ascending: false });
+  // Fetch pets function that can be called whenever we need fresh data
+  const fetchPets = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch pets
+      const { data: petsData, error: petsError } = await supabase
+        .from("pets")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-        if (petsError) {
-          throw petsError;
-        }
-
-        // For each pet, fetch its allergies
-        const petsWithAllergies = await Promise.all(
-          (petsData || []).map(async (pet) => {
-            const { data: allergiesData, error: allergiesError } = await supabase
-              .from("allergies")
-              .select("name")
-              .eq("pet_id", pet.id);
-              
-            if (allergiesError) {
-              console.error("Error fetching allergies:", allergiesError);
-              return {
-                ...pet,
-                knownAllergies: [],
-              } as Pet;
-            }
-
-            // Transform the pet data to match our Pet type
-            return {
-              id: pet.id,
-              name: pet.name,
-              species: pet.species as "dog" | "cat" | "other",
-              breed: pet.breed || undefined,
-              age: pet.age || undefined,
-              weight: pet.weight || undefined,
-              knownAllergies: allergiesData?.map((allergy) => allergy.name) || [],
-              imageUrl: pet.image_url || undefined,
-            } as Pet;
-          })
-        );
-
-        setPets(petsWithAllergies);
-        
-        // If a pet ID is provided in the URL, set it as the selected pet
-        if (petId) {
-          const selectedPet = petsWithAllergies.find(pet => pet.id === petId);
-          if (selectedPet) {
-            setSelectedPet(selectedPet);
-          } else {
-            console.error("Pet not found with ID:", petId);
-            toast({
-              title: "Pet Not Found",
-              description: "The selected pet could not be found.",
-              variant: "destructive",
-            });
-          }
-        }
-      } catch (error: any) {
-        console.error("Error fetching pets:", error.message);
-        toast({
-          title: "Error",
-          description: "Failed to load your pets",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+      if (petsError) {
+        throw petsError;
       }
-    };
 
-    fetchPets();
+      // For each pet, fetch its allergies
+      const petsWithAllergies = await Promise.all(
+        (petsData || []).map(async (pet) => {
+          const { data: allergiesData, error: allergiesError } = await supabase
+            .from("allergies")
+            .select("name")
+            .eq("pet_id", pet.id);
+            
+          if (allergiesError) {
+            console.error("Error fetching allergies:", allergiesError);
+            return {
+              ...pet,
+              knownAllergies: [],
+            } as Pet;
+          }
+
+          // Transform the pet data to match our Pet type
+          return {
+            id: pet.id,
+            name: pet.name,
+            species: pet.species as "dog" | "cat" | "other",
+            breed: pet.breed || undefined,
+            age: pet.age || undefined,
+            weight: pet.weight || undefined,
+            knownAllergies: allergiesData?.map((allergy) => allergy.name) || [],
+            imageUrl: pet.image_url || undefined,
+          } as Pet;
+        })
+      );
+
+      setPets(petsWithAllergies);
+      
+      // If a pet ID is provided in the URL, set it as the selected pet
+      if (petId) {
+        const selectedPet = petsWithAllergies.find(pet => pet.id === petId);
+        if (selectedPet) {
+          setSelectedPet(selectedPet);
+        } else {
+          console.error("Pet not found with ID:", petId);
+          toast({
+            title: "Pet Not Found",
+            description: "The selected pet could not be found.",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error("Error fetching pets:", error.message);
+      toast({
+        title: "Error",
+        description: "Failed to load your pets",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast, petId]);
+
+  // Initialize by fetching pets on component mount or when dependencies change
+  useEffect(() => {
+    fetchPets();
+  }, [fetchPets]);
 
   const clearSelectedPet = () => {
     setSelectedPet(null);
@@ -111,8 +116,8 @@ export function usePets() {
         throw petError;
       }
       
-      // Update local state
-      setPets(pets.filter(pet => pet.id !== petId));
+      // Update local state by fetching fresh data
+      await fetchPets();
       
       toast({
         title: "Success",
@@ -136,6 +141,7 @@ export function usePets() {
     selectedPet,
     setSelectedPet,
     clearSelectedPet,
-    deletePet
+    deletePet,
+    fetchPets  // Export the function so components can trigger a refresh
   };
 }
