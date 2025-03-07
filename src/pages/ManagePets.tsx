@@ -6,6 +6,7 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { PetsActionBar } from "@/components/pets/PetsActionBar";
 import { PetsList } from "@/components/pets/PetsList";
+import { useToast } from "@/hooks/use-toast";
 
 const ManagePets = () => {
   const { pets, loading, deletePet, fetchPets } = usePets();
@@ -13,21 +14,47 @@ const ManagePets = () => {
   const [deletingPetId, setDeletingPetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { toast } = useToast();
 
   // Force fetch pets data when component mounts
   useEffect(() => {
+    console.log("ManagePets - Component mounted, fetching pets");
     const loadData = async () => {
-      await fetchPets();
+      try {
+        await fetchPets();
+      } catch (error) {
+        console.error("Error fetching pets:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load your pets. Please try again.",
+          variant: "destructive",
+        });
+      }
     };
     loadData();
-  }, [fetchPets]);
+  }, [fetchPets, toast]);
 
   const handleRefresh = async () => {
+    console.log("ManagePets - Manual refresh triggered");
     setIsRefreshing(true);
-    await fetchPets();
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 500);
+    try {
+      await fetchPets();
+      toast({
+        title: "Success",
+        description: "Pet list refreshed",
+      });
+    } catch (error) {
+      console.error("Error refreshing pets:", error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh pets",
+        variant: "destructive",
+      });
+    } finally {
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 500);
+    }
   };
 
   const handleAddPet = () => {
@@ -49,21 +76,18 @@ const ManagePets = () => {
       await deletePet(petId);
     } catch (error) {
       console.error("Error deleting pet:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete pet",
+        variant: "destructive",
+      });
     } finally {
       setDeletingPetId(null);
       setIsDeleting(false);
     }
   };
 
-  if (loading) {
-    return (
-      <MobileLayout title="Your Pets">
-        <div className="flex-1 flex items-center justify-center">
-          <LoadingSpinner />
-        </div>
-      </MobileLayout>
-    );
-  }
+  console.log("ManagePets - Rendering with pets:", pets, "loading:", loading);
 
   return (
     <MobileLayout title="Your Pets">
@@ -84,6 +108,7 @@ const ManagePets = () => {
           onAddPet={handleAddPet}
           isDeleting={isDeleting}
           deletingPetId={deletingPetId}
+          isLoading={loading}
         />
       </div>
     </MobileLayout>

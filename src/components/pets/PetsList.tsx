@@ -3,6 +3,7 @@ import React from "react";
 import { Pet } from "@/lib/types";
 import { PetCard } from "./PetCard";
 import { EmptyPetsList } from "./EmptyPetsList";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface PetsListProps {
   pets: Pet[];
@@ -12,6 +13,7 @@ interface PetsListProps {
   onAddPet: () => void;
   isDeleting: boolean;
   deletingPetId: string | null;
+  isLoading?: boolean;
 }
 
 export const PetsList: React.FC<PetsListProps> = ({
@@ -22,8 +24,17 @@ export const PetsList: React.FC<PetsListProps> = ({
   onAddPet,
   isDeleting,
   deletingPetId,
+  isLoading = false,
 }) => {
-  if (pets.length === 0) {
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  // Add debugging logs to help troubleshoot
+  console.log("PetsList - Received pets:", pets);
+  
+  if (!pets || pets.length === 0) {
+    console.log("PetsList - No pets found, showing empty state");
     return <EmptyPetsList onAddPet={onAddPet} />;
   }
 
