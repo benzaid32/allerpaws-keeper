@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -152,21 +153,19 @@ function App() {
     registerServiceWorker();
   }, []);
 
-  // Request notification permissions early
+  // Request notification permissions early and register service worker
   useEffect(() => {
     const requestNotificationPermissions = async () => {
       try {
-        // Only request on mobile devices
         if (isPlatform('capacitor')) {
           console.log("App: Requesting notification permissions on startup");
           
-          // Request permissions
+          // Request permissions for Capacitor
           const { display } = await LocalNotifications.requestPermissions();
           console.log("App: Initial notification permission result:", display);
           
-          // Try to register for notifications
+          // Schedule a test notification to verify permissions
           try {
-            // Schedule a silent test notification to verify permissions
             const testId = Math.floor(Math.random() * 10000);
             await LocalNotifications.schedule({
               notifications: [{
@@ -180,13 +179,23 @@ function App() {
               }]
             });
             
-            // If we get here, notifications are allowed
             console.log("App: Notification permission test successful");
             
             // Cancel the test notification
             await LocalNotifications.cancel({ notifications: [{ id: testId }] });
           } catch (error) {
             console.error("App: Error testing notification permissions:", error);
+          }
+        } else if ('Notification' in window) {
+          // For web, prepare service worker for notifications
+          if ('serviceWorker' in navigator) {
+            try {
+              // Ensure service worker is ready for notifications
+              const registration = await navigator.serviceWorker.ready;
+              console.log("Service worker ready for notifications");
+            } catch (error) {
+              console.error("Error preparing service worker for notifications:", error);
+            }
           }
         }
       } catch (error) {
@@ -197,11 +206,10 @@ function App() {
     requestNotificationPermissions();
   }, []);
 
-  // Unregister any existing service workers to prevent caching issues
+  // Initialize the app and handle service workers
   useEffect(() => {
-    const cleanupServiceWorker = async () => {
+    const initializeApp = async () => {
       try {
-        // We no longer unregister service workers since we want PWA functionality
         console.log("App initialized");
         setIsLoading(false);
       } catch (error) {
@@ -210,7 +218,7 @@ function App() {
       }
     };
 
-    cleanupServiceWorker();
+    initializeApp();
 
     // Add error handling for uncaught errors
     const handleUnhandledError = (event) => {

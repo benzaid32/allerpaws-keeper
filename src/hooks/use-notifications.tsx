@@ -212,6 +212,7 @@ export const useNotifications = () => {
       // Check permissions again before scheduling
       await checkPermissions();
       
+      // Fix: Use appropriate API based on platform
       if (isPlatform('capacitor')) {
         // For Capacitor, we use the LocalNotifications plugin
         console.log("Scheduling notification on Capacitor:", { id, title, body, time: new Date(timeInMillis) });
@@ -242,20 +243,43 @@ export const useNotifications = () => {
         setIsSystemBlocked(false);
         
         return true;
-      } else {
-        // Web fallback
-        if (permissionState === 'granted') {
-          console.log("Scheduling web notification:", { title, body, time: new Date(timeInMillis) });
-          
-          const timeUntilNotification = timeInMillis - Date.now();
-          if (timeUntilNotification > 0) {
-            setTimeout(() => {
+      } else if ('serviceWorker' in navigator && 'PushManager' in window) {
+        // Use service worker for web push notifications if available
+        console.log("Using service worker for notifications");
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          if (registration.showNotification) {
+            const timeUntilNotification = timeInMillis - Date.now();
+            if (timeUntilNotification > 0) {
+              setTimeout(() => {
+                registration.showNotification(title, {
+                  body,
+                  icon: '/favicon.ico',
+                  vibrate: [300, 100, 300]
+                });
+                console.log("Web notification displayed using service worker");
+              }, timeUntilNotification);
+            }
+            return true;
+          }
+        } catch (error) {
+          console.error("Service worker notification error:", error);
+          // Fall back to standard Notification API
+        }
+      }
+      
+      // Standard web Notification API fallback
+      if (permissionState === 'granted' && 'Notification' in window) {
+        console.log("Scheduling web notification:", { title, body, time: new Date(timeInMillis) });
+        
+        const timeUntilNotification = timeInMillis - Date.now();
+        if (timeUntilNotification > 0) {
+          setTimeout(() => {
+            try {
               // Create the notification with appropriate options for web
-              // TypeScript fix: remove 'vibrate' from NotificationOptions and use navigator.vibrate instead
               const notification = new Notification(title, {
                 body,
                 icon: '/favicon.ico'
-                // vibrate property removed as it's not in the standard NotificationOptions type
               });
               
               // Try to vibrate using the Vibration API if available
@@ -264,13 +288,20 @@ export const useNotifications = () => {
               }
               
               console.log("Web notification displayed");
-            }, timeUntilNotification);
-          }
-          return true;
-        } else {
-          console.log("Cannot schedule notification - permission not granted");
+            } catch (error) {
+              console.error("Error creating web notification:", error);
+              toast({
+                title: "Notification Error",
+                description: "Could not display notification. Try refreshing the page.",
+                variant: "destructive",
+              });
+            }
+          }, timeUntilNotification);
         }
+        return true;
       }
+      
+      console.log("Cannot schedule notification - permission not granted or API not available");
       return false;
     } catch (error) {
       console.error("Error scheduling notification:", error);
@@ -301,6 +332,7 @@ export const useNotifications = () => {
     
     // Send an immediate notification for testing
     try {
+      // Fix: Use appropriate API based on platform
       if (isPlatform('capacitor')) {
         console.log("Sending immediate test notification on Capacitor with vibration");
         
@@ -335,16 +367,42 @@ export const useNotifications = () => {
         });
         
         return true;
-      } else {
-        // Web fallback - create and show a notification immediately
-        if (permissionState === 'granted') {
-          console.log("Sending immediate test web notification");
-          
+      } else if ('serviceWorker' in navigator && 'PushManager' in window) {
+        // Try service worker API for web
+        console.log("Trying to use service worker for test notification");
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          if (registration.showNotification) {
+            await registration.showNotification("Test Notification", {
+              body: "This is a test notification from Allerpaws Keeper!",
+              icon: '/favicon.ico',
+              vibrate: [300, 100, 300]
+            });
+            
+            console.log("Test notification sent via service worker");
+            
+            toast({
+              title: "Test notification sent",
+              description: "You should see a notification now",
+            });
+            
+            return true;
+          }
+        } catch (error) {
+          console.error("Service worker notification error:", error);
+          // Fall back to standard notification
+        }
+      }
+      
+      // Standard web notification fallback
+      if ('Notification' in window && permissionState === 'granted') {
+        console.log("Using standard Web Notification API");
+        
+        try {
           // Create the notification without the vibrate property
           const notification = new Notification("Test Notification", {
             body: "This is a test notification from Allerpaws Keeper!",
             icon: '/favicon.ico'
-            // vibrate property removed as it's not in the standard NotificationOptions type
           });
           
           // Use the Vibration API separately
@@ -358,7 +416,13 @@ export const useNotifications = () => {
           });
           
           return true;
+        } catch (error) {
+          console.error("Error creating web notification:", error);
+          throw new Error("Browser notification API error: " + (error.message || "Unknown error"));
         }
+      } else {
+        console.error("No notification method available");
+        throw new Error("No notification method available on this device/browser");
       }
     } catch (error) {
       console.error("Error sending test notification:", error);

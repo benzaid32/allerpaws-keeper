@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -105,8 +106,9 @@ export const useReminderOperations = ({
     const nextOccurrence = calculateNextOccurrence(reminder.time, reminder.days);
     if (!nextOccurrence) return false;
     
-    // Use numerical ID for notifications
-    const numericId = parseInt(reminder.id.replace(/\D/g, '').slice(0, 9)) || Math.floor(Math.random() * 1000000);
+    // Generate a numeric ID that's compatible with notification systems
+    // Ensure it's within safe integer range for all platforms
+    const numericId = Math.abs(parseInt(reminder.id.replace(/\D/g, '').slice(0, 8)) || Math.floor(Math.random() * 100000));
     
     // Create notification content
     const title = reminder.title;
@@ -117,13 +119,18 @@ export const useReminderOperations = ({
       body = `For ${reminder.petName}: ${body}`;
     }
     
-    // Schedule the notification
-    return scheduleNotification(
-      numericId,
-      title,
-      body,
-      nextOccurrence.getTime()
-    );
+    // Schedule the notification using the updated notification hook
+    try {
+      return await scheduleNotification(
+        numericId,
+        title,
+        body,
+        nextOccurrence.getTime()
+      );
+    } catch (error) {
+      console.error("Failed to schedule reminder notification:", error);
+      return false;
+    }
   };
   
   const handleSubmit = async (
