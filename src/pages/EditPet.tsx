@@ -202,7 +202,7 @@ const EditPet = () => {
         
         imageUrl = uploadedImageUrl;
         console.log("Pet image uploaded successfully:", imageUrl);
-      } else if (imageUrl === null && originalImageUrl) {
+      } else if (imageFile === null && originalImageUrl) {
         // If image was cleared (imageFile is null) but there was an original image
         // This means the user removed the image
         imageUrl = null;
@@ -264,10 +264,10 @@ const EditPet = () => {
       // Show redirecting state before navigation
       setRedirecting(true);
       
-      // Short delay to show the success message before redirecting
+      // IMPORTANT: Ensure redirect happens by forcing navigation after completion
       setTimeout(() => {
-        navigate("/manage-pets");
-      }, 800);
+        navigate("/manage-pets", { replace: true });
+      }, 500);
     } catch (error: any) {
       console.error("Error updating pet:", error.message);
       toast({
@@ -276,12 +276,18 @@ const EditPet = () => {
         variant: "destructive",
       });
       setSubmitting(false);
+      setRedirecting(false); // Reset redirecting state on error
     }
   };
 
   const nextStep = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
+    } else if (currentStep === 3) {
+      // If on the last step, submit the form
+      document.getElementById('pet-update-form')?.dispatchEvent(
+        new Event('submit', { cancelable: true, bubbles: true })
+      );
     }
   };
 
@@ -321,7 +327,11 @@ const EditPet = () => {
       <div className="space-y-4">
         <PetFormProgress currentStep={currentStep} totalSteps={3} />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form 
+          id="pet-update-form"
+          onSubmit={handleSubmit} 
+          className="space-y-4"
+        >
           <PetFormSection 
             section={currentStep}
             formData={formData}
