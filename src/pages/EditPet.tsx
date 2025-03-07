@@ -39,6 +39,7 @@ const EditPet = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -198,7 +199,13 @@ const EditPet = () => {
         description: "Pet information updated successfully",
       });
 
-      navigate("/manage-pets");
+      // Show redirecting state before navigation
+      setRedirecting(true);
+      
+      // Short delay to show the success message before redirecting
+      setTimeout(() => {
+        navigate("/manage-pets");
+      }, 800);
     } catch (error: any) {
       console.error("Error updating pet:", error.message);
       toast({
@@ -206,7 +213,6 @@ const EditPet = () => {
         description: "Failed to update pet information",
         variant: "destructive",
       });
-    } finally {
       setSubmitting(false);
     }
   };
@@ -228,6 +234,17 @@ const EditPet = () => {
       <MobileLayout title="Edit Pet">
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner />
+        </div>
+      </MobileLayout>
+    );
+  }
+  
+  if (redirecting) {
+    return (
+      <MobileLayout title="Pet Updated">
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <LoadingSpinner />
+          <p className="mt-4 text-primary">Redirecting to your pets...</p>
         </div>
       </MobileLayout>
     );
