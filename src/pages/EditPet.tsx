@@ -182,7 +182,7 @@ const EditPet = () => {
       // Redirect after briefly showing the message
       setRedirecting(true);
       setTimeout(() => {
-        navigate("/manage-pets");
+        navigate("/manage-pets", { replace: true });
       }, 800);
       return;
     }
@@ -264,9 +264,10 @@ const EditPet = () => {
       // Show redirecting state before navigation
       setRedirecting(true);
       
-      // IMPORTANT: Ensure redirect happens by forcing navigation after completion
+      // IMPORTANT: Force redirect to manage-pets page
       setTimeout(() => {
-        navigate("/manage-pets", { replace: true });
+        // Use window.location for a hard redirect to ensure we navigate correctly
+        window.location.href = "/manage-pets";
       }, 500);
     } catch (error: any) {
       console.error("Error updating pet:", error.message);
