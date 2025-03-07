@@ -1,0 +1,40 @@
+
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Crown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import MobileCard from "@/components/ui/mobile-card";
+import CurrentPlan from "@/components/subscription/CurrentPlan";
+import { UserSubscription } from "@/types/subscriptions";
+
+interface SubscriptionCardProps {
+  subscription: UserSubscription | null;
+  isLoading: boolean;
+}
+
+const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ 
+  subscription, 
+  isLoading 
+}) => {
+  const navigate = useNavigate();
+  
+  return (
+    <MobileCard
+      icon={<Crown className="h-5 w-5 text-primary" />}
+      title="Your Subscription"
+    >
+      <CurrentPlan subscription={subscription} isLoading={isLoading} />
+      <div className="mt-4">
+        <Button 
+          onClick={() => navigate("/pricing")} 
+          className="w-full"
+          variant="outline"
+        >
+          View All Plans
+        </Button>
+      </div>
+    </MobileCard>
+  );
+};
+
+export default SubscriptionCard;

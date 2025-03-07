@@ -76,7 +76,7 @@ export const requestMobilePermission = async (): Promise<boolean> => {
       return await testMobilePermissions();
     }
     
-    return display === 'granted';
+    return display === 'granted' || display === 'prompt';
   } catch (error) {
     console.error("Error requesting mobile notification permissions:", error);
     return false;
