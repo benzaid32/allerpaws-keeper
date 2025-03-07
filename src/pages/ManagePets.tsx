@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePets } from "@/hooks/use-pets";
@@ -12,7 +13,8 @@ import {
   Pencil, 
   Trash, 
   MoreVertical,
-  PawPrint
+  PawPrint,
+  RefreshCw
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -38,11 +40,23 @@ const ManagePets = () => {
   const navigate = useNavigate();
   const [deletingPetId, setDeletingPetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Force fetch pets data when component mounts
   useEffect(() => {
-    fetchPets();
+    const loadData = async () => {
+      await fetchPets();
+    };
+    loadData();
   }, [fetchPets]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchPets();
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 500);
+  };
 
   const handleAddPet = () => {
     navigate("/add-pet");
@@ -82,14 +96,26 @@ const ManagePets = () => {
   return (
     <MobileLayout title="Your Pets">
       <div className="space-y-6">
-        {/* Add Pet Button */}
-        <Button 
-          onClick={handleAddPet} 
-          className="w-full"
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add New Pet
-        </Button>
+        {/* Add Pet and Refresh Buttons */}
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleAddPet} 
+            className="flex-1"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add New Pet
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="w-10 h-10"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
 
         {/* Pet List */}
         {pets.length > 0 ? (

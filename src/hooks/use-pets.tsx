@@ -17,7 +17,11 @@ export function usePets() {
     try {
       setLoading(true);
       
-      // Fetch pets
+      // Clear existing data before fetching fresh data
+      setPets([]);
+      
+      // Fetch pets with cache busting by adding a timestamp
+      const timestamp = new Date().getTime();
       const { data: petsData, error: petsError } = await supabase
         .from("pets")
         .select("*")
@@ -26,6 +30,8 @@ export function usePets() {
       if (petsError) {
         throw petsError;
       }
+
+      console.log(`Fetched ${petsData?.length || 0} pets from Supabase at ${timestamp}`);
 
       // For each pet, fetch its allergies
       const petsWithAllergies = await Promise.all(
@@ -88,6 +94,27 @@ export function usePets() {
   // Initialize by fetching pets on component mount or when dependencies change
   useEffect(() => {
     fetchPets();
+    
+    // Set up an event listener to refresh data when the app comes back into focus
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('App came back into focus, refreshing pets data');
+        fetchPets();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Set up an interval to periodically refresh data (every 30 seconds)
+    const refreshInterval = setInterval(() => {
+      console.log('Periodic refresh of pets data');
+      fetchPets();
+    }, 30000);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(refreshInterval);
+    };
   }, [fetchPets]);
 
   const clearSelectedPet = () => {
