@@ -1,157 +1,133 @@
-
-import { LocalNotifications } from '@capacitor/local-notifications';
-import { CombinedPermissionState } from '@/lib/notification-types';
-
-/**
- * Check mobile notification permissions
- */
-export const checkMobilePermissions = async (): Promise<{
-  permissionState: CombinedPermissionState;
-  isBlocked: boolean;
-}> => {
-  try {
-    const { display } = await LocalNotifications.checkPermissions();
-    console.log("Capacitor notification permission state:", display);
-
-    // Only consider notifications blocked if explicitly 'denied'
-    return {
-      permissionState: display as CombinedPermissionState,
-      isBlocked: display === 'denied'
-    };
-  } catch (error) {
-    console.error("Error checking mobile notification permissions:", error);
-    return {
-      permissionState: "denied",
-      isBlocked: true
-    };
-  }
-};
+import { isPlatform } from "@/lib/utils";
+import { LocalNotifications } from "@capacitor/local-notifications";
 
 /**
- * Test mobile notification permissions by scheduling a silent notification
+ * Request permission for local notifications on mobile devices
  */
-export const testMobilePermissions = async (): Promise<boolean> => {
+export const requestMobileNotificationPermission = async (): Promise<"granted" | "denied" | "prompt"> => {
+  console.log("Requesting mobile notification permission");
+  
   try {
-    // Create a silent notification that won't actually show
-    const testId = Math.floor(Math.random() * 10000);
-    await LocalNotifications.schedule({
-      notifications: [{
-        id: testId,
-        title: "Permission Test",
-        body: "Testing notification permissions",
-        schedule: { at: new Date(Date.now() + 3600000) }, // Far in the future
-        sound: null,
-        smallIcon: "ic_stat_icon_config_sample",
-        iconColor: '#488AFF',
-        // Add vibration explicitly
-        extra: {
-          vibrate: true
-        }
-      }]
-    });
-    
-    // If we get here, notifications are allowed
-    console.log("Notification permission test successful - permissions are granted");
-    
-    // Cancel the test notification
-    await LocalNotifications.cancel({ notifications: [{ id: testId }] });
-    return true;
-  } catch (error) {
-    console.error("Error testing notification permissions:", error);
-    return false;
-  }
-};
-
-/**
- * Request permission for mobile notifications
- */
-export const requestMobilePermission = async (): Promise<boolean> => {
-  try {
-    console.log("Requesting Capacitor notification permissions...");
-    const { display } = await LocalNotifications.requestPermissions();
-    console.log("Permission request result:", display);
-    
-    // If not explicitly denied, try to schedule a test notification
-    if (display !== 'denied') {
-      return await testMobilePermissions();
+    if (!isPlatform('capacitor')) {
+      console.log("Not on Capacitor platform, skipping mobile permission request");
+      return "prompt";
     }
     
-    return display === 'granted' || display === 'prompt';
+    const result = await LocalNotifications.requestPermissions();
+    
+    // Map the Capacitor permission result to our standard format
+    if (result.display === "granted") {
+      console.log("Mobile notification permission granted");
+      return "granted";
+    } else if (result.display === "denied") {
+      console.log("Mobile notification permission denied");
+      return "denied";
+    } else {
+      console.log("Mobile notification permission prompt");
+      return "prompt";
+    }
   } catch (error) {
-    console.error("Error requesting mobile notification permissions:", error);
-    return false;
+    console.error("Error requesting mobile notification permission:", error);
+    return "prompt"; // Default to prompt on error
   }
 };
 
 /**
- * Schedule a notification on mobile
+ * Schedule a local notification
+ * @param id - Unique ID for the notification
+ * @param title - Title of the notification
+ * @param body - Body of the notification
+ * @param at - Date and time to display the notification
  */
 export const scheduleMobileNotification = async (
-  id: number, 
-  title: string, 
-  body: string, 
-  timeInMillis: number
-): Promise<boolean> => {
+  id: number,
+  title: string,
+  body: string,
+  at: Date
+): Promise<void> => {
   try {
-    console.log("Scheduling notification on Capacitor:", { id, title, body, time: new Date(timeInMillis) });
+    if (!isPlatform('capacitor')) {
+      console.log("Not on Capacitor platform, skipping mobile notification schedule");
+      return;
+    }
     
-    // Schedule the notification with vibration
     await LocalNotifications.schedule({
-      notifications: [{
-        id,
-        title,
-        body,
-        schedule: { at: new Date(timeInMillis) },
-        sound: 'beep.wav',
-        smallIcon: 'ic_stat_icon_config_sample',
-        iconColor: '#488AFF',
-        // Ensure vibration is enabled for notifications
-        extra: {
-          vibrate: true,
-          importance: "high",
-          visibility: "public"
+      notifications: [
+        {
+          id: id,
+          title: title,
+          body: body,
+          schedule: { at: at },
+          sound: null,
+          smallIcon: "ic_stat_icon_config_sample",
+          iconColor: '#488AFF'
         }
-      }]
+      ]
     });
     
-    console.log("Notification scheduled successfully");
-    return true;
+    console.log(`Mobile notification scheduled with id: ${id}, title: ${title}, body: ${body}, at: ${at}`);
   } catch (error) {
     console.error("Error scheduling mobile notification:", error);
-    return false;
   }
 };
 
 /**
- * Send an immediate test notification on mobile
+ * Cancel a scheduled local notification
+ * @param id - ID of the notification to cancel
  */
-export const sendMobileTestNotification = async (): Promise<boolean> => {
+export const cancelMobileNotification = async (id: number): Promise<void> => {
   try {
-    console.log("Sending immediate test notification on Capacitor with vibration");
+    if (!isPlatform('capacitor')) {
+      console.log("Not on Capacitor platform, skipping mobile notification cancel");
+      return;
+    }
     
-    // Schedule immediate notification with vibration
-    await LocalNotifications.schedule({
-      notifications: [{
-        id: 999,
-        title: "Test Notification",
-        body: "This is a test notification from Allerpaws Keeper!",
-        // Schedule for 1 second from now to ensure it fires
-        schedule: { at: new Date(Date.now() + 1000) },
-        sound: 'beep.wav',
-        smallIcon: 'ic_stat_icon_config_sample',
-        iconColor: '#488AFF',
-        extra: {
-          vibrate: true,
-          importance: "high",
-          visibility: "public"
-        }
-      }]
+    await LocalNotifications.cancel({
+      notifications: [{ id: id }]
     });
     
-    console.log("Test notification scheduled");
-    return true;
+    console.log(`Mobile notification cancelled with id: ${id}`);
   } catch (error) {
-    console.error("Error sending mobile test notification:", error);
+    console.error("Error cancelling mobile notification:", error);
+  }
+};
+
+/**
+ * Cancel all scheduled local notifications
+ */
+export const cancelAllMobileNotifications = async (): Promise<void> => {
+  try {
+    if (!isPlatform('capacitor')) {
+      console.log("Not on Capacitor platform, skipping mobile notification cancel all");
+      return;
+    }
+    
+    await LocalNotifications.cancelAll();
+    
+    console.log("All mobile notifications cancelled");
+  } catch (error) {
+    console.error("Error cancelling all mobile notifications:", error);
+  }
+};
+
+/**
+ * Check if notification permissions are granted
+ */
+export const checkMobileNotificationPermissions = async (): Promise<boolean> => {
+  try {
+    if (!isPlatform('capacitor')) {
+      return false;
+    }
+    
+    const permissionStatus = await LocalNotifications.checkPermissions();
+    
+    if (permissionStatus.display === "granted") {
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error("Error checking mobile notification permissions:", error);
     return false;
   }
 };

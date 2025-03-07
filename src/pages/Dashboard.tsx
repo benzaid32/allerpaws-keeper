@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -450,7 +449,7 @@ const Dashboard = () => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate('/manage-pets')} 
+              onClick={() => navigate('/pets')} 
               className="text-primary hover:bg-primary/10"
             >
               Manage
@@ -499,7 +498,7 @@ const Dashboard = () => {
                           <div className="mt-4 pt-4 border-t">
                             <div className="flex items-center mb-2">
                               <Heart className="h-3 w-3 text-red-500 mr-1" />
-                              <span className="text-sm text-muted-foreground">Allergies: </span>
+                              <span className="text-sm text-muted-foreground">Allergies: </span> 
                             </div>
                             <div className="flex flex-wrap gap-1">
                               {pet.knownAllergies.slice(0, 3).map((allergy, idx) => (
