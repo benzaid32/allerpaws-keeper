@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,8 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User, Mail, Camera } from "lucide-react";
+import { User, Mail, Camera, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { isPlatform } from "@/lib/utils";
 
 const Profile = () => {
   const { user, refreshUser } = useAuth();
@@ -21,6 +23,7 @@ const Profile = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -28,11 +31,35 @@ const Profile = () => {
       setEmail(user.email || "");
       setAvatarUrl(user.user_metadata?.avatar_url || null);
     }
+    
+    // Check if we're on a mobile device
+    setIsMobileDevice(isPlatform('capacitor') || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
   }, [user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      // Validate file size
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setAvatarFile(file);
       
       // Create a preview URL
@@ -41,6 +68,13 @@ const Profile = () => {
         setPreviewUrl(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+  
+  const triggerFileInput = () => {
+    const input = document.getElementById('avatar-upload') as HTMLInputElement;
+    if (input) {
+      input.click();
     }
   };
 
@@ -121,35 +155,46 @@ const Profile = () => {
   return (
     <MobileLayout title="Profile">
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Avatar Card */}
+        {/* Avatar Card - Enhanced Mobile UX */}
         <MobileCard>
           <div className="flex flex-col items-center justify-center py-4">
             <div className="relative mb-4">
-              <Avatar className="h-24 w-24 border-4 border-background">
+              <Avatar className="h-28 w-28 border-4 border-background">
                 {(previewUrl || avatarUrl) ? (
-                  <AvatarImage src={previewUrl || avatarUrl || ""} alt={fullName} />
+                  <AvatarImage 
+                    src={previewUrl || avatarUrl || ""} 
+                    alt={fullName} 
+                    className="object-cover"
+                  />
                 ) : (
-                  <AvatarFallback className="text-2xl">
+                  <AvatarFallback className="text-3xl bg-primary/10">
                     {fullName.charAt(0)}
                   </AvatarFallback>
                 )}
               </Avatar>
-              <label 
-                htmlFor="avatar-upload" 
-                className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer shadow-md"
+              
+              <Button 
+                onClick={triggerFileInput}
+                className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 shadow-md"
+                size="icon"
+                type="button"
               >
-                <Camera className="h-4 w-4" />
-                <input 
-                  id="avatar-upload" 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleFileChange} 
-                  className="hidden" 
-                />
-              </label>
+                <Camera className="h-5 w-5" />
+                <span className="sr-only">Change profile picture</span>
+              </Button>
+              
+              <input 
+                id="avatar-upload" 
+                type="file" 
+                accept="image/*"
+                capture={isMobileDevice ? "user" : undefined}
+                onChange={handleFileChange} 
+                className="hidden" 
+              />
             </div>
+            
             <p className="text-sm text-muted-foreground">
-              Tap the camera icon to change your profile picture
+              Tap the camera icon to {previewUrl ? "change" : "add"} your profile picture
             </p>
           </div>
         </MobileCard>
@@ -194,8 +239,15 @@ const Profile = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-col space-y-3">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : "Save Changes"}
+          <Button type="submit" disabled={isLoading} className="relative">
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
           </Button>
           <Button 
             type="button" 

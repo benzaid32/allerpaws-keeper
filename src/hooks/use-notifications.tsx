@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { useToast } from "./use-toast";
@@ -49,7 +50,11 @@ export const useNotifications = () => {
                 schedule: { at: new Date(Date.now() + 3600000) }, // Far in the future
                 sound: null,
                 smallIcon: "ic_stat_icon_config_sample",
-                iconColor: '#488AFF'
+                iconColor: '#488AFF',
+                // Add vibration explicitly
+                extra: {
+                  vibrate: true
+                }
               }]
             });
             
@@ -211,7 +216,7 @@ export const useNotifications = () => {
         // For Capacitor, we use the LocalNotifications plugin
         console.log("Scheduling notification on Capacitor:", { id, title, body, time: new Date(timeInMillis) });
         
-        // Schedule the notification
+        // Schedule the notification with vibration
         await LocalNotifications.schedule({
           notifications: [{
             id,
@@ -221,7 +226,7 @@ export const useNotifications = () => {
             sound: 'beep.wav',
             smallIcon: 'ic_stat_icon_config_sample',
             iconColor: '#488AFF',
-            // Add these properties directly to ensure they're applied
+            // Ensure vibration is enabled for notifications
             extra: {
               vibrate: true,
               importance: "high",
@@ -248,7 +253,8 @@ export const useNotifications = () => {
               // Create the notification
               const notification = new Notification(title, {
                 body,
-                icon: '/favicon.ico'
+                icon: '/favicon.ico',
+                vibrate: [200, 100, 200] // Add vibration pattern for web notifications
               });
               
               // Try to vibrate using the Vibration API if available
@@ -295,9 +301,9 @@ export const useNotifications = () => {
     // Send an immediate notification for testing
     try {
       if (isPlatform('capacitor')) {
-        console.log("Sending immediate test notification on Capacitor");
+        console.log("Sending immediate test notification on Capacitor with vibration");
         
-        // Schedule immediate notification
+        // Schedule immediate notification with vibration
         await LocalNotifications.schedule({
           notifications: [{
             id: 999,
