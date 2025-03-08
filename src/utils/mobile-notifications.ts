@@ -228,9 +228,10 @@ export const cancelAllMobileNotifications = async (): Promise<void> => {
       return;
     }
     
-    // Use cancel with an empty notification list to cancel all notifications
-    // The API doesn't have a cancelAll method
-    await LocalNotifications.cancel();
+    // Fix: We need to provide an empty object to cancel all notifications
+    await LocalNotifications.cancel({
+      notifications: []
+    });
     
     console.log("All mobile notifications cancelled");
   } catch (error) {
