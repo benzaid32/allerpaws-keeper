@@ -126,7 +126,7 @@ export async function uploadImage(
     // Generate a unique file name if not provided
     if (!fileName) {
       const fileExt = file.name.split('.').pop();
-      fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
     }
     
     // Determine which bucket to use based on category

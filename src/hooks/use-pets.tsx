@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -50,6 +49,15 @@ export function usePets() {
             } as Pet;
           }
 
+          // Add timestamp to image URL to prevent caching
+          let imageUrl = pet.image_url;
+          if (imageUrl) {
+            const cacheBuster = `t=${timestamp}`;
+            imageUrl = imageUrl.includes('?') 
+              ? `${imageUrl}&${cacheBuster}` 
+              : `${imageUrl}?${cacheBuster}`;
+          }
+
           // Transform the pet data to match our Pet type
           return {
             id: pet.id,
@@ -59,7 +67,7 @@ export function usePets() {
             age: pet.age || undefined,
             weight: pet.weight || undefined,
             knownAllergies: allergiesData?.map((allergy) => allergy.name) || [],
-            imageUrl: pet.image_url || undefined,
+            imageUrl: imageUrl || undefined,
           } as Pet;
         })
       );

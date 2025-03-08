@@ -11,7 +11,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User, Mail, Camera, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isPlatform } from "@/lib/utils";
-import { ensureStorageBucket, deleteImage } from "@/lib/image-utils";
+import { deleteImage } from "@/lib/image-utils";
 
 const Profile = () => {
   const { user, refreshUser } = useAuth();
@@ -30,15 +30,22 @@ const Profile = () => {
     if (user) {
       setFullName(user.user_metadata?.full_name || "");
       setEmail(user.email || "");
-      setAvatarUrl(user.user_metadata?.avatar_url || null);
-      setPreviousAvatarUrl(user.user_metadata?.avatar_url || null);
+      
+      // Add cache buster to image URL
+      const userAvatarUrl = user.user_metadata?.avatar_url || null;
+      if (userAvatarUrl) {
+        const cacheBuster = `t=${Date.now()}`;
+        const avatarWithCache = userAvatarUrl.includes('?') 
+          ? `${userAvatarUrl}&${cacheBuster}` 
+          : `${userAvatarUrl}?${cacheBuster}`;
+        
+        setAvatarUrl(avatarWithCache);
+        setPreviousAvatarUrl(userAvatarUrl); // Store original URL without cache buster
+      }
     }
     
     // Check if we're on a mobile device
     setIsMobileDevice(isPlatform('capacitor') || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-    
-    // Ensure the storage bucket exists
-    ensureStorageBucket('user-content');
   }, [user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,7 +91,7 @@ const Profile = () => {
   };
 
   const uploadAvatar = async (): Promise<string | null> => {
-    if (!avatarFile || !user) return avatarUrl;
+    if (!avatarFile || !user) return avatarUrl ? previousAvatarUrl : null;
     
     try {
       // Delete previous avatar if it exists
@@ -137,7 +144,7 @@ const Profile = () => {
     
     try {
       // Upload avatar if a new one was selected
-      let newAvatarUrl = avatarUrl;
+      let newAvatarUrl = avatarUrl ? previousAvatarUrl : null;
       if (avatarFile) {
         newAvatarUrl = await uploadAvatar();
         if (!newAvatarUrl) {
@@ -168,6 +175,11 @@ const Profile = () => {
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
       });
+      
+      // Force reload the page to ensure all components pick up the new image
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error: any) {
       console.error("Error updating profile:", error);
       toast({

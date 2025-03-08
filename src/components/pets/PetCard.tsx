@@ -1,10 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Pet } from "@/lib/types";
 import MobileCard from "@/components/ui/mobile-card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PetActionMenu } from "./PetActionMenu";
+import { PLACEHOLDER_IMAGES } from "@/lib/image-utils";
 
 interface PetCardProps {
   pet: Pet;
@@ -23,6 +24,23 @@ export const PetCard: React.FC<PetCardProps> = ({
   isDeleting,
   deletingPetId,
 }) => {
+  const [imageError, setImageError] = useState(false);
+  
+  // Force a unique URL with a cache buster to prevent stale images
+  const getImageUrl = () => {
+    if (!pet.imageUrl || imageError) return null;
+    
+    // Add a timestamp as a query parameter to bust cache
+    const cacheBuster = `?t=${Date.now()}`;
+    
+    // If URL already has query parameters, append the cache buster
+    if (pet.imageUrl.includes('?')) {
+      return `${pet.imageUrl}&cb=${cacheBuster}`;
+    }
+    
+    return `${pet.imageUrl}${cacheBuster}`;
+  };
+
   return (
     <MobileCard
       key={pet.id}
@@ -31,20 +49,21 @@ export const PetCard: React.FC<PetCardProps> = ({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12">
-            {pet.imageUrl ? (
+          <Avatar className="h-12 w-12 border border-muted">
+            {pet.imageUrl && !imageError ? (
               <AvatarImage 
-                src={pet.imageUrl} 
+                src={getImageUrl()} 
                 alt={pet.name} 
                 onError={(e) => {
-                  // If image fails to load, show fallback
-                  e.currentTarget.style.display = 'none';
+                  console.error("Failed to load pet image:", pet.imageUrl);
+                  setImageError(true);
                 }}
               />
             ) : (
-              <AvatarFallback>{pet.name.charAt(0)}</AvatarFallback>
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                {pet.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
             )}
-            <AvatarFallback>{pet.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <div>
             <h3 className="font-semibold text-lg">{pet.name}</h3>

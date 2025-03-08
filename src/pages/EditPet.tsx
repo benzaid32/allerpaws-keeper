@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -5,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SEVERITY_LEVELS } from "@/lib/constants";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { uploadImage } from "@/lib/image-utils";
+import { uploadImage, deleteImage } from "@/lib/image-utils";
 import PetFormSection from "@/components/pet/PetFormSection";
 import PetImageUploader from "@/components/pet/PetImageUploader";
 import PetAllergyEditor from "@/components/pet/PetAllergyEditor";
@@ -211,8 +212,8 @@ const EditPet = () => {
       } else if (imageFile === null && originalImageUrl && oldImageUrl) {
         // If image was cleared (imageFile is null) but there was an original image
         // This means the user removed the image
-        // Delete the old image
-        await uploadImage(new Blob(), "pets", "", oldImageUrl); // Hack to trigger deletion without upload
+        // Delete the old image directly without trying to upload a new one
+        await deleteImage(oldImageUrl);
         imageUrl = null;
       }
 

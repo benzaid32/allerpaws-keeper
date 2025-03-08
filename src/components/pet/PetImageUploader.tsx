@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { X } from "lucide-react";
+import { X, Camera } from "lucide-react";
 
 interface PetImageUploaderProps {
   initialImageUrl: string | null;
@@ -18,11 +18,24 @@ const PetImageUploader: React.FC<PetImageUploaderProps> = ({
   className,
 }) => {
   const { toast } = useToast();
-  const [imagePreview, setImagePreview] = useState<string | null>(initialImageUrl);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [previousImageUrl, setPreviousImageUrl] = useState<string | null>(null);
   
   // Update the image preview when initialImageUrl changes
   useEffect(() => {
-    setImagePreview(initialImageUrl);
+    if (initialImageUrl) {
+      // Add timestamp to prevent caching
+      const cacheBuster = `t=${Date.now()}`;
+      const imageUrlWithCache = initialImageUrl.includes('?') 
+        ? `${initialImageUrl}&${cacheBuster}` 
+        : `${initialImageUrl}?${cacheBuster}`;
+      
+      setImagePreview(imageUrlWithCache);
+      setPreviousImageUrl(initialImageUrl); // Store original URL without cache buster
+    } else {
+      setImagePreview(null);
+      setPreviousImageUrl(null);
+    }
   }, [initialImageUrl]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,7 +63,7 @@ const PetImageUploader: React.FC<PetImageUploaderProps> = ({
       }
       
       // Pass the old imageUrl along with the new file
-      onImageSelected(file, imagePreview);
+      onImageSelected(file, previousImageUrl);
       
       // Create a preview URL that complies with CSP
       const reader = new FileReader();
@@ -67,19 +80,24 @@ const PetImageUploader: React.FC<PetImageUploaderProps> = ({
     e.stopPropagation(); // Prevent event bubbling
     setImagePreview(null);
     // Pass null for the new file and the old URL for deletion
-    onImageSelected(null, imagePreview);
+    onImageSelected(null, previousImageUrl);
   };
 
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${className || ''}`}>
       <Label htmlFor="image">Pet Photo</Label>
       <div className="flex flex-col items-center space-y-3">
         {imagePreview && (
-          <div className="relative w-32 h-32 rounded-full overflow-hidden mb-2">
+          <div className="relative w-32 h-32 rounded-full overflow-hidden mb-2 border border-muted">
             <img 
               src={imagePreview} 
               alt="Pet preview" 
               className="w-full h-full object-cover"
+              onError={() => {
+                console.error("Failed to load image preview");
+                // If preview fails, show the file input again
+                setImagePreview(null);
+              }}
             />
             <Button
               variant="destructive"
@@ -108,7 +126,9 @@ const PetImageUploader: React.FC<PetImageUploaderProps> = ({
               document.getElementById('image')?.click();
             }}
             type="button"
+            className="flex items-center gap-2"
           >
+            <Camera className="h-4 w-4" />
             Choose Photo
           </Button>
         )}
