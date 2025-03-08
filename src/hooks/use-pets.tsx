@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -52,6 +53,7 @@ export function usePets() {
           // Add timestamp to image URL to prevent caching
           let imageUrl = pet.image_url;
           if (imageUrl) {
+            // Always use a new timestamp to force cache refresh
             const cacheBuster = `t=${timestamp}`;
             imageUrl = imageUrl.includes('?') 
               ? `${imageUrl}&${cacheBuster}` 
@@ -102,6 +104,7 @@ export function usePets() {
 
   // Initialize by fetching pets on component mount or when dependencies change
   useEffect(() => {
+    console.log("usePets: Initial data load or dependencies changed");
     fetchPets();
     
     // Set up an event listener to refresh data when the app comes back into focus
@@ -114,11 +117,12 @@ export function usePets() {
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
-    // Set up an interval to periodically refresh data (every 30 seconds)
+    // Set up a short interval to periodically refresh data (every 5 seconds)
+    // This ensures that new pets or image updates appear quickly
     const refreshInterval = setInterval(() => {
       console.log('Periodic refresh of pets data');
       fetchPets();
-    }, 30000);
+    }, 5000); // Reduced from 30s to 5s for more responsive updates
     
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);

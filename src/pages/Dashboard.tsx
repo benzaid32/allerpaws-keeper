@@ -28,21 +28,26 @@ const Dashboard = () => {
 
   // Force fetch fresh data when the dashboard is loaded or focused
   useEffect(() => {
-    // Fetch pets directly from Supabase when component mounts
+    console.log("Dashboard mounted or dependencies changed - fetching fresh data");
+    
+    // Fetch data immediately when component mounts
     fetchPets();
     
-    // Also set up a listener for when the user navigates back to this page
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        fetchPets();
-      }
-    };
+    // Add a timer to refresh data after images might have been processed
+    const initialLoadTimer = setTimeout(() => {
+      console.log("Dashboard initial delayed refresh");
+      fetchPets();
+    }, 2000);
     
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Set up a second refresh for cases where the first one might miss an update
+    const secondLoadTimer = setTimeout(() => {
+      console.log("Dashboard second delayed refresh");
+      fetchPets();
+    }, 5000);
     
-    // Clean up the event listener
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearTimeout(initialLoadTimer);
+      clearTimeout(secondLoadTimer);
     };
   }, [fetchPets]);
 
