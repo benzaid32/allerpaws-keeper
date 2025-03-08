@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -43,7 +42,7 @@ const FoodDiary = () => {
         
         let query = supabase
           .from("food_entries")
-          .select("*, food_items(name, type, food_product_id)")
+          .select("*, food_items(name, type, id)")
           .order("created_at", { ascending: false });
         
         if (selectedPetId !== "all") {
@@ -65,7 +64,7 @@ const FoodDiary = () => {
             ...entry,
             food_name: foodItem ? foodItem.name : "Unnamed Food",
             food_type: foodItem ? foodItem.type : "regular",
-            food_product_id: foodItem ? foodItem.food_product_id : null
+            food_product_id: foodItem ? foodItem.id : null // Using the food item's id as the product id
           };
         }) as FoodEntry[];
         

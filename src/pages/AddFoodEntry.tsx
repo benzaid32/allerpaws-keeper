@@ -25,7 +25,6 @@ interface FoodEntryFormData {
   food_type: string;
   date: string;
   notes?: string;
-  food_product_id?: string;
 }
 
 const AddFoodEntry = () => {
@@ -60,23 +59,40 @@ const AddFoodEntry = () => {
     try {
       setIsSubmitting(true);
       
-      // Prepare the data for submission
+      // Create a unique ID for the food entry
+      const entryId = uuidv4();
+      
+      // Prepare the food entry data
       const entryData = {
-        id: uuidv4(),
+        id: entryId,
         pet_id: data.pet_id,
-        food_name: data.food_name,
-        food_type: data.food_type,
         date: data.date,
         notes: data.notes || null,
-        food_product_id: selectedFood?.id || null, // Add reference to food product if selected
       };
       
       // Insert into food_entries table
-      const { error } = await supabase
+      const { error: entryError } = await supabase
         .from("food_entries")
         .insert(entryData);
       
-      if (error) throw error;
+      if (entryError) throw entryError;
+      
+      // Prepare the food item data
+      const foodItemData = {
+        id: uuidv4(),
+        entry_id: entryId,
+        name: data.food_name,
+        type: data.food_type,
+        // We're not adding a food_product_id column since it doesn't exist
+        // If we get food from the database, we just store its relevant data
+      };
+      
+      // Insert into food_items table
+      const { error: itemError } = await supabase
+        .from("food_items")
+        .insert(foodItemData);
+      
+      if (itemError) throw itemError;
       
       toast({
         title: "Food entry added",
