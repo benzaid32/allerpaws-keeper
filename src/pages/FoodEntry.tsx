@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { Calendar, ArrowLeft, Pencil, Trash2, Zap, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/layout/MobileLayout";
@@ -11,6 +11,7 @@ import PatternBackground from "@/components/ui/pattern-background";
 import { usePets } from "@/hooks/use-pets";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface FoodEntryDetails {
   id: string;
@@ -34,6 +35,8 @@ const FoodEntry = () => {
   const [entry, setEntry] = useState<FoodEntryDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [foodAnalysis, setFoodAnalysis] = useState<any>(null);
   
   // Fetch entry details
   useEffect(() => {
@@ -124,6 +127,7 @@ const FoodEntry = () => {
         description: "Food entry has been removed from your diary",
       });
       
+      // Navigate back to food diary
       navigate("/food-diary");
     } catch (error) {
       console.error("Error deleting entry:", error);
@@ -132,6 +136,58 @@ const FoodEntry = () => {
         description: "Failed to delete food entry",
         variant: "destructive",
       });
+    }
+  };
+
+  // Analyze food with AI
+  const analyzeFood = async () => {
+    if (!entry || !entry.food_items || entry.food_items.length === 0) return;
+    
+    // Get the ingredients from the first food item
+    const ingredients = entry.food_items[0].ingredients || [];
+    
+    // If no ingredients are available, show a message
+    if (ingredients.length === 0) {
+      toast({
+        title: "No ingredients",
+        description: "This food entry doesn't have any ingredients to analyze",
+        variant: "warning",
+      });
+      return;
+    }
+    
+    setIsAnalyzing(true);
+    
+    try {
+      // Call the Supabase Edge Function to analyze the food
+      const { data, error } = await supabase.functions.invoke("analyze-food", {
+        body: { 
+          ingredients,
+          petAllergies: [] // We could fetch pet allergies here if needed
+        }
+      });
+      
+      if (error) {
+        console.error("Error analyzing food:", error);
+        throw error;
+      }
+      
+      console.log("Food analysis result:", data);
+      setFoodAnalysis(data.analysis);
+      
+      toast({
+        title: "Analysis complete",
+        description: "Food has been analyzed successfully",
+      });
+    } catch (error) {
+      console.error("Error in food analysis:", error);
+      toast({
+        title: "Analysis failed",
+        description: "Could not analyze food ingredients",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
     }
   };
   
@@ -250,6 +306,96 @@ const FoodEntry = () => {
                 {entry.notes}
               </p>
             </div>
+          )}
+          
+          {/* AI Analysis button */}
+          {entry.food_items[0]?.ingredients && entry.food_items[0].ingredients.length > 0 && (
+            <Button 
+              className="w-full" 
+              variant="outline"
+              onClick={analyzeFood}
+              disabled={isAnalyzing}
+            >
+              {isAnalyzing ? (
+                <>
+                  <LoadingSpinner className="h-4 w-4 mr-2" />
+                  Analyzing Food...
+                </>
+              ) : (
+                <>
+                  <Zap className="h-4 w-4 mr-2" />
+                  Analyze with AI
+                </>
+              )}
+            </Button>
+          )}
+          
+          {/* AI Analysis Results */}
+          {foodAnalysis && (
+            <Card className="border-primary/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center">
+                  <Info className="h-4 w-4 mr-2" />
+                  AI Food Analysis
+                </CardTitle>
+                <CardDescription>
+                  Nutritional profile and concerns
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Summary</h4>
+                  <p className="text-sm text-muted-foreground">{foodAnalysis.summary}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <h4 className="text-sm font-medium">Quality Score</h4>
+                    <div className={`text-sm font-medium ${
+                      foodAnalysis.overall_quality_score >= 7 ? 'text-green-500' : 
+                      foodAnalysis.overall_quality_score >= 4 ? 'text-yellow-500' : 
+                      'text-red-500'
+                    }`}>
+                      {foodAnalysis.overall_quality_score}/10
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium">Safety Score</h4>
+                    <div className={`text-sm font-medium ${
+                      foodAnalysis.safety_score >= 7 ? 'text-green-500' : 
+                      foodAnalysis.safety_score >= 4 ? 'text-yellow-500' : 
+                      'text-red-500'
+                    }`}>
+                      {foodAnalysis.safety_score}/10
+                    </div>
+                  </div>
+                </div>
+                
+                {foodAnalysis.nutritional_benefits && foodAnalysis.nutritional_benefits.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Benefits</h4>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground">
+                      {foodAnalysis.nutritional_benefits.slice(0, 3).map((benefit: string, i: number) => (
+                        <li key={i}>{benefit}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {foodAnalysis.problematic_ingredients && foodAnalysis.problematic_ingredients.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Concerns</h4>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground">
+                      {foodAnalysis.problematic_ingredients.slice(0, 3).map((item: any, i: number) => (
+                        <li key={i}>
+                          <span className="font-medium">{item.name}</span>: {item.reason}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
           
           {/* Actions */}
