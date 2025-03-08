@@ -11,7 +11,6 @@ import { FoodProduct } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
-import PremiumFeature from "@/components/subscription/PremiumFeature";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FoodAnalysisHistory from "@/components/food/FoodAnalysisHistory";
 import FoodComparison from "@/components/food/FoodComparison";
@@ -86,24 +85,31 @@ const FoodDatabase = () => {
 
     setLoading(true);
     try {
-      // Search for food products
-      const { data, error } = await supabase
-        .from("food_products")
-        .select("*")
-        .or(`name.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%`)
-        .limit(20);
+      console.log("Searching for:", searchTerm);
+      
+      // Call the search-food edge function
+      const { data: response, error } = await supabase.functions.invoke('search-food', {
+        body: { query: searchTerm },
+      });
 
       if (error) {
+        console.error("Edge function error:", error);
         throw error;
       }
 
-      setSearchResults(data as FoodProduct[]);
+      console.log("Search response:", response);
       
-      if (data.length === 0) {
-        toast({
-          title: "No results found",
-          description: "Try a different search term or browse our categories",
-        });
+      if (response.success && response.data) {
+        setSearchResults(response.data as FoodProduct[]);
+        
+        if (response.data.length === 0) {
+          toast({
+            title: "No results found",
+            description: "Try a different search term or browse our categories",
+          });
+        }
+      } else {
+        throw new Error(response.error || "Failed to search the food database");
       }
     } catch (error: any) {
       console.error("Error searching food database:", error);
@@ -112,6 +118,8 @@ const FoodDatabase = () => {
         description: error.message || "Failed to search the food database",
         variant: "destructive",
       });
+      // Set empty results to avoid showing stale data
+      setSearchResults([]);
     } finally {
       setLoading(false);
     }

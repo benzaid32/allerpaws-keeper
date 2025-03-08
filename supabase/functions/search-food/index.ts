@@ -4,16 +4,31 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   try {
     const { query, petId, allergens, type } = await req.json();
+    
+    console.log('Search request received:', { query, petId, allergens, type });
     
     if (!query && !type) {
       return new Response(
         JSON.stringify({ 
           error: "Missing 'query' or 'type' parameter" 
         }),
-        { status: 400 }
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
       );
     }
 
@@ -25,15 +40,19 @@ serve(async (req) => {
     
     // If type is specified, use that for filtering
     if (type) {
+      console.log(`Searching by type: ${type}`);
       foodQuery = foodQuery.eq('type', type);
     } 
     // Otherwise use the general search query
     else if (query) {
-      foodQuery = foodQuery.or(`name.ilike.%${query}%,brand.ilike.%${query}%,ingredients.cs.{${query}}`);
+      console.log(`Searching by query: ${query}`);
+      // Fix the ilike syntax and search in name and brand columns
+      foodQuery = foodQuery.or(`name.ilike.%${query}%,brand.ilike.%${query}%`);
     }
     
     // If we have a pet ID and want to filter by allergens
     if (petId && allergens) {
+      console.log(`Filtering for pet: ${petId} with allergens`);
       // Fetch pet allergies
       const { data: allergiesData, error: allergiesError } = await supabase
         .from('allergies')
@@ -45,6 +64,7 @@ serve(async (req) => {
       // Filter out products containing any of the pet's allergens
       if (allergiesData && allergiesData.length > 0) {
         const petAllergens = allergiesData.map(a => a.name.toLowerCase());
+        console.log('Pet allergens:', petAllergens);
         
         // This is a simplistic approach - in a real app, you'd need more sophisticated
         // filtering logic to match allergen names to ingredients
@@ -55,17 +75,26 @@ serve(async (req) => {
     }
     
     // Execute the query with limit
+    console.log('Executing Supabase query...');
     const { data, error } = await foodQuery.limit(20);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase query error:', error);
+      throw error;
+    }
+    
+    console.log(`Found ${data?.length || 0} results`);
     
     return new Response(
       JSON.stringify({
         success: true,
         data,
-        count: data.length,
+        count: data?.length || 0,
       }),
-      { status: 200 }
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
     );
   } catch (error) {
     console.error("Error in search-food function:", error);
@@ -75,7 +104,10 @@ serve(async (req) => {
         success: false,
         error: error.message || "An unexpected error occurred" 
       }),
-      { status: 500 }
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
     );
   }
 });
