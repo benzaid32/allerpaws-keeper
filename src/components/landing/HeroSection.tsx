@@ -2,81 +2,84 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PawPrint, Download } from "lucide-react";
 
 const HeroSection = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="bg-[#a4e1e9] text-[#1d3557] py-12 md:py-20">
-      <div className="container px-4 md:px-6 mx-auto">
-        <div className="flex flex-col items-center text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4">
-            Our Pet Food<br />Allergy Allergies
-          </h1>
-          <p className="text-xl opacity-90 max-w-2xl mx-auto mb-10">
-            Your all-in-one tool for managing your pet's food allergies effectively.
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Button 
-              size="lg" 
-              onClick={() => navigate("/auth?signup=true")} 
-              className="bg-white text-[#5ec9d7] hover:bg-white/90 min-w-[180px]"
-            >
-              <PawPrint className="mr-2 h-5 w-5" />
-              Download
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              onClick={() => navigate("/auth")}
-              className="bg-[#5ec9d7] text-white border-white hover:bg-[#5ec9d7]/90 min-w-[180px]"
-            >
-              <Download className="mr-2 h-5 w-5" />
-              Sign Up/Login
-            </Button>
-          </div>
-        </div>
-
-        <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <div className="text-left">
-            <h2 className="text-3xl font-bold mb-4">
-              Pet Food<br />Allergy Management
-            </h2>
-            <p className="text-lg mb-6">
-              Discover which foods trigger reactions in your pet and prevent future issues.
-            </p>
-            <div className="flex gap-4">
-              <Button
-                size="lg"
+    <section className="bg-[#a4e1e9] pt-8 pb-0">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col md:flex-row">
+          <div className="w-full md:w-1/2 pt-12">
+            <h1 className="text-4xl md:text-5xl font-bold text-black mb-4 leading-tight">
+              Pet Owner<br />
+              and Regarding Their Pets<br />
+              allergic Food pages
+            </h1>
+            
+            <div className="mt-6 mb-12">
+              <Button 
                 onClick={() => navigate("/auth?signup=true")}
-                className="bg-white text-[#5ec9d7] hover:bg-white/90"
+                className="bg-[#33c1db] text-white hover:bg-[#33c1db]/90 rounded-full px-8"
               >
-                <PawPrint className="mr-2 h-5 w-5" />
-                Get Started
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => window.open("#", "_blank")}
-                className="bg-[#1d3557] text-white border-[#1d3557] hover:bg-[#1d3557]/90"
-              >
-                <Download className="mr-2 h-5 w-5" />
-                Download
+                Order with Paypal
               </Button>
             </div>
           </div>
-          <div className="flex justify-center">
-            <img
-              src="/lovable-uploads/199b5421-e758-4d9d-b434-0dd294164b58.png"
-              alt="Dog with allergies"
-              className="max-w-full h-auto rounded-lg"
+          
+          <div className="w-full md:w-1/2">
+            <img 
+              src="/lovable-uploads/4667b09b-8f1b-4f41-bd46-b762b1a75339.png" 
+              alt="Dogs with allergies" 
+              className="w-full h-auto"
             />
           </div>
+        </div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 -mt-4">
+          {featureCards.map((card, index) => (
+            <div key={index} className="bg-white rounded-lg shadow-md p-6 text-center">
+              <div className="bg-[#33c1db] w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4">
+                {card.icon}
+              </div>
+              <h3 className="font-bold text-black mb-1">{card.title}</h3>
+              <p className="text-gray-500 text-sm mb-2">{card.subtitle}</p>
+              <p className="text-gray-600 text-xs">{card.description}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
   );
 };
+
+const featureCards = [
+  {
+    title: "Symptom/Allergy Tracking",
+    subtitle: "Lorem ipsum",
+    description: "Keep track of the food your pets consume",
+    icon: <span className="text-white text-xl">🔍</span>,
+  },
+  {
+    title: "Customized Rx Recipes",
+    subtitle: "Sed do eiusmod",
+    description: "Get access to vet-approved recipes that avoid allergens",
+    icon: <span className="text-white text-xl">🍲</span>,
+  },
+  {
+    title: "Premium Pet Foods",
+    subtitle: "Ut enim ad",
+    description: "Find the right food for your pet's specific needs",
+    icon: <span className="text-white text-xl">💰</span>,
+  },
+  {
+    title: "Raw Recipe Ideas",
+    subtitle: "Consectetur amet",
+    description: "Healthy raw food options for your pet",
+    icon: <span className="text-white text-xl">🥩</span>,
+  },
+];
 
 export default HeroSection;
