@@ -277,6 +277,84 @@ const AddPet = () => {
         return (
           <MobileCard className="mb-4">
             <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="age">Age</Label>
+                <Input
+                  id="age"
+                  name="age"
+                  value={formData.age}
+                  onChange={handleInputChange}
+                  placeholder="Enter age (optional)"
+                  inputMode="decimal"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="weight">Weight (kg)</Label>
+                <Input
+                  id="weight"
+                  name="weight"
+                  value={formData.weight}
+                  onChange={handleInputChange}
+                  placeholder="Enter weight (optional)"
+                  type="number"
+                  step="0.1"
+                  inputMode="decimal"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="allergies">Known Allergies</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="currentAllergy"
+                    value={currentAllergy}
+                    onChange={(e) => setCurrentAllergy(e.target.value)}
+                    placeholder="Add an allergy"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        addAllergy();
+                      }
+                    }}
+                  />
+                  <Button 
+                    type="button" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      addAllergy();
+                    }}
+                    variant="outline"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {formData.allergies.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.allergies.map((allergy, index) => (
+                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                      {allergy}
+                      <button
+                        type="button"
+                        onClick={() => removeAllergy(allergy)}
+                        className="ml-1 text-xs"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </MobileCard>
+        );
+      case 3:
+        return (
+          <MobileCard className="mb-4">
+            <div className="space-y-4">
               {/* Pet Photo - Enhanced Mobile UI */}
               <div className="space-y-2">
                 <Label htmlFor="image-upload">Pet Photo</Label>
@@ -335,76 +413,6 @@ const AddPet = () => {
                   </Button>
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="age">Age</Label>
-                <Input
-                  id="age"
-                  name="age"
-                  value={formData.age}
-                  onChange={handleInputChange}
-                  placeholder="Enter age (optional)"
-                  inputMode="decimal"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="weight">Weight (kg)</Label>
-                <Input
-                  id="weight"
-                  name="weight"
-                  value={formData.weight}
-                  onChange={handleInputChange}
-                  placeholder="Enter weight (optional)"
-                  type="number"
-                  step="0.1"
-                  inputMode="decimal"
-                />
-              </div>
-            </div>
-          </MobileCard>
-        );
-      case 3:
-        return (
-          <MobileCard className="mb-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="allergies">Known Allergies</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    id="currentAllergy"
-                    value={currentAllergy}
-                    onChange={(e) => setCurrentAllergy(e.target.value)}
-                    placeholder="Add an allergy"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addAllergy();
-                      }
-                    }}
-                  />
-                  <Button type="button" onClick={addAllergy} variant="outline">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {formData.allergies.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.allergies.map((allergy, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                      {allergy}
-                      <button
-                        type="button"
-                        onClick={() => removeAllergy(allergy)}
-                        className="ml-1 text-xs"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
             </div>
           </MobileCard>
         );
@@ -432,24 +440,54 @@ const AddPet = () => {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form 
+          onSubmit={(e) => {
+            // Only allow form submission when explicitly clicked on the submit button
+            if (currentStep !== 3) {
+              e.preventDefault();
+              return false;
+            }
+            handleSubmit(e);
+          }} 
+          className="space-y-4"
+        >
           {renderStepContent()}
 
           <div className="flex justify-between mt-6">
             {currentStep > 1 ? (
-              <Button type="button" variant="outline" onClick={prevStep}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  prevStep();
+                }}
+              >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
             ) : (
-              <Button type="button" variant="outline" onClick={() => navigate("/manage-pets")}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/manage-pets");
+                }}
+              >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Cancel
               </Button>
             )}
 
             {currentStep < 3 ? (
-              <Button type="button" onClick={nextStep}>
+              <Button 
+                type="button" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  nextStep();
+                }}
+              >
                 Next
               </Button>
             ) : (
