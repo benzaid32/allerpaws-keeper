@@ -7,8 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Search, BarChart3, Info, XCircle, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Search, BarChart3, Info, XCircle, AlertCircle, BookPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { usePets } from "@/hooks/use-pets";
+import { useFoodEntry } from "@/hooks/use-food-entry";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const SearchTab: React.FC = () => {
@@ -24,6 +29,14 @@ const SearchTab: React.FC = () => {
   } = useFoodSearch();
   const { addToComparison } = useFoodComparison();
   const [hasSearched, setHasSearched] = useState(false);
+  const { pets } = usePets();
+  const { saveSearchResultToDatabase, isSubmitting } = useFoodEntry();
+  
+  // Dialog state for adding to food diary
+  const [diaryDialogOpen, setDiaryDialogOpen] = useState(false);
+  const [selectedFoodForDiary, setSelectedFoodForDiary] = useState<FoodProduct | null>(null);
+  const [selectedPetId, setSelectedPetId] = useState<string>("");
+  const [notes, setNotes] = useState("");
 
   const onSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -37,6 +50,24 @@ const SearchTab: React.FC = () => {
   useEffect(() => {
     setHasSearched(false);
   }, [searchTerm]);
+
+  // Handle saving food to diary
+  const handleSaveToFoodDiary = async () => {
+    if (selectedFoodForDiary && selectedPetId && saveSearchResultToDatabase) {
+      await saveSearchResultToDatabase(selectedFoodForDiary, selectedPetId, notes);
+      setDiaryDialogOpen(false);
+      setSelectedFoodForDiary(null);
+      setNotes("");
+      setSelectedPetId("");
+    }
+  };
+
+  // Open the "Add to Food Diary" dialog
+  const openDiaryDialog = (food: FoodProduct, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedFoodForDiary(food);
+    setDiaryDialogOpen(true);
+  };
 
   return (
     <div>
@@ -125,12 +156,68 @@ const SearchTab: React.FC = () => {
                   product={product} 
                   onViewDetails={() => navigate(`/food/${product.id}`)}
                   onAddToComparison={() => addToComparison(product)}
+                  onAddToFoodDiary={(e) => openDiaryDialog(product, e)}
                 />
               ))}
             </div>
           </>
         )}
       </div>
+      
+      {/* Add to Food Diary Dialog */}
+      <Dialog open={diaryDialogOpen} onOpenChange={setDiaryDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add to Food Diary</DialogTitle>
+            <DialogDescription>
+              Save this food product to your pet's food diary
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="pet-select">Select Pet</Label>
+              <Select value={selectedPetId} onValueChange={setSelectedPetId}>
+                <SelectTrigger id="pet-select">
+                  <SelectValue placeholder="Select a pet" />
+                </SelectTrigger>
+                <SelectContent>
+                  {pets.map((pet) => (
+                    <SelectItem key={pet.id} value={pet.id}>{pet.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {selectedFoodForDiary && (
+              <div className="border rounded-md p-3 bg-muted/20">
+                <h4 className="font-medium">{selectedFoodForDiary.name}</h4>
+                <p className="text-xs text-muted-foreground">{selectedFoodForDiary.brand}</p>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Textarea 
+                id="notes" 
+                placeholder="Add any notes about this food"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDiaryDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleSaveToFoodDiary}
+              disabled={!selectedPetId || isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save to Diary"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -139,12 +226,14 @@ interface SearchResultCardProps {
   product: FoodProduct;
   onViewDetails: () => void;
   onAddToComparison: () => void;
+  onAddToFoodDiary: (e: React.MouseEvent) => void;
 }
 
 const SearchResultCard: React.FC<SearchResultCardProps> = ({ 
   product, 
   onViewDetails, 
-  onAddToComparison 
+  onAddToComparison,
+  onAddToFoodDiary
 }) => {
   return (
     <Card key={product.id} className="overflow-hidden">
@@ -187,6 +276,15 @@ const SearchResultCard: React.FC<SearchResultCardProps> = ({
             >
               <BarChart3 className="h-3 w-3 mr-1" />
               Compare
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={onAddToFoodDiary}
+            >
+              <BookPlus className="h-3 w-3 mr-1" />
+              Add to Diary
             </Button>
           </div>
         </div>

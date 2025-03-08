@@ -11,12 +11,16 @@ import CompareTab from "@/components/food/CompareTab";
 import { useFoodComparison } from "@/hooks/use-food-comparison";
 import { useFoodAnalysis } from "@/hooks/use-food-analysis";
 import { useFoodDatabaseTabs } from "@/hooks/use-food-database-tabs";
+import { useFoodEntry } from "@/hooks/use-food-entry";
 
 const FoodDatabase = () => {
   const navigate = useNavigate();
   const { activeTab, handleTabChange } = useFoodDatabaseTabs();
   const { selectedFoods } = useFoodComparison();
   const { analysisResult } = useFoodAnalysis();
+  
+  // Initialize the useFoodEntry hook to make it available for the SearchTab
+  useFoodEntry();
 
   return (
     <div className="container mx-auto px-4 py-6 pb-20">
