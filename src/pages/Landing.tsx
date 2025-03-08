@@ -102,13 +102,13 @@ const Landing = () => {
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <motion.h2 
-                className="text-3xl md:text-4xl font-bold mb-4"
+                className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#033b5c] to-[#33c1db] bg-clip-text text-transparent"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}
               >
-                Powerful <span className="text-[#33c1db]">Features</span>
+                Powerful Features
               </motion.h2>
               <motion.p 
                 className="text-gray-600 max-w-2xl mx-auto"
@@ -125,14 +125,14 @@ const Landing = () => {
               {features.map((feature, index) => (
                 <motion.div 
                   key={index}
-                  className="bg-white p-6 rounded-xl shadow-md"
+                  className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-gray-100"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: 0.05 * index }}
                 >
-                  <div className="text-3xl mb-4">{feature.icon}</div>
-                  <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                  <div className="text-3xl mb-4 bg-gradient-to-br from-[#33c1db]/20 to-[#1a8a9e]/20 w-12 h-12 flex items-center justify-center rounded-lg">{feature.icon}</div>
+                  <h3 className="text-xl font-bold mb-2 text-[#033b5c]">{feature.title}</h3>
                   <p className="text-gray-600">{feature.description}</p>
                 </motion.div>
               ))}
@@ -147,13 +147,13 @@ const Landing = () => {
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <motion.h2 
-                className="text-3xl md:text-4xl font-bold mb-4"
+                className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#033b5c] to-[#33c1db] bg-clip-text text-transparent"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}
               >
-                Simple <span className="text-[#33c1db]">Pricing</span>
+                Simple Pricing
               </motion.h2>
               <motion.p 
                 className="text-gray-600 max-w-2xl mx-auto"
@@ -174,20 +174,20 @@ const Landing = () => {
                     plan.featured 
                       ? "border-[#33c1db] shadow-lg relative" 
                       : "border-gray-200"
-                  }`}
+                  } transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl`}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.1 * index }}
                 >
                   {plan.featured && (
-                    <div className="bg-[#33c1db] text-white text-xs font-medium py-1 px-4 text-center">
+                    <div className="bg-gradient-to-r from-[#33c1db] to-[#1a8a9e] text-white text-xs font-medium py-1 px-4 text-center">
                       MOST POPULAR
                     </div>
                   )}
                   
                   <div className="p-6">
-                    <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
+                    <h3 className="text-xl font-bold mb-2 text-[#033b5c]">{plan.name}</h3>
                     <div className="flex items-baseline mb-4">
                       <span className="text-3xl font-bold">{plan.price}</span>
                       <span className="text-gray-500 ml-2">/{plan.period}</span>
@@ -207,9 +207,9 @@ const Landing = () => {
                       onClick={() => navigate("/auth?signup=true")}
                       className={`w-full rounded-full ${
                         plan.buttonVariant === 'default' 
-                          ? "bg-[#33c1db] text-white hover:bg-[#33c1db]/90" 
+                          ? "bg-gradient-to-r from-[#33c1db] to-[#1a8a9e] text-white hover:from-[#33c1db]/90 hover:to-[#1a8a9e]/90" 
                           : "border-[#33c1db] text-[#33c1db] hover:bg-[#33c1db]/10"
-                      }`}
+                      } transform transition-all duration-300 hover:scale-[1.02]`}
                       variant={plan.buttonVariant === 'default' ? 'default' : 'outline'}
                     >
                       {plan.buttonText}
@@ -222,7 +222,7 @@ const Landing = () => {
         </section>
         
         {/* CTA Section */}
-        <section className="py-16 bg-[#33c1db]">
+        <section className="py-16 bg-gradient-to-r from-[#33c1db] to-[#1a8a9e]">
           <div className="container mx-auto px-4 text-center">
             <motion.h2 
               className="text-2xl md:text-3xl font-bold text-white mb-6"
@@ -242,7 +242,7 @@ const Landing = () => {
             >
               <Button 
                 onClick={() => navigate("/auth?signup=true")}
-                className="bg-white text-[#33c1db] hover:bg-white/90 rounded-full px-8 py-6 h-auto text-lg"
+                className="bg-white text-[#33c1db] hover:bg-white/90 rounded-full px-8 py-6 h-auto text-lg shadow-lg transform transition-all duration-300 hover:scale-105"
               >
                 Get Started Now
               </Button>
