@@ -3,37 +3,7 @@ import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-
-type AnalysisResult = {
-  overall_quality_score: number;
-  safety_score: number;
-  nutritional_profile: {
-    protein_quality: string;
-    fat_quality: string;
-    carbohydrate_quality: string;
-    fiber_content: string;
-    vitamin_mineral_balance: string;
-  };
-  nutritional_benefits: string[];
-  problematic_ingredients: Array<{
-    name: string;
-    reason: string;
-    severity: string;
-  }>;
-  allergy_warnings: string[];
-  digestibility: string;
-  suitable_for: string[];
-  artificial_additives: string[];
-  suggestions: string[];
-  summary: string;
-};
-
-type AnalysisHistoryItem = {
-  id: string;
-  ingredients: string[];
-  timestamp: string;
-  analysis: AnalysisResult;
-};
+import { AnalysisHistoryItem } from '@/hooks/use-food-analysis';
 
 interface FoodAnalysisHistoryProps {
   history: AnalysisHistoryItem[];
@@ -48,8 +18,8 @@ const FoodAnalysisHistory: React.FC<FoodAnalysisHistoryProps> = ({ history, onSe
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <div className="font-medium text-sm truncate max-w-[200px]">
-                {item.ingredients.slice(0, 2).join(', ')}
-                {item.ingredients.length > 2 && '...'}
+                {item.ingredients.slice(0, 50)}
+                {item.ingredients.length > 50 && '...'}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}

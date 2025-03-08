@@ -4,15 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Zap, History, Trash2 } from "lucide-react";
-import { useFoodAnalysis, AnalysisResult } from "@/hooks/use-food-analysis";
+import { useFoodAnalysis, FoodAnalysisResult } from "@/hooks/use-food-analysis";
 import FoodAnalysisHistory from "@/components/food/FoodAnalysisHistory";
 
 const AnalyzeTab: React.FC = () => {
   const {
     ingredientsList,
     setIngredientsList,
-    analyzingIngredients,
-    analysisResult,
+    isAnalyzing,
+    foodAnalysis,
     analysisHistory,
     analyzeIngredients,
     clearHistory,
@@ -49,9 +49,9 @@ const AnalyzeTab: React.FC = () => {
               <Button 
                 className="w-full" 
                 onClick={analyzeIngredients}
-                disabled={analyzingIngredients || !ingredientsList.trim()}
+                disabled={isAnalyzing || !ingredientsList.trim()}
               >
-                {analyzingIngredients ? (
+                {isAnalyzing ? (
                   <span className="flex items-center">
                     <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
                     Analyzing...
@@ -108,13 +108,13 @@ const AnalyzeTab: React.FC = () => {
         </Card>
       </div>
 
-      {analysisResult && <AnalysisResultCard result={analysisResult} />}
+      {foodAnalysis && <AnalysisResultCard result={foodAnalysis} />}
     </div>
   );
 };
 
 interface AnalysisResultCardProps {
-  result: AnalysisResult;
+  result: FoodAnalysisResult;
 }
 
 const AnalysisResultCard: React.FC<AnalysisResultCardProps> = ({ result }) => {
@@ -159,45 +159,45 @@ const AnalysisResultCard: React.FC<AnalysisResultCardProps> = ({ result }) => {
               <div>
                 <span className="font-medium">Protein Quality: </span>
                 <span className={`${
-                  result.nutritional_profile.protein_quality === 'high' ? 'text-green-500' : 
-                  result.nutritional_profile.protein_quality === 'medium' ? 'text-yellow-500' : 
+                  result.nutritional_profile?.protein_quality === 'high' ? 'text-green-500' : 
+                  result.nutritional_profile?.protein_quality === 'medium' ? 'text-yellow-500' : 
                   'text-red-500'
                 }`}>
-                  {result.nutritional_profile.protein_quality}
+                  {result.nutritional_profile?.protein_quality}
                 </span>
               </div>
               <div>
                 <span className="font-medium">Fat Quality: </span>
                 <span className={`${
-                  result.nutritional_profile.fat_quality === 'high' ? 'text-green-500' : 
-                  result.nutritional_profile.fat_quality === 'medium' ? 'text-yellow-500' : 
+                  result.nutritional_profile?.fat_quality === 'high' ? 'text-green-500' : 
+                  result.nutritional_profile?.fat_quality === 'medium' ? 'text-yellow-500' : 
                   'text-red-500'
                 }`}>
-                  {result.nutritional_profile.fat_quality}
+                  {result.nutritional_profile?.fat_quality}
                 </span>
               </div>
               <div>
                 <span className="font-medium">Carb Quality: </span>
                 <span className={`${
-                  result.nutritional_profile.carbohydrate_quality === 'high' ? 'text-green-500' : 
-                  result.nutritional_profile.carbohydrate_quality === 'medium' ? 'text-yellow-500' : 
+                  result.nutritional_profile?.carbohydrate_quality === 'high' ? 'text-green-500' : 
+                  result.nutritional_profile?.carbohydrate_quality === 'medium' ? 'text-yellow-500' : 
                   'text-red-500'
                 }`}>
-                  {result.nutritional_profile.carbohydrate_quality}
+                  {result.nutritional_profile?.carbohydrate_quality}
                 </span>
               </div>
               <div>
                 <span className="font-medium">Fiber Content: </span>
-                <span>{result.nutritional_profile.fiber_content}</span>
+                <span>{result.nutritional_profile?.fiber_content}</span>
               </div>
               <div className="col-span-2">
                 <span className="font-medium">Vitamin/Mineral Balance: </span>
-                <span>{result.nutritional_profile.vitamin_mineral_balance}</span>
+                <span>{result.nutritional_profile?.vitamin_mineral_balance}</span>
               </div>
             </div>
           </div>
           
-          {result.nutritional_benefits.length > 0 && (
+          {result.nutritional_benefits && result.nutritional_benefits.length > 0 && (
             <div>
               <h3 className="text-md font-semibold mb-2">Benefits</h3>
               <ul className="list-disc list-inside text-sm space-y-1">
@@ -208,7 +208,7 @@ const AnalysisResultCard: React.FC<AnalysisResultCardProps> = ({ result }) => {
             </div>
           )}
           
-          {result.problematic_ingredients.length > 0 && (
+          {result.problematic_ingredients && result.problematic_ingredients.length > 0 && (
             <div>
               <h3 className="text-md font-semibold mb-2 text-red-500">Issues</h3>
               <div className="space-y-2">
@@ -231,7 +231,7 @@ const AnalysisResultCard: React.FC<AnalysisResultCardProps> = ({ result }) => {
             </div>
           )}
           
-          {result.allergy_warnings.length > 0 && (
+          {result.allergy_warnings && result.allergy_warnings.length > 0 && (
             <div>
               <h3 className="text-md font-semibold mb-2 text-red-500">Allergy Warnings</h3>
               <ul className="list-disc list-inside text-sm space-y-1">
@@ -256,11 +256,11 @@ const AnalysisResultCard: React.FC<AnalysisResultCardProps> = ({ result }) => {
             
             <div>
               <h3 className="text-md font-semibold mb-1">Suitable For</h3>
-              <span>{result.suitable_for.join(', ')}</span>
+              <span>{result.suitable_for && result.suitable_for.join(', ')}</span>
             </div>
           </div>
           
-          {result.suggestions.length > 0 && (
+          {result.suggestions && result.suggestions.length > 0 && (
             <div>
               <h3 className="text-md font-semibold mb-2">Suggestions</h3>
               <ul className="list-disc list-inside text-sm space-y-1">

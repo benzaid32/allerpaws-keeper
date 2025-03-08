@@ -26,6 +26,13 @@ export interface FoodAnalysisResult {
   suggestions?: string[];
 }
 
+export interface AnalysisHistoryItem {
+  id: string;
+  timestamp: string;
+  ingredients: string;
+  analysis: FoodAnalysisResult;
+}
+
 // Store analysis history in localStorage
 const STORAGE_KEY = "food_analysis_history";
 
@@ -37,12 +44,7 @@ export const useFoodAnalysis = () => {
 
   // For the AnalyzeTab component
   const [ingredientsList, setIngredientsList] = useState<string>("");
-  const [analysisHistory, setAnalysisHistory] = useState<Array<{
-    id: string;
-    date: string;
-    ingredients: string;
-    result: FoodAnalysisResult;
-  }>>([]);
+  const [analysisHistory, setAnalysisHistory] = useState<Array<AnalysisHistoryItem>>([]);
   
   // Load history from localStorage on component mount
   useEffect(() => {
@@ -58,7 +60,7 @@ export const useFoodAnalysis = () => {
   }, []);
 
   // Save history to localStorage
-  const saveHistory = (history: any[]) => {
+  const saveHistory = (history: AnalysisHistoryItem[]) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
     setAnalysisHistory(history);
   };
@@ -130,7 +132,7 @@ export const useFoodAnalysis = () => {
         .filter(item => item.length > 0);
       
       // Call the Supabase Edge Function to analyze the ingredients
-      const { data, error } = await supabase.functions.invoke("analyze-ingredients", {
+      const { data, error } = await supabase.functions.invoke("analyze-food", {
         body: { 
           ingredients: ingredientsArray,
           petAllergies: [] // Could be fetched from pet profiles
@@ -148,11 +150,11 @@ export const useFoodAnalysis = () => {
       setFoodAnalysis(analysisResult);
       
       // Add to history
-      const newHistoryItem = {
+      const newHistoryItem: AnalysisHistoryItem = {
         id: Date.now().toString(),
-        date: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
         ingredients: ingredientsList,
-        result: analysisResult
+        analysis: analysisResult
       };
       
       const updatedHistory = [newHistoryItem, ...analysisHistory].slice(0, 10); // Keep last 10 analyses
@@ -185,8 +187,8 @@ export const useFoodAnalysis = () => {
   };
 
   // Select a history item to view
-  const selectHistoryItem = (historyItem: any) => {
-    setFoodAnalysis(historyItem.result);
+  const selectHistoryItem = (historyItem: AnalysisHistoryItem) => {
+    setFoodAnalysis(historyItem.analysis);
     setIngredientsList(historyItem.ingredients);
     toast({
       title: "Analysis loaded",
