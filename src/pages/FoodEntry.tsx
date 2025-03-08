@@ -75,7 +75,7 @@ const FoodEntry = () => {
     fetchEntryDetails();
   }, [id, toast]);
   
-  // Get pet name
+  // Get pet name - don't throw an error if pet is not found
   const getPetName = (petId: string) => {
     const pet = pets.find(p => p.id === petId);
     return pet?.name || "Unknown Pet";
@@ -103,7 +103,10 @@ const FoodEntry = () => {
         .delete()
         .eq("entry_id", entry.id);
       
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error("Error deleting food items:", itemsError);
+        throw itemsError;
+      }
       
       // Then delete the entry
       const { error: entryError } = await supabase
@@ -111,7 +114,10 @@ const FoodEntry = () => {
         .delete()
         .eq("id", entry.id);
       
-      if (entryError) throw entryError;
+      if (entryError) {
+        console.error("Error deleting entry:", entryError);
+        throw entryError;
+      }
       
       toast({
         title: "Entry deleted",
