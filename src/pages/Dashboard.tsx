@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { usePets } from "@/hooks/use-pets";
+import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import BottomNavigation from "@/components/BottomNavigation";
 import { LogOut, BarChart2, Calendar, Activity, AlertTriangle, CheckCircle, Clock, PlusCircle, User, Settings, Crown, PawPrint, Sparkles, Heart, Loader2 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -26,12 +27,10 @@ const DASHBOARD_BG_IMAGE = "https://whspcnovvaqeztgtcsjl.supabase.co/storage/v1/
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const { pets, loading, fetchPets } = usePets(); // Get the fetchPets function
+  const { recentActivity, symptomsThisWeek, loading: statsLoading } = useDashboardStats();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { hasPremiumAccess } = useUserSubscription();
-  const [recentActivity, setRecentActivity] = useState<number>(0);
-  const [symptomsThisWeek, setSymptomsThisWeek] = useState<number>(0);
-  const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
   const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const userName = user?.user_metadata?.full_name || "Pet Parent";
@@ -57,44 +56,6 @@ const Dashboard = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [fetchPets]);
-
-  useEffect(() => {
-    // TODO: Replace with real data fetching from Supabase
-    // Currently using mock data due to TypeScript issues with Supabase queries
-    const loadStats = async () => {
-      try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Calculate statistics based on pets data
-        if (pets.length === 0) {
-          setRecentActivity(0);
-          setSymptomsThisWeek(0);
-        } else {
-          // Generate realistic statistics based on number of pets
-          const activityCount = Math.min(pets.length * 2 + Math.floor(Math.random() * 5), 15);
-          const symptomsCount = Math.min(pets.length + Math.floor(Math.random() * 3), 8);
-          
-          setRecentActivity(activityCount);
-          setSymptomsThisWeek(symptomsCount);
-        }
-      } catch (error) {
-        console.error("Error loading statistics:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load statistics",
-          variant: "destructive",
-        });
-        // Set default values in case of error
-        setRecentActivity(0);
-        setSymptomsThisWeek(0);
-      } finally {
-        setIsLoadingStats(false);
-      }
-    };
-
-    loadStats();
-  }, [pets, toast]);
 
   const handleSignOut = async () => {
     try {
@@ -169,7 +130,7 @@ const Dashboard = () => {
     );
   }
 
-  if (loading || isLoadingStats) {
+  if (loading || statsLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-blue-50/30 to-primary/5">
         <motion.div
