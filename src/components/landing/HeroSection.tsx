@@ -2,54 +2,88 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 const HeroSection = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="bg-[#a4e1e9] pt-8 pb-0">
+    <section className="bg-[#a4e1e9] pt-8 pb-0 overflow-hidden">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-1/2 pt-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-black mb-4 leading-tight">
-              Pet Owner<br />
-              and Regarding Their Pets<br />
-              allergic Food pages
+        <div className="flex flex-col md:flex-row items-center">
+          <motion.div 
+            className="w-full md:w-1/2 pt-8 md:pt-12 pb-8"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-black mb-4 leading-tight">
+              Track Your Pet's<br />
+              <span className="text-[#33c1db]">Diet & Allergies</span><br />
+              With Smart Tools
             </h1>
             
-            <div className="mt-6 mb-12">
+            <p className="text-gray-700 mb-6 text-lg">
+              Monitor food intake, track symptoms, and identify allergies with our easy-to-use pet health tracking app.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Button 
                 onClick={() => navigate("/auth?signup=true")}
-                className="bg-[#33c1db] text-white hover:bg-[#33c1db]/90 rounded-full px-8"
+                className="bg-[#33c1db] text-white hover:bg-[#33c1db]/90 rounded-full px-8 py-6 h-auto text-lg"
               >
-                Order with Paypal
+                Start Free Trial
+              </Button>
+              
+              <Button 
+                onClick={() => navigate("/auth")}
+                variant="outline"
+                className="border-[#33c1db] text-[#33c1db] hover:bg-[#33c1db]/10 rounded-full px-8 py-6 h-auto text-lg"
+              >
+                Log In
               </Button>
             </div>
-          </div>
+          </motion.div>
           
-          <div className="w-full md:w-1/2">
+          <motion.div 
+            className="w-full md:w-1/2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
             <img 
               src="/lovable-uploads/10a2cf89-32c2-410d-9387-743e8a77abfe.png" 
               alt="Happy dog and cat" 
-              className="w-full h-auto"
+              className="w-full h-auto rounded-tl-3xl md:rounded-bl-none md:rounded-tl-[100px]"
             />
-          </div>
+          </motion.div>
         </div>
       </div>
       
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 -mt-4">
+      <div className="container mx-auto px-4 py-12">
+        <motion.div 
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4, staggerChildren: 0.1 }}
+        >
           {featureCards.map((card, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-md p-6 text-center">
+            <motion.div 
+              key={index} 
+              className="bg-white rounded-xl shadow-md p-6 text-center transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 * index }}
+            >
               <div className="bg-[#33c1db] w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4">
                 {card.icon}
               </div>
               <h3 className="font-bold text-black mb-1">{card.title}</h3>
               <p className="text-gray-500 text-sm mb-2">{card.subtitle}</p>
               <p className="text-gray-600 text-xs">{card.description}</p>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -57,28 +91,28 @@ const HeroSection = () => {
 
 const featureCards = [
   {
-    title: "Symptom/Allergy Tracking",
-    subtitle: "Lorem ipsum",
-    description: "Keep track of the food your pets consume",
+    title: "Symptom Tracking",
+    subtitle: "Monitor health issues",
+    description: "Keep track of the food your pets consume and symptoms they experience",
     icon: <span className="text-white text-xl">🔍</span>,
   },
   {
-    title: "Customized Rx Recipes",
-    subtitle: "Sed do eiusmod",
-    description: "Get access to vet-approved recipes that avoid allergens",
+    title: "Allergy Detection",
+    subtitle: "Identify triggers",
+    description: "Identify patterns between food intake and allergic reactions",
+    icon: <span className="text-white text-xl">⚠️</span>,
+  },
+  {
+    title: "Food Diary",
+    subtitle: "Complete history",
+    description: "Record all meals and treats to pinpoint potential allergens",
     icon: <span className="text-white text-xl">🍲</span>,
   },
   {
-    title: "Premium Pet Foods",
-    subtitle: "Ut enim ad",
-    description: "Find the right food for your pet's specific needs",
-    icon: <span className="text-white text-xl">💰</span>,
-  },
-  {
-    title: "Raw Recipe Ideas",
-    subtitle: "Consectetur amet",
-    description: "Healthy raw food options for your pet",
-    icon: <span className="text-white text-xl">🥩</span>,
+    title: "Diet Planning",
+    subtitle: "Healthier choices",
+    description: "Get recommendations for allergy-friendly food options",
+    icon: <span className="text-white text-xl">📋</span>,
   },
 ];
 
