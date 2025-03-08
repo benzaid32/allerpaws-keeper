@@ -29,8 +29,8 @@ const HeroSection = () => {
           
           <div className="w-full md:w-1/2">
             <img 
-              src="/lovable-uploads/4667b09b-8f1b-4f41-bd46-b762b1a75339.png" 
-              alt="Dogs with allergies" 
+              src="/lovable-uploads/10a2cf89-32c2-410d-9387-743e8a77abfe.png" 
+              alt="Happy dog and cat" 
               className="w-full h-auto"
             />
           </div>
