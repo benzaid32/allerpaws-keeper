@@ -6,6 +6,8 @@ import AuthForm from "@/components/auth/AuthForm";
 import AuthHeader from "@/components/auth/AuthHeader";
 import AuthFooter from "@/components/auth/AuthFooter";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import PatternBackground from "@/components/ui/pattern-background";
+import { motion } from "framer-motion";
 
 const Auth = () => {
   const { user, isLoading } = useAuth();
@@ -41,28 +43,68 @@ const Auth = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col justify-between bg-gradient-to-b from-background to-background/95 overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none z-0"></div>
-      <div className="absolute bottom-0 right-0 w-72 h-72 bg-accent/10 rounded-full filter blur-3xl -z-10"></div>
-      <div className="absolute top-1/4 left-0 w-96 h-96 bg-primary/10 rounded-full filter blur-3xl -z-10"></div>
-      
+    <div className="flex min-h-screen flex-col justify-between bg-[#a4e1e9] overflow-hidden">
       <AuthHeader />
       
       <main className="flex-1 flex items-center justify-center p-4 relative">
-        <div className="w-full max-w-md space-y-8 animate-fade-in">
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-sm">
-            {isSignUp ? "Create Account" : "Welcome Back"}
-          </h1>
-          <p className="text-center text-muted-foreground mb-8">
-            {isSignUp 
-              ? "Join AllerPaws and start managing your pet's allergies today."
-              : "Sign in to access your AllerPaws dashboard."}
-          </p>
-          <div className="transform hover:scale-[1.01] transition-all duration-300">
-            <AuthForm initialView={isSignUp ? "sign-up" : "sign-in"} />
+        <PatternBackground opacity={0.04} color="primary">
+          <div className="container mx-auto max-w-md px-4 py-8">
+            <motion.div 
+              className="w-full space-y-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="text-center space-y-2">
+                <motion.h1 
+                  className="text-3xl md:text-4xl font-bold text-[#033b5c]"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  {isSignUp ? "Create Your Account" : "Welcome Back"}
+                </motion.h1>
+                <motion.p 
+                  className="text-gray-600"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  {isSignUp 
+                    ? "Join AllerPaws and start managing your pet's allergies today."
+                    : "Sign in to access your AllerPaws dashboard."}
+                </motion.p>
+              </div>
+              
+              <motion.div 
+                className="transform hover:scale-[1.01] transition-all duration-300"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <AuthForm initialView={isSignUp ? "sign-up" : "sign-in"} />
+              </motion.div>
+              
+              <motion.div 
+                className="flex justify-center space-x-6 mt-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <img 
+                  src="/lovable-uploads/199b5421-e758-4d9d-b434-0dd294164b58.png" 
+                  alt="Dog" 
+                  className="h-24 md:h-32 transform -rotate-6 hover:rotate-0 transition-all duration-300"
+                />
+                <img 
+                  src="/lovable-uploads/4667b09b-8f1b-4f41-bd46-b762b1a75339.png" 
+                  alt="Cat" 
+                  className="h-24 md:h-32 transform rotate-6 hover:rotate-0 transition-all duration-300"
+                />
+              </motion.div>
+            </motion.div>
           </div>
-        </div>
+        </PatternBackground>
       </main>
       
       <AuthFooter />
