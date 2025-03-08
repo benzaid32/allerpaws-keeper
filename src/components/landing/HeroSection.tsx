@@ -8,9 +8,9 @@ const HeroSection = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="bg-[#78c6d9] text-white py-16 md:py-24 relative overflow-hidden">
+    <section className="bg-[#78c6d9] text-white py-12 md:py-20 relative overflow-hidden">
       <div className="container px-4 md:px-6 mx-auto">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
           {/* Left side content */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -51,8 +51,8 @@ const HeroSection = () => {
             className="w-full max-w-md mx-auto lg:mx-0"
           >
             <img 
-              src="/lovable-uploads/e91a3106-40f3-492a-a3c4-8a6706bad1e2.png" 
-              alt="Happy dog" 
+              src="/lovable-uploads/35bd10fb-53e3-4bd6-92c3-064e4cc89787.png" 
+              alt="Golden retriever dog" 
               className="w-full max-w-md object-contain"
             />
           </motion.div>

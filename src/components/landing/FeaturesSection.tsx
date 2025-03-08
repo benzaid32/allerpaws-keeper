@@ -1,23 +1,23 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Smartphone, HeartPulse, Calendar } from "lucide-react";
+import { Calendar, HeartPulse, Smartphone } from "lucide-react";
 
 const features = [
   {
-    icon: <Calendar className="h-10 w-10 text-[#78c6d9]" />,
     title: "Symptom Tracking",
-    description: "Record and monitor your pet's allergic reactions to identify patterns and triggers over time."
+    description: "Allow pet owners to track symptoms, identify patterns and triggers to help manage your pet's food allergies.",
+    icon: <Calendar className="h-10 w-10 text-[#78c6d9]" />,
   },
   {
-    icon: <HeartPulse className="h-10 w-10 text-[#78c6d9]" />,
     title: "Food Database",
-    description: "Access our comprehensive database of pet foods and ingredients to find safe options."
+    description: "Access our comprehensive database of pet foods and ingredients to find safe options for your pet.",
+    icon: <HeartPulse className="h-10 w-10 text-[#78c6d9]" />,
   },
   {
-    icon: <Smartphone className="h-10 w-10 text-[#78c6d9]" />,
     title: "Mobile App",
-    description: "Track allergies on the go with our user-friendly mobile application."
+    description: "Track allergies on the go with our user-friendly mobile application.",
+    icon: <Smartphone className="h-10 w-10 text-[#78c6d9]" />,
   }
 ];
 
@@ -27,7 +27,7 @@ const FeatureCard = ({ title, description, icon, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 * index, duration: 0.5 }}
-      className="flex flex-col md:flex-row gap-4 items-start"
+      className="flex flex-col md:flex-row gap-4 items-start p-6"
     >
       <div className="p-3 rounded-full bg-[#eaf6f9] mb-2">
         {icon}
@@ -42,26 +42,26 @@ const FeatureCard = ({ title, description, icon, index }) => {
 
 const FeaturesSection = () => {
   return (
-    <section className="py-16 md:py-24 bg-white">
+    <section className="py-16 md:py-24 bg-white" id="features">
       <div className="container px-4 md:px-6">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold">Symptom Tracking</h2>
+          <p className="text-muted-foreground text-lg mt-3 max-w-2xl mx-auto">
+            Allow pet owners to track symptoms, identify patterns and triggers to help manage your pet's food allergies.
+          </p>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
-            <h2 className="text-3xl font-bold">Symptom Tracking</h2>
-            <p className="text-muted-foreground text-lg">
-              Help your pet manage allergies effectively by tracking symptoms, identifying food triggers, and finding safe alternatives.
-            </p>
-            
-            <div className="space-y-12">
-              {features.map((feature, index) => (
-                <FeatureCard
-                  key={index}
-                  title={feature.title}
-                  description={feature.description}
-                  icon={feature.icon}
-                  index={index}
-                />
-              ))}
-            </div>
+            {features.map((feature, index) => (
+              <FeatureCard
+                key={index}
+                title={feature.title}
+                description={feature.description}
+                icon={feature.icon}
+                index={index}
+              />
+            ))}
           </div>
           
           <div className="relative">
@@ -83,7 +83,7 @@ const FeaturesSection = () => {
               <div className="relative max-w-[300px]">
                 <div className="absolute inset-0 bg-gradient-to-b from-[#78c6d9]/80 to-transparent z-10 opacity-30 rounded-3xl"></div>
                 <img 
-                  src="/lovable-uploads/e91a3106-40f3-492a-a3c4-8a6706bad1e2.png" 
+                  src="/lovable-uploads/35bd10fb-53e3-4bd6-92c3-064e4cc89787.png" 
                   alt="AllerPaws Mobile App" 
                   className="relative z-20 rounded-3xl shadow-lg mx-auto transform -rotate-6"
                   style={{ maxWidth: '100%' }}

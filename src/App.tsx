@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { HelmetProvider } from "react-helmet-async";
@@ -52,7 +53,7 @@ const PublicPageLayout = ({ children }) => {
 
 // Component to handle redirects from 404 page
 const RedirectHandler = () => {
-  const useNavigate = useNavigate;
+  const navigate = useNavigate();
   
   useEffect(() => {
     // Check if there's a redirect path stored in localStorage
@@ -63,12 +64,15 @@ const RedirectHandler = () => {
       
       // Navigate to the stored path
       console.log('Redirecting to:', redirectPath);
-      useNavigate(redirectPath);
+      navigate(redirectPath);
     }
-  }, [useNavigate]);
+  }, [navigate]);
   
   return null;
 };
+
+// Import useNavigate at the top level
+import { useNavigate } from 'react-router-dom';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -92,41 +96,13 @@ function App() {
     registerServiceWorker();
   }, []);
 
-  // Request notification permissions early and register service worker
+  // Request notification permissions early
   useEffect(() => {
     const requestNotificationPermissions = async () => {
       try {
-        if (isPlatform('capacitor')) {
-          console.log("App: Requesting notification permissions on startup");
-          
-          // Request permissions for Capacitor
-          const { display } = await LocalNotifications.requestPermissions();
-          console.log("App: Initial notification permission result:", display);
-          
-          // Schedule a test notification to verify permissions
-          try {
-            const testId = Math.floor(Math.random() * 10000);
-            await LocalNotifications.schedule({
-              notifications: [{
-                id: testId,
-                title: "Permission Test",
-                body: "Testing notification permissions",
-                schedule: { at: new Date(Date.now() + 3600000) }, // Far in the future
-                sound: null,
-                smallIcon: "ic_stat_icon_config_sample",
-                iconColor: '#488AFF'
-              }]
-            });
-            
-            console.log("App: Notification permission test successful");
-            
-            // Cancel the test notification
-            await LocalNotifications.cancel({ notifications: [{ id: testId }] });
-          } catch (error) {
-            console.error("App: Error testing notification permissions:", error);
-          }
-        } else if ('Notification' in window) {
-          // For web, prepare service worker for notifications
+        // For web notifications
+        if ('Notification' in window) {
+          // Prepare service worker for notifications
           if ('serviceWorker' in navigator) {
             try {
               // Ensure service worker is ready for notifications
@@ -198,11 +174,12 @@ function App() {
               <SubscriptionProvider>
                 <Toaster />
                 <InstallBanner />
-                <RedirectHandler />
                 <Routes>
+                  {/* Landing page as public route */}
+                  <Route path="/" element={<Landing />} />
+                  
                   {/* Protected routes */}
-                  <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                  <Route path="/dashboard" element={<Navigate to="/" replace />} />
+                  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/pets" element={<ProtectedRoute><ManagePets /></ProtectedRoute>} />
@@ -227,7 +204,6 @@ function App() {
                   <Route path="/auth" element={<Auth />} />
                   
                   {/* Public pages */}
-                  <Route path="/" element={<Landing />} />
                   <Route path="/landing" element={<Navigate to="/" replace />} />
                   <Route path="/pricing" element={<Pricing />} />
                   <Route path="/about" element={<About />} />
