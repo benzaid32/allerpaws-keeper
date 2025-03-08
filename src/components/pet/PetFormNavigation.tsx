@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -23,19 +22,42 @@ const PetFormNavigation: React.FC<PetFormNavigationProps> = ({
   return (
     <div className="flex justify-between mt-6">
       {currentStep > 1 ? (
-        <Button type="button" variant="outline" onClick={onPrevious}>
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onPrevious();
+          }}
+        >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
       ) : (
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onCancel();
+          }}
+        >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Cancel
         </Button>
       )}
 
       {currentStep < totalSteps ? (
-        <Button type="button" onClick={onNext}>
+        <Button 
+          type="button" 
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onNext();
+          }}
+        >
           Next
         </Button>
       ) : (
