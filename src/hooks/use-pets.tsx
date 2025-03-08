@@ -105,6 +105,7 @@ export function usePets() {
     fetchPets();
     
     // Set up an event listener to refresh data when the app comes back into focus
+    // This is important to catch updates made in other tabs or after returning to the app
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         console.log('App came back into focus, refreshing pets data');
@@ -114,16 +115,11 @@ export function usePets() {
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
-    // Set up a moderate interval to periodically refresh data (every 15 seconds)
-    // This is less frequent than before to reduce excessive refreshing
-    const refreshInterval = setInterval(() => {
-      console.log('Periodic refresh of pets data');
-      fetchPets();
-    }, 15000); // Changed from 5s to 15s to reduce refresh frequency
+    // We're no longer setting up a periodic refresh interval
+    // This removes the continuous refreshing behavior
     
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearInterval(refreshInterval);
     };
   }, [fetchPets]);
 

@@ -26,22 +26,12 @@ const Dashboard = () => {
   const firstName = userName.split(' ')[0];
   const isPremium = hasPremiumAccess;
 
-  // Fetch fresh data when the dashboard is loaded, but more efficiently
+  // Fetch data only once when the dashboard is loaded 
   useEffect(() => {
-    console.log("Dashboard mounted - fetching fresh data");
-    
-    // Initial fetch when component mounts
+    console.log("Dashboard mounted - fetching data once");
     fetchPets();
     
-    // Single delayed refresh to catch any processing delays with images
-    const refreshTimer = setTimeout(() => {
-      console.log("Dashboard delayed refresh");
-      fetchPets();
-    }, 3000);
-    
-    return () => {
-      clearTimeout(refreshTimer);
-    };
+    // No additional refresh timers - we're relying on the initial data load
   }, [fetchPets]);
 
   // If signing out, show a full-screen loading indicator
