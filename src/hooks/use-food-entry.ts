@@ -38,13 +38,13 @@ export const useFoodEntry = () => {
       // Create a unique ID for the food entry
       const entryId = uuidv4();
       
-      // Get the current user's ID
-      const { data: userData, error: userError } = await supabase.auth.getUser();
+      // Check authentication status first
+      const { data: session, error: sessionError } = await supabase.auth.getSession();
       
-      if (userError) throw userError;
-      if (!userData.user) throw new Error("You must be logged in to add a food entry");
-      
-      const userId = userData.user.id;
+      if (sessionError) throw sessionError;
+      if (!session.session?.user) {
+        throw new Error("You must be logged in to add a food entry");
+      }
       
       // Prepare the food entry data
       const entryData = {
@@ -95,16 +95,18 @@ export const useFoodEntry = () => {
     }
   };
   
-  // New function to save a food product from search to the database
+  // Function to save a food product from search to the database
   const saveSearchResultToDatabase = async (food: FoodProduct, petId: string, notes?: string) => {
     try {
       setIsSubmitting(true);
       
-      // Get the current user's ID
-      const { data: userData, error: userError } = await supabase.auth.getUser();
+      // Check authentication status first
+      const { data: session, error: sessionError } = await supabase.auth.getSession();
       
-      if (userError) throw userError;
-      if (!userData.user) throw new Error("You must be logged in to add a food entry");
+      if (sessionError) throw sessionError;
+      if (!session.session?.user) {
+        throw new Error("You must be logged in to add a food entry");
+      }
       
       // Create a unique ID for the food entry
       const entryId = uuidv4();
