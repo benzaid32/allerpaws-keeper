@@ -43,6 +43,7 @@ import Careers from './pages/Careers';
 import Landing from './pages/Landing';
 
 import FoodDetailsPage from './pages/FoodDetailsPage';
+import FoodDiary from './pages/FoodDiary';
 
 // Create a stylish, mobile-friendly landing page using the components
 const OriginalLanding = () => {
@@ -280,6 +281,7 @@ function App() {
                   <Route path="/symptom-diary/:id" element={<ProtectedRoute><EditSymptomEntry /></ProtectedRoute>} />
                   <Route path="/elimination-diet" element={<ProtectedRoute><EliminationDiet /></ProtectedRoute>} />
                   <Route path="/food/:id" element={<ProtectedRoute><FoodDetailsPage /></ProtectedRoute>} />
+                  <Route path="/food-diary" element={<ProtectedRoute><FoodDiary /></ProtectedRoute>} />
                   
                   {/* Authentication */}
                   <Route path="/auth" element={<Auth />} />

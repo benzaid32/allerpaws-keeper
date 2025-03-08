@@ -368,7 +368,11 @@ const EliminationDiet = () => {
                       Reset Plan
                     </Button>
                     
-                    <Button variant="outline" size="sm" onClick={() => navigate("/food-diary")}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => navigate("/food-diary")}
+                    >
                       Log Food
                       <ArrowRight className="ml-2 h-3.5 w-3.5" />
                     </Button>
