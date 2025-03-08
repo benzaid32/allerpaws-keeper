@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -7,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/layout/MobileLayout";
 import PatternBackground from "@/components/ui/pattern-background";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { useFoodEntry } from "@/hooks/use-food-entry";
+import { useFoodEntry } from "@/hooks/use-food-entry-view";
 import { useFoodAnalysis } from "@/hooks/use-food-analysis";
 import FoodEntryHeader from "@/components/food-entry/FoodEntryHeader";
 import FoodItemDetails from "@/components/food-entry/FoodItemDetails";

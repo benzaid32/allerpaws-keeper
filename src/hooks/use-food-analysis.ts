@@ -1,9 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface FoodAnalysisResult {
+export interface FoodAnalysisResult {
   summary: string;
   overall_quality_score: number;
   safety_score: number;
@@ -11,14 +11,59 @@ interface FoodAnalysisResult {
   problematic_ingredients?: Array<{
     name: string;
     reason: string;
+    severity?: "low" | "medium" | "high";
   }>;
+  nutritional_profile?: {
+    protein_quality: "low" | "medium" | "high";
+    fat_quality: "low" | "medium" | "high";
+    carbohydrate_quality: "low" | "medium" | "high";
+    fiber_content: string;
+    vitamin_mineral_balance: string;
+  };
+  allergy_warnings?: string[];
+  digestibility?: string;
+  suitable_for?: string[];
+  suggestions?: string[];
 }
 
+// Store analysis history in localStorage
+const STORAGE_KEY = "food_analysis_history";
+
+// Basic hook for food entry analysis
 export const useFoodAnalysis = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [foodAnalysis, setFoodAnalysis] = useState<FoodAnalysisResult | null>(null);
   const { toast } = useToast();
 
+  // For the AnalyzeTab component
+  const [ingredientsList, setIngredientsList] = useState<string>("");
+  const [analysisHistory, setAnalysisHistory] = useState<Array<{
+    id: string;
+    date: string;
+    ingredients: string;
+    result: FoodAnalysisResult;
+  }>>([]);
+  
+  // Load history from localStorage on component mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem(STORAGE_KEY);
+    if (savedHistory) {
+      try {
+        const parsed = JSON.parse(savedHistory);
+        setAnalysisHistory(parsed);
+      } catch (error) {
+        console.error("Error parsing analysis history:", error);
+      }
+    }
+  }, []);
+
+  // Save history to localStorage
+  const saveHistory = (history: any[]) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    setAnalysisHistory(history);
+  };
+
+  // Analyze food ingredients for a food entry
   const analyzeFood = async (ingredients: string[]) => {
     if (!ingredients || ingredients.length === 0) {
       toast({
@@ -64,9 +109,106 @@ export const useFoodAnalysis = () => {
     }
   };
 
+  // Analyze ingredients from text input (for AnalyzeTab)
+  const analyzeIngredients = async () => {
+    if (!ingredientsList.trim()) {
+      toast({
+        title: "No ingredients",
+        description: "Please enter ingredients to analyze",
+        variant: "default",
+      });
+      return;
+    }
+    
+    setIsAnalyzing(true);
+    
+    try {
+      // Convert ingredients string to array
+      const ingredientsArray = ingredientsList
+        .split(',')
+        .map(item => item.trim())
+        .filter(item => item.length > 0);
+      
+      // Call the Supabase Edge Function to analyze the ingredients
+      const { data, error } = await supabase.functions.invoke("analyze-ingredients", {
+        body: { 
+          ingredients: ingredientsArray,
+          petAllergies: [] // Could be fetched from pet profiles
+        }
+      });
+      
+      if (error) {
+        console.error("Error analyzing ingredients:", error);
+        throw error;
+      }
+      
+      console.log("Ingredients analysis result:", data);
+      
+      const analysisResult = data.analysis;
+      setFoodAnalysis(analysisResult);
+      
+      // Add to history
+      const newHistoryItem = {
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        ingredients: ingredientsList,
+        result: analysisResult
+      };
+      
+      const updatedHistory = [newHistoryItem, ...analysisHistory].slice(0, 10); // Keep last 10 analyses
+      saveHistory(updatedHistory);
+      
+      toast({
+        title: "Analysis complete",
+        description: "Ingredients have been analyzed successfully",
+      });
+    } catch (error) {
+      console.error("Error analyzing ingredients:", error);
+      toast({
+        title: "Analysis failed",
+        description: "Could not analyze ingredients",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Clear analysis history
+  const clearHistory = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setAnalysisHistory([]);
+    toast({
+      title: "History cleared",
+      description: "Analysis history has been cleared",
+    });
+  };
+
+  // Select a history item to view
+  const selectHistoryItem = (historyItem: any) => {
+    setFoodAnalysis(historyItem.result);
+    setIngredientsList(historyItem.ingredients);
+    toast({
+      title: "Analysis loaded",
+      description: "Previous analysis has been loaded",
+    });
+  };
+
   return {
+    // Basic food analysis for FoodEntry
     analyzeFood,
     isAnalyzing,
-    foodAnalysis
+    foodAnalysis,
+    
+    // Extended functionality for AnalyzeTab
+    ingredientsList,
+    setIngredientsList,
+    analyzeIngredients,
+    analysisHistory,
+    clearHistory,
+    selectHistoryItem,
+    
+    // Alias for AnalyzeTab to match existing code
+    analysisResult: foodAnalysis,
   };
 };

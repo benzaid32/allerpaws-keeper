@@ -17,7 +17,7 @@ const FoodDatabase = () => {
   const navigate = useNavigate();
   const { activeTab, handleTabChange } = useFoodDatabaseTabs();
   const { selectedFoods } = useFoodComparison();
-  const { analysisResult } = useFoodAnalysis();
+  const { foodAnalysis } = useFoodAnalysis();
   
   // Initialize the useFoodEntry hook to make it available for the SearchTab
   useFoodEntry();
@@ -36,7 +36,7 @@ const FoodDatabase = () => {
           <TabsTrigger value="search">Search</TabsTrigger>
           <TabsTrigger value="analyze" className="relative">
             Analyze
-            {analysisResult && (
+            {foodAnalysis && (
               <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-green-500"></span>
             )}
           </TabsTrigger>
