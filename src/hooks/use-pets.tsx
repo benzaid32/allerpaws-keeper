@@ -17,9 +17,6 @@ export function usePets() {
     try {
       setLoading(true);
       
-      // Clear existing data before fetching fresh data
-      setPets([]);
-      
       // Fetch pets with cache busting by adding a timestamp
       const timestamp = new Date().getTime();
       const { data: petsData, error: petsError } = await supabase
@@ -104,7 +101,7 @@ export function usePets() {
 
   // Initialize by fetching pets on component mount or when dependencies change
   useEffect(() => {
-    console.log("usePets: Initial data load or dependencies changed");
+    console.log("usePets: Initial data load");
     fetchPets();
     
     // Set up an event listener to refresh data when the app comes back into focus
@@ -117,12 +114,12 @@ export function usePets() {
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
-    // Set up a short interval to periodically refresh data (every 5 seconds)
-    // This ensures that new pets or image updates appear quickly
+    // Set up a moderate interval to periodically refresh data (every 15 seconds)
+    // This is less frequent than before to reduce excessive refreshing
     const refreshInterval = setInterval(() => {
       console.log('Periodic refresh of pets data');
       fetchPets();
-    }, 5000); // Reduced from 30s to 5s for more responsive updates
+    }, 15000); // Changed from 5s to 15s to reduce refresh frequency
     
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);

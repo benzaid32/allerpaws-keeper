@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Pet } from "@/lib/types";
 import { PawPrint } from "lucide-react";
-import { PetsList } from "@/components/pets/PetsList"; // Import from the correct location
+import { PetsList } from "@/components/pets/PetsList";
 import AddPetCard from "./AddPetCard";
 import { EmptyPetsList } from "@/components/pets/EmptyPetsList";
 
@@ -33,6 +33,9 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
     navigate('/add-pet');
   };
 
+  // Add debug logging
+  console.log("PetsSection - Received pets:", pets);
+
   return (
     <motion.div 
       className="mb-6"
@@ -55,9 +58,8 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
         </Button>
       </div>
 
-      {pets.length > 0 ? (
+      {pets && pets.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {/* Use the PetsList component with required props */}
           <PetsList 
             pets={pets}
             onViewPet={handleViewPet}
