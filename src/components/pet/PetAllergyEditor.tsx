@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,11 +40,19 @@ const PetAllergyEditor: React.FC<PetAllergyEditorProps> = ({
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
+                e.stopPropagation();
                 addAllergy();
               }
             }}
           />
-          <Button type="button" onClick={addAllergy} variant="outline">
+          <Button 
+            type="button" 
+            onClick={(e) => {
+              e.preventDefault();
+              addAllergy();
+            }} 
+            variant="outline"
+          >
             <Plus className="h-4 w-4" />
           </Button>
         </div>
