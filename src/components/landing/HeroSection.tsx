@@ -2,60 +2,59 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { APP_DESCRIPTION } from "@/lib/constants";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
 
 const HeroSection = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-20 md:py-28">
-      <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center text-center space-y-8">
+    <section className="bg-[#78c6d9] text-white py-16 md:py-24 relative overflow-hidden">
+      <div className="container px-4 md:px-6 mx-auto">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+          {/* Left side content */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="space-y-4 max-w-3xl"
+            className="space-y-6 max-w-xl"
           >
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter">
-              Track and Manage Your Pet's Allergies with Ease
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight">
+              Pet Food Allergy Management
             </h1>
-            <p className="text-xl text-muted-foreground max-w-[700px] mx-auto">
-              {APP_DESCRIPTION}. Identify allergens, track symptoms, and find safe foods for your furry friends.
+            <p className="text-xl opacity-90">
+              Helping pet owners track and manage food allergies for their furry friends with ease.
             </p>
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="flex flex-col sm:flex-row gap-4"
-          >
-            <Button size="lg" onClick={() => navigate("/auth?signup=true")} className="gap-2">
-              Get Started <ArrowRight className="h-4 w-4" />
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/pricing")}>
-              View Pricing
-            </Button>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="relative mt-12 w-full max-w-5xl rounded-lg border bg-background shadow-lg overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 z-10 pointer-events-none" />
-            <img 
-              src="/placeholder.svg" 
-              alt="App Screenshot" 
-              className="w-full object-cover relative z-0"
-            />
-            <div className="absolute top-0 right-0 p-4 bg-primary text-primary-foreground text-sm font-medium rounded-bl-lg z-20">
-              Dashboard Preview
+            <div className="flex flex-wrap gap-4 pt-2">
+              <Button 
+                size="lg" 
+                onClick={() => navigate("/auth?signup=true")} 
+                className="bg-white text-[#78c6d9] hover:bg-white/90"
+              >
+                Get Started
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                onClick={() => window.open("#", "_blank")}
+                className="text-white border-white hover:bg-white/10"
+              >
+                Download
+              </Button>
             </div>
+          </motion.div>
+          
+          {/* Right side image */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="w-full max-w-md mx-auto lg:mx-0"
+          >
+            <img 
+              src="/lovable-uploads/e91a3106-40f3-492a-a3c4-8a6706bad1e2.png" 
+              alt="Happy dog" 
+              className="w-full max-w-md object-contain"
+            />
           </motion.div>
         </div>
       </div>

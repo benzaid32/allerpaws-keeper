@@ -23,13 +23,6 @@ import Reminders from './pages/Reminders';
 import { LoadingSpinner } from './components/ui/loading-spinner';
 import { useToast } from './hooks/use-toast';
 import { APP_NAME } from './lib/constants';
-import HeroSection from './components/home/welcome/HeroSection';
-import FeaturesSection from './components/home/welcome/FeaturesSection';
-import TestimonialsSection from './components/home/welcome/TestimonialsSection';
-import LandingFooter from './components/home/welcome/LandingFooter';
-import { Button } from './components/ui/button';
-import { isPlatform } from './lib/utils';
-import { LocalNotifications } from '@capacitor/local-notifications';
 import InstallBanner from './components/pwa/InstallBanner';
 import About from './pages/About';
 import Contact from './pages/Contact';
@@ -48,65 +41,6 @@ import AddFoodEntry from './pages/AddFoodEntry';
 import FoodEntry from './pages/FoodEntry';
 import EditFoodEntry from './pages/EditFoodEntry';
 
-// Create a stylish, mobile-friendly landing page using the components
-const OriginalLanding = () => {
-  const navigate = useNavigate();
-  
-  const handleGetStarted = () => {
-    navigate('/auth');
-  };
-
-  return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-background/95 overflow-hidden">
-      <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none z-0"></div>
-      
-      <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border/40 shadow-sm">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <img 
-              src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
-              alt={APP_NAME} 
-              className="w-8 h-8 md:w-10 md:h-10"
-            />
-            <span className="font-bold text-lg md:text-xl">{APP_NAME}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button 
-              onClick={() => navigate('/auth')} 
-              variant="ghost" 
-              size="sm" 
-              className="hidden sm:inline-flex"
-            >
-              Sign In
-            </Button>
-            <Button 
-              onClick={handleGetStarted} 
-              size="sm" 
-              className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all"
-            >
-              Get Started
-            </Button>
-          </div>
-        </div>
-      </header>
-      
-      <main className="flex-1 overflow-auto">
-        <div className="relative">
-          <div className="absolute top-0 inset-x-0 h-64 bg-gradient-to-b from-primary/5 to-transparent -z-10"></div>
-          <div className="absolute bottom-0 right-0 w-72 h-72 bg-accent/10 rounded-full filter blur-3xl -z-10"></div>
-          <div className="absolute top-1/4 left-0 w-96 h-96 bg-primary/10 rounded-full filter blur-3xl -z-10"></div>
-          
-          <HeroSection onGetStarted={handleGetStarted} />
-          <FeaturesSection />
-          <TestimonialsSection />
-        </div>
-      </main>
-      
-      <LandingFooter />
-    </div>
-  );
-};
-
 // Layout component to wrap public pages with common elements
 const PublicPageLayout = ({ children }) => {
   return (
@@ -118,7 +52,7 @@ const PublicPageLayout = ({ children }) => {
 
 // Component to handle redirects from 404 page
 const RedirectHandler = () => {
-  const navigate = useNavigate();
+  const useNavigate = useNavigate;
   
   useEffect(() => {
     // Check if there's a redirect path stored in localStorage
@@ -129,9 +63,9 @@ const RedirectHandler = () => {
       
       // Navigate to the stored path
       console.log('Redirecting to:', redirectPath);
-      navigate(redirectPath);
+      useNavigate(redirectPath);
     }
-  }, [navigate]);
+  }, [useNavigate]);
   
   return null;
 };
@@ -293,7 +227,8 @@ function App() {
                   <Route path="/auth" element={<Auth />} />
                   
                   {/* Public pages */}
-                  <Route path="/landing" element={<OriginalLanding />} />
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/landing" element={<Navigate to="/" replace />} />
                   <Route path="/pricing" element={<Pricing />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />

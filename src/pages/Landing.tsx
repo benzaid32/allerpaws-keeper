@@ -21,7 +21,7 @@ const Landing = () => {
   }, [user, isLoading, navigate]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-background to-background/95">
+    <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-1">
         <HeroSection />
