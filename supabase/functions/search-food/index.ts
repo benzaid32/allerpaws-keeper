@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -46,7 +47,7 @@ serve(async (req) => {
     // Otherwise use the general search query
     else if (query) {
       console.log(`Searching by query: ${query}`);
-      // Fix the ilike syntax and search in name and brand columns
+      // Fix: Use the ilike operator correctly
       foodQuery = foodQuery.or(`name.ilike.%${query}%,brand.ilike.%${query}%`);
     }
     
@@ -59,7 +60,10 @@ serve(async (req) => {
         .select('name')
         .eq('pet_id', petId);
       
-      if (allergiesError) throw allergiesError;
+      if (allergiesError) {
+        console.error('Error fetching pet allergies:', allergiesError);
+        throw allergiesError;
+      }
       
       // Filter out products containing any of the pet's allergens
       if (allergiesData && allergiesData.length > 0) {
@@ -84,6 +88,13 @@ serve(async (req) => {
     }
     
     console.log(`Found ${data?.length || 0} results`);
+    
+    // For debugging: Log a sample of the first result if available
+    if (data && data.length > 0) {
+      console.log('Sample result:', data[0]);
+    } else {
+      console.log('No results found in the database');
+    }
     
     return new Response(
       JSON.stringify({
