@@ -21,8 +21,8 @@ interface FoodEntry {
   pet_id: string;
   notes?: string;
   date: string;
-  food_name: string;
-  food_type: string;
+  food_name?: string;
+  food_type?: string;
   food_product_id?: string;
 }
 
@@ -43,7 +43,7 @@ const FoodDiary = () => {
         
         let query = supabase
           .from("food_entries")
-          .select("*")
+          .select("*, food_items(name, type, food_product_id)")
           .order("created_at", { ascending: false });
         
         if (selectedPetId !== "all") {
@@ -57,11 +57,17 @@ const FoodDiary = () => {
         }
         
         // Transform the data to ensure all expected fields
-        const formattedEntries = data.map(entry => ({
-          ...entry,
-          food_name: entry.food_name || "Unnamed Food",
-          food_type: entry.food_type || "regular"
-        })) as FoodEntry[];
+        const formattedEntries = data.map(entry => {
+          // Extract the first food item if available
+          const foodItem = entry.food_items && entry.food_items.length > 0 ? entry.food_items[0] : null;
+          
+          return {
+            ...entry,
+            food_name: foodItem ? foodItem.name : "Unnamed Food",
+            food_type: foodItem ? foodItem.type : "regular",
+            food_product_id: foodItem ? foodItem.food_product_id : null
+          };
+        }) as FoodEntry[];
         
         setEntries(formattedEntries);
       } catch (error) {
