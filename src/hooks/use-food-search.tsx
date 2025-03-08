@@ -34,6 +34,9 @@ export function useFoodSearch() {
       console.log("Search response:", response);
       
       if (response.success && response.data) {
+        // Save results to localStorage for caching
+        localStorage.setItem('foodSearchResults', JSON.stringify(response.data));
+        
         setSearchResults(response.data as FoodProduct[]);
         
         if (response.data.length === 0) {

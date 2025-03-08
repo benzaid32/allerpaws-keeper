@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,11 +9,29 @@ import BottomNavigation from "@/components/BottomNavigation";
 import { useFoodDetails } from "@/hooks/use-food-details";
 import MobileCard from "@/components/ui/mobile-card";
 import { Separator } from "@/components/ui/separator";
+import { useFoodComparison } from "@/hooks/use-food-comparison";
+import { useToast } from "@/hooks/use-toast";
 
 const FoodDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { food, loading, error } = useFoodDetails(id);
+  const { addToComparison } = useFoodComparison();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    console.log("FoodDetailsPage rendered with food:", food);
+  }, [food]);
+
+  const handleAddToComparison = () => {
+    if (food) {
+      addToComparison(food);
+      toast({
+        title: "Added to comparison",
+        description: `${food.name} added to comparison list`,
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 pb-20">
@@ -75,6 +93,16 @@ const FoodDetailsPage = () => {
                     </div>
                   </div>
                 )}
+                
+                <div className="mt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleAddToComparison}
+                    className="w-full sm:w-auto"
+                  >
+                    Add to Comparison
+                  </Button>
+                </div>
               </div>
             </div>
           </MobileCard>

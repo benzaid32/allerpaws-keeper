@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FoodProduct } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
@@ -8,8 +8,29 @@ export function useFoodComparison() {
   const [selectedFoods, setSelectedFoods] = useState<FoodProduct[]>([]);
   const { toast } = useToast();
   const { isPremium } = useSubscriptionContext();
+  
+  // Load comparison items from localStorage on initial load
+  useEffect(() => {
+    const savedItems = localStorage.getItem('comparisonItems');
+    if (savedItems) {
+      try {
+        const parsedItems = JSON.parse(savedItems);
+        setSelectedFoods(parsedItems);
+      } catch (err) {
+        console.error('Error parsing saved comparison items:', err);
+        localStorage.removeItem('comparisonItems');
+      }
+    }
+  }, []);
+
+  // Save comparison items to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('comparisonItems', JSON.stringify(selectedFoods));
+  }, [selectedFoods]);
 
   const addToComparison = (product: FoodProduct) => {
+    console.log("Adding to comparison:", product);
+    
     if (selectedFoods.some(p => p.id === product.id)) {
       toast({
         title: "Already added",
@@ -43,10 +64,15 @@ export function useFoodComparison() {
 
   const removeFromComparison = (productId: string) => {
     setSelectedFoods(prev => prev.filter(p => p.id !== productId));
+    toast({
+      title: "Removed from comparison",
+      description: "Product removed from comparison",
+    });
   };
 
   const clearComparison = () => {
     setSelectedFoods([]);
+    localStorage.removeItem('comparisonItems');
     toast({
       title: "Comparison cleared",
       description: "All products removed from comparison",

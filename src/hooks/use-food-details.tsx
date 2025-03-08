@@ -27,6 +27,8 @@ export function useFoodDetails(foodId: string | undefined) {
           .eq('id', foodId)
           .maybeSingle();
 
+        console.log("Food details query result:", { data, error });
+
         if (error) {
           console.error("Error fetching food details:", error);
           throw error;
@@ -36,6 +38,18 @@ export function useFoodDetails(foodId: string | undefined) {
           console.log("Food details retrieved:", data);
           setFood(data as FoodProduct);
         } else {
+          console.log("No food data found for ID:", foodId);
+          // Try fetching from search results before giving up
+          const cachedResults = localStorage.getItem('foodSearchResults');
+          if (cachedResults) {
+            const parsedResults = JSON.parse(cachedResults);
+            const foundFood = parsedResults.find((item: FoodProduct) => item.id === foodId);
+            if (foundFood) {
+              console.log("Found food in cached search results:", foundFood);
+              setFood(foundFood);
+              return;
+            }
+          }
           throw new Error("Food product not found");
         }
       } catch (error: any) {
