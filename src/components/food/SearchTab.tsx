@@ -7,13 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Search, BarChart3, Info } from "lucide-react";
+import { Search, BarChart3, Info, XCircle, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const SearchTab: React.FC = () => {
   const navigate = useNavigate();
-  const { searchTerm, setSearchTerm, searchResults, loading, handleSearch } = useFoodSearch();
+  const { 
+    searchTerm, 
+    setSearchTerm, 
+    searchResults, 
+    loading, 
+    error,
+    handleSearch, 
+    clearSearch 
+  } = useFoodSearch();
   const { addToComparison } = useFoodComparison();
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -38,14 +46,28 @@ const SearchTab: React.FC = () => {
           <div className="space-y-2">
             <Label htmlFor="search">Search for pet food</Label>
             <div className="flex gap-2">
-              <Input
-                id="search"
-                placeholder="Search by brand or product name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1"
-              />
-              <Button type="submit" disabled={loading}>
+              <div className="relative flex-1">
+                <Input
+                  id="search"
+                  placeholder="Search by brand or product name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pr-8"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearSearch();
+                      setHasSearched(false);
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <Button type="submit" disabled={loading || !searchTerm.trim()}>
                 {loading ? (
                   <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
                 ) : (
@@ -54,16 +76,33 @@ const SearchTab: React.FC = () => {
               </Button>
             </div>
           </div>
+          
+          <div className="text-xs text-muted-foreground">
+            Example searches: "Royal Canin", "Purina", "Salmon", "Dry Food"
+          </div>
         </form>
       </div>
 
       {/* Results */}
       <div>
         {loading && (
-          <LoadingSpinner />
+          <div className="flex flex-col items-center justify-center py-8">
+            <LoadingSpinner />
+            <p className="mt-2 text-muted-foreground">Searching for pet food products...</p>
+          </div>
         )}
         
-        {!loading && hasSearched && searchResults.length === 0 && (
+        {error && !loading && (
+          <div className="bg-destructive/10 p-4 rounded-md flex items-start space-x-2">
+            <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-destructive">Search Error</h3>
+              <p className="text-sm text-muted-foreground">{error}</p>
+            </div>
+          </div>
+        )}
+        
+        {!loading && hasSearched && searchResults.length === 0 && !error && (
           <div className="text-center py-8 border rounded-md bg-muted/20">
             <Info className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
             <h3 className="text-lg font-medium mb-1">No results found</h3>
@@ -78,7 +117,7 @@ const SearchTab: React.FC = () => {
 
         {searchResults.length > 0 && (
           <>
-            <h2 className="text-xl font-semibold mb-4">Search Results</h2>
+            <h2 className="text-xl font-semibold mb-4">Search Results ({searchResults.length})</h2>
             <div className="grid gap-4 md:grid-cols-2">
               {searchResults.map((product) => (
                 <SearchResultCard 

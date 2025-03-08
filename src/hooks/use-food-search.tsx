@@ -8,6 +8,7 @@ export function useFoodSearch() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<FoodProduct[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleSearch = async (e?: React.FormEvent) => {
@@ -15,6 +16,8 @@ export function useFoodSearch() {
     if (!searchTerm.trim()) return;
 
     setLoading(true);
+    setError(null);
+    
     try {
       console.log("Searching for:", searchTerm);
       
@@ -38,12 +41,18 @@ export function useFoodSearch() {
             title: "No results found",
             description: "Try a different search term or check your spelling",
           });
+        } else {
+          toast({
+            title: "Search complete",
+            description: `Found ${response.data.length} products`,
+          });
         }
       } else {
         throw new Error(response.error || "Failed to search the food database");
       }
     } catch (error: any) {
       console.error("Error searching food database:", error);
+      setError(error.message || "Failed to search the food database");
       toast({
         title: "Search failed",
         description: error.message || "Failed to search the food database",
@@ -56,12 +65,20 @@ export function useFoodSearch() {
     }
   };
 
+  const clearSearch = () => {
+    setSearchTerm("");
+    setSearchResults([]);
+    setError(null);
+  };
+
   return {
     searchTerm,
     setSearchTerm,
     searchResults,
     setSearchResults,
     loading,
-    handleSearch
+    error,
+    handleSearch,
+    clearSearch
   };
 }
