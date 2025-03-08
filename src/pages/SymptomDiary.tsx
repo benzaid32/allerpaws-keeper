@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -73,7 +72,7 @@ const SymptomDiary = () => {
           </Button>
           <h1 className="text-2xl font-bold flex-1">Symptom Diary</h1>
           <Button 
-            onClick={() => navigate("/symptom-diary/new")} 
+            onClick={() => navigate("/add-symptom")} 
             size="sm" 
             className="gap-1"
           >
@@ -180,7 +179,7 @@ const SymptomDiary = () => {
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   Start tracking your pet's symptoms to identify potential food allergies.
                 </p>
-                <Button onClick={() => navigate("/symptom-diary/new")}>
+                <Button onClick={() => navigate("/add-symptom")}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create First Entry
                 </Button>

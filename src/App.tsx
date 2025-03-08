@@ -275,7 +275,9 @@ function App() {
                   <Route path="/symptom-diary" element={<ProtectedRoute><SymptomDiary /></ProtectedRoute>} />
                   <Route path="/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />
                   <Route path="/add-symptom" element={<ProtectedRoute><AddSymptomEntry /></ProtectedRoute>} />
+                  <Route path="/symptom-diary/new" element={<ProtectedRoute><AddSymptomEntry /></ProtectedRoute>} />
                   <Route path="/edit-symptom/:id" element={<ProtectedRoute><EditSymptomEntry /></ProtectedRoute>} />
+                  <Route path="/symptom-diary/:id" element={<ProtectedRoute><EditSymptomEntry /></ProtectedRoute>} />
                   <Route path="/elimination-diet" element={<ProtectedRoute><EliminationDiet /></ProtectedRoute>} />
                   <Route path="/food/:id" element={<ProtectedRoute><FoodDetailsPage /></ProtectedRoute>} />
                   
