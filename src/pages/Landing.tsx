@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/landing/Header";
 import HeroSection from "@/components/landing/HeroSection";
-import FeaturesSection from "@/components/landing/FeaturesSection";
+import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import Footer from "@/components/landing/Footer";
 
 const Landing = () => {
@@ -23,7 +23,7 @@ const Landing = () => {
       <Header />
       <main className="flex-1">
         <HeroSection />
-        <FeaturesSection />
+        <HowItWorksSection />
       </main>
       <Footer />
     </div>

@@ -2,8 +2,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { PawPrint, Mail, Instagram, Twitter, Facebook } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { APP_NAME } from "@/lib/constants";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -47,9 +45,9 @@ const Footer = () => {
           {/* Logo and description */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center mb-4">
-              <PawPrint className="h-8 w-8 text-[#78c6d9] mr-2" />
-              <span className="text-2xl font-bold text-[#78c6d9]">
-                {APP_NAME}
+              <PawPrint className="h-8 w-8 text-[#5ec9d7] mr-2" />
+              <span className="text-2xl font-bold text-[#5ec9d7]">
+                Allé Paws
               </span>
             </Link>
             <p className="text-muted-foreground mb-4">
@@ -62,7 +60,7 @@ const Footer = () => {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-[#78c6d9] transition-colors"
+                  className="text-muted-foreground hover:text-[#5ec9d7] transition-colors"
                   aria-label={social.name}
                 >
                   {social.icon}
@@ -80,7 +78,7 @@ const Footer = () => {
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-muted-foreground hover:text-[#78c6d9] transition-colors"
+                      className="text-muted-foreground hover:text-[#5ec9d7] transition-colors"
                     >
                       {link.name}
                     </Link>
@@ -94,7 +92,7 @@ const Footer = () => {
         {/* Bottom bar */}
         <div className="border-t border-muted pt-8 mt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground mb-4 md:mb-0">
-            © {currentYear} {APP_NAME}. All rights reserved.
+            © {currentYear} Allé Paws. All rights reserved.
           </p>
         </div>
       </div>

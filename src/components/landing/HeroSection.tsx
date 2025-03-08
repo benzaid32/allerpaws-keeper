@@ -2,60 +2,77 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { PawPrint, Download } from "lucide-react";
 
 const HeroSection = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="bg-[#78c6d9] text-white py-12 md:py-20 relative overflow-hidden">
+    <section className="bg-[#a4e1e9] text-[#1d3557] py-12 md:py-20">
       <div className="container px-4 md:px-6 mx-auto">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-          {/* Left side content */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-6 max-w-xl"
-          >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight">
-              Pet Food Allergy Management
-            </h1>
-            <p className="text-xl opacity-90">
-              Helping pet owners track and manage food allergies for their furry friends with ease.
+        <div className="flex flex-col items-center text-center mb-12">
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4">
+            Our Pet Food<br />Allergy Allergies
+          </h1>
+          <p className="text-xl opacity-90 max-w-2xl mx-auto mb-10">
+            Your all-in-one tool for managing your pet's food allergies effectively.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Button 
+              size="lg" 
+              onClick={() => navigate("/auth?signup=true")} 
+              className="bg-white text-[#5ec9d7] hover:bg-white/90 min-w-[180px]"
+            >
+              <PawPrint className="mr-2 h-5 w-5" />
+              Download
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              onClick={() => navigate("/auth")}
+              className="bg-[#5ec9d7] text-white border-white hover:bg-[#5ec9d7]/90 min-w-[180px]"
+            >
+              <Download className="mr-2 h-5 w-5" />
+              Sign Up/Login
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div className="text-left">
+            <h2 className="text-3xl font-bold mb-4">
+              Pet Food<br />Allergy Management
+            </h2>
+            <p className="text-lg mb-6">
+              Discover which foods trigger reactions in your pet and prevent future issues.
             </p>
-            <div className="flex flex-wrap gap-4 pt-2">
-              <Button 
-                size="lg" 
-                onClick={() => navigate("/auth?signup=true")} 
-                className="bg-white text-[#78c6d9] hover:bg-white/90"
+            <div className="flex gap-4">
+              <Button
+                size="lg"
+                onClick={() => navigate("/auth?signup=true")}
+                className="bg-white text-[#5ec9d7] hover:bg-white/90"
               >
+                <PawPrint className="mr-2 h-5 w-5" />
                 Get Started
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
+              <Button
+                size="lg"
+                variant="outline"
                 onClick={() => window.open("#", "_blank")}
-                className="text-white border-white hover:bg-white/10"
+                className="bg-[#1d3557] text-white border-[#1d3557] hover:bg-[#1d3557]/90"
               >
+                <Download className="mr-2 h-5 w-5" />
                 Download
               </Button>
             </div>
-          </motion.div>
-          
-          {/* Right side image */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="w-full max-w-md mx-auto lg:mx-0"
-          >
-            <img 
-              src="/lovable-uploads/35bd10fb-53e3-4bd6-92c3-064e4cc89787.png" 
-              alt="Golden retriever dog" 
-              className="w-full max-w-md object-contain"
+          </div>
+          <div className="flex justify-center">
+            <img
+              src="/lovable-uploads/199b5421-e758-4d9d-b434-0dd294164b58.png"
+              alt="Dog with allergies"
+              className="max-w-full h-auto rounded-lg"
             />
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
