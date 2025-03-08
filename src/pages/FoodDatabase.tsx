@@ -10,10 +10,11 @@ import AnalyzeTab from "@/components/food/AnalyzeTab";
 import CompareTab from "@/components/food/CompareTab";
 import { useFoodComparison } from "@/hooks/use-food-comparison";
 import { useFoodAnalysis } from "@/hooks/use-food-analysis";
+import { useFoodDatabaseTabs } from "@/hooks/use-food-database-tabs";
 
 const FoodDatabase = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("search");
+  const { activeTab, setActiveTab } = useFoodDatabaseTabs();
   const { selectedFoods } = useFoodComparison();
   const { analysisResult } = useFoodAnalysis();
 
