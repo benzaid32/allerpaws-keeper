@@ -44,6 +44,7 @@ import Landing from './pages/Landing';
 
 import FoodDetailsPage from './pages/FoodDetailsPage';
 import FoodDiary from './pages/FoodDiary';
+import AddFoodEntry from './pages/AddFoodEntry';
 
 // Create a stylish, mobile-friendly landing page using the components
 const OriginalLanding = () => {
@@ -282,6 +283,7 @@ function App() {
                   <Route path="/elimination-diet" element={<ProtectedRoute><EliminationDiet /></ProtectedRoute>} />
                   <Route path="/food/:id" element={<ProtectedRoute><FoodDetailsPage /></ProtectedRoute>} />
                   <Route path="/food-diary" element={<ProtectedRoute><FoodDiary /></ProtectedRoute>} />
+                  <Route path="/add-food-entry" element={<ProtectedRoute><AddFoodEntry /></ProtectedRoute>} />
                   
                   {/* Authentication */}
                   <Route path="/auth" element={<Auth />} />
