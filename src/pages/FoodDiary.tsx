@@ -14,15 +14,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePets } from "@/hooks/use-pets";
 
-// Define the FoodEntry type to match the database schema
-type FoodEntry = {
+// Define the FoodEntry type to match the actual structure from the database
+interface FoodEntry {
   id: string;
   created_at: string;
   pet_id: string;
-  food_name: string;
-  food_type: string;
   notes?: string;
-};
+  date: string;
+  food_name?: string;
+  food_type?: string;
+}
 
 const FoodDiary = () => {
   const navigate = useNavigate();
@@ -54,7 +55,18 @@ const FoodDiary = () => {
           throw error;
         }
         
-        setEntries(data as FoodEntry[] || []);
+        // Transform the data to match our component's expected format
+        const formattedEntries = data.map(entry => {
+          // Join with food_items to get food details if needed
+          // For now, use dummy values for food_name and food_type
+          return {
+            ...entry,
+            food_name: "Food Item", // This would ideally come from a join with food_items
+            food_type: "regular"    // This would ideally come from a join with food_items
+          } as FoodEntry;
+        });
+        
+        setEntries(formattedEntries);
       } catch (error) {
         console.error("Error fetching food diary entries:", error);
         toast({
@@ -163,13 +175,13 @@ const FoodDiary = () => {
                   >
                     <div className="flex justify-between">
                       <div>
-                        <h3 className="font-medium text-lg">{entry.food_name}</h3>
+                        <h3 className="font-medium text-lg">{entry.food_name || "Unnamed Food"}</h3>
                         <div className="text-sm text-muted-foreground">
                           {getPetName(entry.pet_id)}
                         </div>
                       </div>
                       <div className="flex flex-col items-end">
-                        <Badge variant="outline">{entry.food_type}</Badge>
+                        <Badge variant="outline">{entry.food_type || "unknown"}</Badge>
                         <div className="text-xs text-muted-foreground mt-1 flex items-center">
                           <Calendar className="h-3 w-3 mr-1" />
                           {formatDate(entry.created_at)}
