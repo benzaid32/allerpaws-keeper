@@ -20,7 +20,7 @@ export function useFoodSearch() {
       
       // Call the search-food edge function
       const { data: response, error } = await supabase.functions.invoke('search-food', {
-        body: { query: searchTerm },
+        body: { query: searchTerm.trim() },
       });
 
       if (error) {
@@ -36,7 +36,7 @@ export function useFoodSearch() {
         if (response.data.length === 0) {
           toast({
             title: "No results found",
-            description: "Try a different search term or browse our categories",
+            description: "Try a different search term or check your spelling",
           });
         }
       } else {

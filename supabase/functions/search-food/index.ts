@@ -47,8 +47,10 @@ serve(async (req) => {
     // Otherwise use the general search query
     else if (query) {
       console.log(`Searching by query: ${query}`);
-      // Fix: Use the ilike operator correctly
-      foodQuery = foodQuery.or(`name.ilike.%${query}%,brand.ilike.%${query}%`);
+      
+      // More flexible search implementation - modified for better results
+      const searchTerm = `%${query.toLowerCase()}%`;
+      foodQuery = foodQuery.or(`name.ilike.${searchTerm},brand.ilike.${searchTerm}`);
     }
     
     // If we have a pet ID and want to filter by allergens

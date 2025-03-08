@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useFoodSearch } from "@/hooks/use-food-search";
 import { useFoodComparison } from "@/hooks/use-food-comparison";
 import { FoodProduct } from "@/lib/types";
@@ -7,19 +7,34 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Search, BarChart3 } from "lucide-react";
+import { Search, BarChart3, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const SearchTab: React.FC = () => {
   const navigate = useNavigate();
   const { searchTerm, setSearchTerm, searchResults, loading, handleSearch } = useFoodSearch();
   const { addToComparison } = useFoodComparison();
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const onSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!searchTerm.trim()) return;
+    
+    setHasSearched(true);
+    handleSearch(e);
+  };
+
+  // Clear the "hasSearched" flag when search term changes
+  useEffect(() => {
+    setHasSearched(false);
+  }, [searchTerm]);
 
   return (
     <div>
       {/* Search form */}
       <div className="mb-6">
-        <form onSubmit={handleSearch} className="space-y-4">
+        <form onSubmit={onSearch} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="search">Search for pet food</Label>
             <div className="flex gap-2">
@@ -44,6 +59,23 @@ const SearchTab: React.FC = () => {
 
       {/* Results */}
       <div>
+        {loading && (
+          <LoadingSpinner />
+        )}
+        
+        {!loading && hasSearched && searchResults.length === 0 && (
+          <div className="text-center py-8 border rounded-md bg-muted/20">
+            <Info className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+            <h3 className="text-lg font-medium mb-1">No results found</h3>
+            <p className="text-muted-foreground">
+              Try a different search term or check your spelling.
+            </p>
+            <p className="text-xs text-muted-foreground mt-4">
+              Example searches: "Royal Canin", "Purina", "Salmon", "Dry Food"
+            </p>
+          </div>
+        )}
+
         {searchResults.length > 0 && (
           <>
             <h2 className="text-xl font-semibold mb-4">Search Results</h2>
