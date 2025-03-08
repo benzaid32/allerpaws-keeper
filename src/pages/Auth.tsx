@@ -7,6 +7,8 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import AuthFooter from "@/components/auth/AuthFooter";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import PatternBackground from "@/components/ui/pattern-background";
+import MobileLayout from "@/components/layout/MobileLayout";
+import MobileCard from "@/components/ui/mobile-card";
 import { motion } from "framer-motion";
 
 const Auth = () => {
@@ -31,6 +33,7 @@ const Auth = () => {
     }
   }, [user, isLoading, navigate]);
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -42,70 +45,101 @@ const Auth = () => {
     );
   }
 
+  // Content for both desktop and mobile
+  const authContent = (
+    <>
+      <motion.div 
+        className="w-full space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="text-center space-y-2">
+          <motion.h1 
+            className="text-3xl md:text-4xl font-bold text-[#033b5c]"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            {isSignUp ? "Create Your Account" : "Welcome Back"}
+          </motion.h1>
+          <motion.p 
+            className="text-gray-600"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {isSignUp 
+              ? "Join AllerPaws and start managing your pet's allergies today."
+              : "Sign in to access your AllerPaws dashboard."}
+          </motion.p>
+        </div>
+        
+        <motion.div 
+          className="transform hover:scale-[1.01] transition-all duration-300"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <AuthForm initialView={isSignUp ? "sign-up" : "sign-in"} />
+        </motion.div>
+        
+        <motion.div 
+          className="flex justify-center space-x-6 mt-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <img 
+            src="/lovable-uploads/199b5421-e758-4d9d-b434-0dd294164b58.png" 
+            alt="Dog" 
+            className="h-24 md:h-32 transform -rotate-6 hover:rotate-0 transition-all duration-300"
+          />
+          <img 
+            src="/lovable-uploads/4667b09b-8f1b-4f41-bd46-b762b1a75339.png" 
+            alt="Cat" 
+            className="h-24 md:h-32 transform rotate-6 hover:rotate-0 transition-all duration-300"
+          />
+        </motion.div>
+      </motion.div>
+    </>
+  );
+
+  // Responsive design for both mobile and desktop
   return (
-    <div className="flex min-h-screen flex-col justify-between bg-[#a4e1e9] overflow-hidden">
+    <div className="min-h-screen flex flex-col md:justify-between bg-[#a4e1e9] overflow-hidden">
       <AuthHeader />
       
-      <main className="flex-1 flex items-center justify-center p-4 relative">
-        <PatternBackground opacity={0.04} color="primary">
-          <div className="container mx-auto max-w-md px-4 py-8">
-            <motion.div 
-              className="w-full space-y-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="text-center space-y-2">
-                <motion.h1 
-                  className="text-3xl md:text-4xl font-bold text-[#033b5c]"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                >
-                  {isSignUp ? "Create Your Account" : "Welcome Back"}
-                </motion.h1>
-                <motion.p 
-                  className="text-gray-600"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  {isSignUp 
-                    ? "Join AllerPaws and start managing your pet's allergies today."
-                    : "Sign in to access your AllerPaws dashboard."}
-                </motion.p>
-              </div>
-              
-              <motion.div 
-                className="transform hover:scale-[1.01] transition-all duration-300"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <AuthForm initialView={isSignUp ? "sign-up" : "sign-in"} />
-              </motion.div>
-              
-              <motion.div 
-                className="flex justify-center space-x-6 mt-8"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-              >
-                <img 
-                  src="/lovable-uploads/199b5421-e758-4d9d-b434-0dd294164b58.png" 
-                  alt="Dog" 
-                  className="h-24 md:h-32 transform -rotate-6 hover:rotate-0 transition-all duration-300"
-                />
-                <img 
-                  src="/lovable-uploads/4667b09b-8f1b-4f41-bd46-b762b1a75339.png" 
-                  alt="Cat" 
-                  className="h-24 md:h-32 transform rotate-6 hover:rotate-0 transition-all duration-300"
-                />
-              </motion.div>
-            </motion.div>
-          </div>
-        </PatternBackground>
-      </main>
+      {/* Desktop version */}
+      <div className="hidden md:block flex-1">
+        <main className="flex-1 flex items-center justify-center p-4 relative">
+          <PatternBackground opacity={0.04} color="primary">
+            <div className="container mx-auto max-w-md px-4 py-8">
+              {authContent}
+            </div>
+          </PatternBackground>
+        </main>
+      </div>
+      
+      {/* Mobile version with optimized layout */}
+      <div className="md:hidden flex-1">
+        <MobileLayout 
+          hideNavigation={true} 
+          fullWidth={false} 
+          className="bg-[#a4e1e9] pt-0"
+          contentClassName="justify-center items-center"
+        >
+          <MobileCard 
+            className="w-full mx-auto max-w-md bg-white/80 backdrop-blur-sm border-none rounded-2xl shadow-lg overflow-hidden"
+            variant="ghost"
+            noPadding
+          >
+            <div className="px-4 py-8">
+              {authContent}
+            </div>
+          </MobileCard>
+        </MobileLayout>
+      </div>
       
       <AuthFooter />
     </div>
