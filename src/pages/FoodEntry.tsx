@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { usePets } from "@/hooks/use-pets";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface FoodEntryDetails {
   id: string;
@@ -151,7 +151,7 @@ const FoodEntry = () => {
       toast({
         title: "No ingredients",
         description: "This food entry doesn't have any ingredients to analyze",
-        variant: "warning",
+        variant: "default", // Changed from "warning" to "default"
       });
       return;
     }
