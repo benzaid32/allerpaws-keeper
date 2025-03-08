@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePets } from "@/hooks/use-pets";
 
+// Define the FoodEntry type to match the database schema
 type FoodEntry = {
   id: string;
   created_at: string;
@@ -39,7 +40,7 @@ const FoodDiary = () => {
         setLoading(true);
         
         let query = supabase
-          .from("food_diary")
+          .from("food_entries")
           .select("*")
           .order("created_at", { ascending: false });
         
@@ -53,7 +54,7 @@ const FoodDiary = () => {
           throw error;
         }
         
-        setEntries(data || []);
+        setEntries(data as FoodEntry[] || []);
       } catch (error) {
         console.error("Error fetching food diary entries:", error);
         toast({
