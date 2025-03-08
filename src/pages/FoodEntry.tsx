@@ -1,76 +1,70 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Plus, X, CalendarIcon } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Calendar, ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import BottomNavigation from "@/components/BottomNavigation";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import FoodAnalyzer from "@/components/FoodAnalyzer";
+import { useToast } from "@/hooks/use-toast";
+import MobileLayout from "@/components/layout/MobileLayout";
+import PatternBackground from "@/components/ui/pattern-background";
+import { usePets } from "@/hooks/use-pets";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-interface FoodItem {
-  id?: string;
-  name: string;
-  type: "regular" | "treat" | "supplement";
-  amount: string;
-  ingredients: string[];
-  notes: string;
+interface FoodEntryDetails {
+  id: string;
+  date: string;
+  pet_id: string;
+  notes?: string;
+  food_items: {
+    id: string;
+    name: string;
+    type: string;
+    ingredients?: string[];
+    notes?: string;
+  }[];
 }
 
 const FoodEntry = () => {
-  const { petId } = useParams<{ petId: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [petName, setPetName] = useState("");
-  const [date, setDate] = useState<Date>(new Date());
-  const [notes, setNotes] = useState("");
-  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const { pets } = usePets();
+  const [entry, setEntry] = useState<FoodEntryDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
-  // Current food item being added
-  const [currentFood, setCurrentFood] = useState<FoodItem>({
-    name: "",
-    type: "regular",
-    amount: "",
-    ingredients: [],
-    notes: "",
-  });
-  const [currentIngredient, setCurrentIngredient] = useState("");
-  
+  // Fetch entry details
   useEffect(() => {
-    if (!petId) return;
-    
-    const fetchPetInfo = async () => {
+    const fetchEntryDetails = async () => {
+      if (!id) return;
+      
       try {
-        const { data, error } = await supabase
-          .from("pets")
-          .select("name")
-          .eq("id", petId)
-          .single();
-          
-        if (error) throw error;
+        setLoading(true);
         
-        setPetName(data.name);
-      } catch (error: any) {
-        console.error("Error fetching pet info:", error.message);
+        // Query the food entry and its related food items
+        const { data, error } = await supabase
+          .from("food_entries")
+          .select(`
+            *,
+            food_items (*)
+          `)
+          .eq("id", id)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching entry details:", error);
+          throw error;
+        }
+        
+        console.log("Entry details:", data);
+        setEntry(data as FoodEntryDetails);
+      } catch (error) {
+        console.error("Error in fetch operation:", error);
         toast({
           title: "Error",
-          description: "Failed to load pet information",
+          description: "Failed to load food entry details",
           variant: "destructive",
         });
       } finally {
@@ -78,379 +72,218 @@ const FoodEntry = () => {
       }
     };
     
-    fetchPetInfo();
-  }, [petId, toast]);
+    fetchEntryDetails();
+  }, [id, toast]);
   
-  const addIngredient = () => {
-    if (!currentIngredient.trim()) return;
-    
-    // Check if already exists
-    if (currentFood.ingredients.includes(currentIngredient.trim())) {
-      toast({
-        title: "Ingredient already added",
-        description: "This ingredient is already in the list",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setCurrentFood(prev => ({
-      ...prev,
-      ingredients: [...prev.ingredients, currentIngredient.trim()]
-    }));
-    setCurrentIngredient("");
+  // Get pet name
+  const getPetName = (petId: string) => {
+    const pet = pets.find(p => p.id === petId);
+    return pet?.name || "Unknown Pet";
   };
   
-  const removeIngredient = (ingredientToRemove: string) => {
-    setCurrentFood(prev => ({
-      ...prev,
-      ingredients: prev.ingredients.filter(i => i !== ingredientToRemove)
-    }));
-  };
-  
-  const handleFoodItemChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setCurrentFood(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const addFoodItem = () => {
-    if (!currentFood.name.trim()) {
-      toast({
-        title: "Name required",
-        description: "Please enter a name for the food item",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setFoodItems(prev => [...prev, { ...currentFood }]);
-    setCurrentFood({
-      name: "",
-      type: "regular",
-      amount: "",
-      ingredients: [],
-      notes: "",
-    });
-    
-    toast({
-      title: "Food item added",
-      description: `${currentFood.name} added to the entry`,
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
     });
   };
   
-  const removeFoodItem = (index: number) => {
-    setFoodItems(prev => prev.filter((_, i) => i !== index));
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!petId) return;
-    
-    if (foodItems.length === 0) {
-      toast({
-        title: "No food items",
-        description: "Please add at least one food item",
-        variant: "destructive",
-      });
-      return;
-    }
+  // Handle delete
+  const handleDelete = async () => {
+    if (!entry) return;
     
     try {
-      setSubmitting(true);
-      
-      // Create food entry
-      const { data: entry, error: entryError } = await supabase
-        .from("food_entries")
-        .insert({
-          pet_id: petId,
-          date: date.toISOString(),
-          notes: notes.trim() || null,
-        })
-        .select()
-        .single();
-        
-      if (entryError) throw entryError;
-      
-      // Add food items
-      const foodItemsToInsert = foodItems.map(item => ({
-        entry_id: entry.id,
-        name: item.name,
-        type: item.type,
-        amount: item.amount || null,
-        ingredients: item.ingredients.length > 0 ? item.ingredients : null,
-        notes: item.notes || null,
-      }));
-      
+      // Delete food items first (due to foreign key constraints)
       const { error: itemsError } = await supabase
         .from("food_items")
-        .insert(foodItemsToInsert);
-        
+        .delete()
+        .eq("entry_id", entry.id);
+      
       if (itemsError) throw itemsError;
       
+      // Then delete the entry
+      const { error: entryError } = await supabase
+        .from("food_entries")
+        .delete()
+        .eq("id", entry.id);
+      
+      if (entryError) throw entryError;
+      
       toast({
-        title: "Food entry recorded",
-        description: `Food entry for ${petName} has been saved`,
+        title: "Entry deleted",
+        description: "Food entry has been removed from your diary",
       });
       
-      navigate(`/pet/${petId}`);
-    } catch (error: any) {
-      console.error("Error saving food entry:", error.message);
+      navigate("/food-diary");
+    } catch (error) {
+      console.error("Error deleting entry:", error);
       toast({
         title: "Error",
-        description: "Failed to save food entry",
+        description: "Failed to delete food entry",
         variant: "destructive",
       });
-    } finally {
-      setSubmitting(false);
     }
   };
   
+  // Render loading state
   if (loading) {
     return (
-      <div className="container pt-6 pb-20">
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-        <BottomNavigation />
-      </div>
+      <MobileLayout
+        title="Food Entry"
+        showBackButton
+        onBack={() => navigate("/food-diary")}
+      >
+        <PatternBackground color="primary">
+          <div className="flex flex-col items-center justify-center py-12">
+            <LoadingSpinner />
+            <p className="mt-4 text-muted-foreground">Loading food details...</p>
+          </div>
+        </PatternBackground>
+      </MobileLayout>
+    );
+  }
+  
+  // Render error state if no entry found
+  if (!entry) {
+    return (
+      <MobileLayout
+        title="Food Entry"
+        showBackButton
+        onBack={() => navigate("/food-diary")}
+      >
+        <PatternBackground color="primary">
+          <div className="text-center py-8 border rounded-lg bg-muted/30 px-4">
+            <h3 className="font-medium mb-2">Entry Not Found</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              The food entry you're looking for doesn't exist or you don't have permission to view it.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/food-diary")}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Food Diary
+            </Button>
+          </div>
+        </PatternBackground>
+      </MobileLayout>
     );
   }
   
   return (
-    <div className="container pt-6 pb-20">
-      <div className="flex items-center mb-4">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mr-2">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-2xl font-bold">Food Entry for {petName}</h1>
-      </div>
-      
-      <div className="grid md:grid-cols-5 gap-6">
-        <div className="md:col-span-3 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Add Food Entry</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={(newDate) => newDate && setDate(newDate)}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+    <MobileLayout
+      title="Food Entry"
+      showBackButton
+      onBack={() => navigate("/food-diary")}
+    >
+      <PatternBackground color="primary">
+        <div className="space-y-6">
+          {/* Header with date and pet info */}
+          <div className="border rounded-lg p-4 bg-card">
+            <div className="flex items-center text-muted-foreground mb-2">
+              <Calendar className="h-4 w-4 mr-2" />
+              <span>{formatDate(entry.date)}</span>
+            </div>
+            <h2 className="text-lg font-semibold mb-1">
+              {entry.food_items[0]?.name || "Unnamed Food"}
+            </h2>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">
+                {getPetName(entry.pet_id)}
+              </Badge>
+              {entry.food_items[0]?.type && (
+                <Badge variant="secondary">
+                  {entry.food_items[0].type}
+                </Badge>
+              )}
+            </div>
+          </div>
+          
+          {/* Food details */}
+          <div className="border rounded-lg p-4 bg-card">
+            <h3 className="font-medium mb-3">Food Details</h3>
+            
+            {entry.food_items.map((item) => (
+              <div key={item.id} className="mb-4 last:mb-0">
+                <h4 className="font-medium">{item.name}</h4>
+                <p className="text-sm text-muted-foreground">
+                  Type: {item.type}
+                </p>
                 
-                <div className="border rounded-lg p-4 space-y-4 mt-4">
-                  <h3 className="font-medium">Add Food Item</h3>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Food Name</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={currentFood.name}
-                      onChange={handleFoodItemChange}
-                      placeholder="Kibble, wet food, treat, etc."
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="type">Type</Label>
-                      <Select
-                        value={currentFood.type}
-                        onValueChange={(value: "regular" | "treat" | "supplement") => 
-                          setCurrentFood(prev => ({ ...prev, type: value }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="regular">Regular Food</SelectItem>
-                          <SelectItem value="treat">Treat</SelectItem>
-                          <SelectItem value="supplement">Supplement</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="amount">Amount (Optional)</Label>
-                      <Input
-                        id="amount"
-                        name="amount"
-                        value={currentFood.amount}
-                        onChange={handleFoodItemChange}
-                        placeholder="1 cup, 2 oz, etc."
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Ingredients (Optional)</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={currentIngredient}
-                        onChange={(e) => setCurrentIngredient(e.target.value)}
-                        placeholder="Add an ingredient"
-                        className="flex-1"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addIngredient();
-                          }
-                        }}
-                      />
-                      <Button type="button" onClick={addIngredient} size="icon">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    {currentFood.ingredients.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {currentFood.ingredients.map((ingredient) => (
-                          <Badge key={ingredient} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1">
-                            <span>{ingredient}</span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-4 w-4 ml-1 hover:bg-muted"
-                              onClick={() => removeIngredient(ingredient)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Notes about this food (Optional)</Label>
-                    <Textarea
-                      id="notes"
-                      name="notes"
-                      value={currentFood.notes}
-                      onChange={handleFoodItemChange}
-                      placeholder="Any notes about this food item"
-                    />
-                  </div>
-                  
-                  <Button 
-                    type="button" 
-                    onClick={addFoodItem} 
-                    className="w-full"
-                    disabled={!currentFood.name.trim()}
-                  >
-                    Add Food Item
-                  </Button>
-                </div>
-                
-                {foodItems.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="font-medium">Added Food Items:</h3>
-                    <div className="space-y-3">
-                      {foodItems.map((item, index) => (
-                        <div key={index} className="bg-muted rounded-md p-3 relative">
-                          <div className="pr-8">
-                            <div className="flex items-center justify-between">
-                              <div className="font-medium">{item.name}</div>
-                              <Badge variant="outline">{item.type}</Badge>
-                            </div>
-                            {item.amount && (
-                              <div className="text-sm text-muted-foreground mt-1">Amount: {item.amount}</div>
-                            )}
-                            {item.ingredients.length > 0 && (
-                              <div className="mt-2">
-                                <div className="text-sm font-medium">Ingredients:</div>
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {item.ingredients.map((ingredient) => (
-                                    <Badge key={ingredient} variant="secondary" className="text-xs">
-                                      {ingredient}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            {item.notes && (
-                              <div className="mt-2 text-sm text-muted-foreground">
-                                <div className="font-medium">Notes:</div>
-                                {item.notes}
-                              </div>
-                            )}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive"
-                            onClick={() => removeFoodItem(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
+                {item.ingredients && item.ingredients.length > 0 && (
+                  <div className="mt-2">
+                    <h5 className="text-sm font-medium">Ingredients:</h5>
+                    <p className="text-sm text-muted-foreground">
+                      {item.ingredients.join(", ")}
+                    </p>
                   </div>
                 )}
                 
-                <div className="space-y-2">
-                  <Label htmlFor="entryNotes">Additional Notes (Optional)</Label>
-                  <Textarea
-                    id="entryNotes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Any additional notes about this feeding"
-                  />
-                </div>
-                
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={submitting || foodItems.length === 0}
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Food Entry"
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+                {item.notes && (
+                  <div className="mt-2">
+                    <h5 className="text-sm font-medium">Food Notes:</h5>
+                    <p className="text-sm text-muted-foreground">
+                      {item.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          {/* Entry notes */}
+          {entry.notes && (
+            <div className="border rounded-lg p-4 bg-card">
+              <h3 className="font-medium mb-2">Entry Notes</h3>
+              <p className="text-sm text-muted-foreground">
+                {entry.notes}
+              </p>
+            </div>
+          )}
+          
+          {/* Actions */}
+          <div className="flex gap-3 mt-6">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => navigate(`/edit-food-entry/${entry.id}`)}
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          </div>
         </div>
-        
-        <div className="md:col-span-2">
-          <FoodAnalyzer petId={petId || ""} petName={petName} />
-        </div>
-      </div>
+      </PatternBackground>
       
-      <BottomNavigation />
-    </div>
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Food Entry</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this food entry? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </MobileLayout>
   );
 };
 

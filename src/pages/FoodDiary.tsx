@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, Search, Database } from "lucide-react";
@@ -40,11 +41,16 @@ const FoodDiary = () => {
       try {
         setLoading(true);
         
+        // Start with a base query
         let query = supabase
           .from("food_entries")
-          .select("*, food_items(name, type, id)")
-          .order("created_at", { ascending: false });
+          .select(`
+            *,
+            food_items (*)
+          `)
+          .order("date", { ascending: false });
         
+        // Add pet_id filter only if a specific pet is selected
         if (selectedPetId !== "all") {
           query = query.eq("pet_id", selectedPetId);
         }
@@ -55,16 +61,20 @@ const FoodDiary = () => {
           throw error;
         }
         
+        console.log("Food entries data:", data);
+        
         // Transform the data to ensure all expected fields
         const formattedEntries = data.map(entry => {
           // Extract the first food item if available
-          const foodItem = entry.food_items && entry.food_items.length > 0 ? entry.food_items[0] : null;
+          const foodItem = entry.food_items && entry.food_items.length > 0 
+            ? entry.food_items[0] 
+            : null;
           
           return {
             ...entry,
             food_name: foodItem ? foodItem.name : "Unnamed Food",
             food_type: foodItem ? foodItem.type : "regular",
-            food_product_id: foodItem ? foodItem.id : null // Using the food item's id as the product id
+            food_product_id: foodItem ? foodItem.id : null
           };
         }) as FoodEntry[];
         
@@ -81,8 +91,10 @@ const FoodDiary = () => {
       }
     };
     
-    fetchEntries();
-  }, [selectedPetId, toast]);
+    if (user) {
+      fetchEntries();
+    }
+  }, [selectedPetId, toast, user]);
   
   // Format date for display
   const formatDate = (dateString: string) => {
