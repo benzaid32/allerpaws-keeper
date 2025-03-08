@@ -121,12 +121,15 @@ export const useReminderOperations = ({
     
     // Schedule the notification using the updated notification hook
     try {
-      return await scheduleNotification(
+      const result = await scheduleNotification(
         numericId,
         title,
         body,
         nextOccurrence.getTime()
       );
+      
+      // Ensure we always return a boolean
+      return result === true;
     } catch (error) {
       console.error("Failed to schedule reminder notification:", error);
       return false;

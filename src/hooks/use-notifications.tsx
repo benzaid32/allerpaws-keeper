@@ -122,14 +122,16 @@ export const useNotifications = () => {
     title: string, 
     body: string, 
     timeInMillis: number
-  ) => {
+  ): Promise<boolean> => {
     try {
       // Check permissions again before scheduling
       await checkPermissions();
       
       // Use appropriate API based on platform
       if (isPlatform('capacitor')) {
-        const success = await scheduleMobileNotification(id, title, body, timeInMillis);
+        // Convert timestamp to Date object for mobile notifications
+        const dateObject = new Date(timeInMillis);
+        const success = await scheduleMobileNotification(id, title, body, dateObject);
         
         if (success) {
           // If we get here, permissions must be granted
@@ -140,10 +142,12 @@ export const useNotifications = () => {
         return success;
       } else if ('serviceWorker' in navigator && 'PushManager' in window) {
         // Use service worker for web push notifications if available
-        return await scheduleServiceWorkerNotification(title, body, timeInMillis);
+        const success = await scheduleServiceWorkerNotification(title, body, timeInMillis);
+        return success;
       } else if ('Notification' in window && permissionState === 'granted') {
         // Standard web Notification API fallback
-        return scheduleWebNotification(title, body, timeInMillis);
+        const success = scheduleWebNotification(title, body, timeInMillis);
+        return success;
       }
       
       console.log("Cannot schedule notification - permission not granted or API not available");
