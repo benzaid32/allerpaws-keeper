@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,11 @@ const PetImageUploader: React.FC<PetImageUploaderProps> = ({
 }) => {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(initialImageUrl);
+  
+  // Update the image preview when initialImageUrl changes
+  useEffect(() => {
+    setImagePreview(initialImageUrl);
+  }, [initialImageUrl]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -58,6 +63,7 @@ const PetImageUploader: React.FC<PetImageUploaderProps> = ({
 
   const clearImage = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent form submission
+    e.stopPropagation(); // Prevent event bubbling
     setImagePreview(null);
     onImageSelected(null);
   };

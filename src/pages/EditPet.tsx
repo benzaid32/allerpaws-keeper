@@ -225,6 +225,7 @@ const EditPet = () => {
           age: age,
           weight: weight,
           image_url: imageUrl,
+          updated_at: new Date().toISOString() // Add updated timestamp to force refresh
         })
         .eq("id", id);
 

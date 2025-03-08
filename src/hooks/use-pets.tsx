@@ -25,7 +25,8 @@ export function usePets() {
       const { data: petsData, error: petsError } = await supabase
         .from("pets")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("updated_at", { ascending: false })  // Order by updated_at to show latest updates first
+        .order("created_at", { ascending: false });  // As a fallback
 
       if (petsError) {
         throw petsError;
