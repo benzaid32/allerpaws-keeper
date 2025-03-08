@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -52,6 +51,7 @@ const EditPet = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  const [oldImageUrl, setOldImageUrl] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
@@ -153,8 +153,11 @@ const EditPet = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleImageSelected = (file: File | null) => {
+  const handleImageSelected = (file: File | null, previousImageUrl?: string | null) => {
     setImageFile(file);
+    if (previousImageUrl) {
+      setOldImageUrl(previousImageUrl);
+    }
   };
 
   const handleAllergiesChange = (allergies: string[]) => {
@@ -197,7 +200,7 @@ const EditPet = () => {
       let imageUrl = originalImageUrl;
       if (imageFile) {
         console.log("Uploading pet image...");
-        const uploadedImageUrl = await uploadImage(imageFile, "pets");
+        const uploadedImageUrl = await uploadImage(imageFile, "pets", undefined, oldImageUrl);
         
         if (!uploadedImageUrl) {
           throw new Error("Failed to upload pet image");
@@ -205,9 +208,11 @@ const EditPet = () => {
         
         imageUrl = uploadedImageUrl;
         console.log("Pet image uploaded successfully:", imageUrl);
-      } else if (imageFile === null && originalImageUrl) {
+      } else if (imageFile === null && originalImageUrl && oldImageUrl) {
         // If image was cleared (imageFile is null) but there was an original image
         // This means the user removed the image
+        // Delete the old image
+        await uploadImage(new Blob(), "pets", "", oldImageUrl); // Hack to trigger deletion without upload
         imageUrl = null;
       }
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,7 +11,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User, Mail, Camera, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isPlatform } from "@/lib/utils";
-import { ensureStorageBucket } from "@/lib/image-utils";
+import { ensureStorageBucket, deleteImage } from "@/lib/image-utils";
 
 const Profile = () => {
   const { user, refreshUser } = useAuth();
@@ -22,6 +21,7 @@ const Profile = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [previousAvatarUrl, setPreviousAvatarUrl] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
@@ -31,6 +31,7 @@ const Profile = () => {
       setFullName(user.user_metadata?.full_name || "");
       setEmail(user.email || "");
       setAvatarUrl(user.user_metadata?.avatar_url || null);
+      setPreviousAvatarUrl(user.user_metadata?.avatar_url || null);
     }
     
     // Check if we're on a mobile device
@@ -86,6 +87,11 @@ const Profile = () => {
     if (!avatarFile || !user) return avatarUrl;
     
     try {
+      // Delete previous avatar if it exists
+      if (previousAvatarUrl) {
+        await deleteImage(previousAvatarUrl);
+      }
+      
       const fileExt = avatarFile.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
@@ -137,6 +143,10 @@ const Profile = () => {
         if (!newAvatarUrl) {
           throw new Error("Failed to upload avatar");
         }
+      } else if (previewUrl === null && previousAvatarUrl) {
+        // If avatar was cleared but there was a previous one
+        await deleteImage(previousAvatarUrl);
+        newAvatarUrl = null;
       }
       
       // Update user profile using Supabase Auth API

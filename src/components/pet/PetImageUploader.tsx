@@ -8,7 +8,7 @@ import { X } from "lucide-react";
 
 interface PetImageUploaderProps {
   initialImageUrl: string | null;
-  onImageSelected: (file: File | null) => void;
+  onImageSelected: (file: File | null, oldImageUrl?: string | null) => void;
   className?: string;
 }
 
@@ -49,7 +49,8 @@ const PetImageUploader: React.FC<PetImageUploaderProps> = ({
         return;
       }
       
-      onImageSelected(file);
+      // Pass the old imageUrl along with the new file
+      onImageSelected(file, imagePreview);
       
       // Create a preview URL that complies with CSP
       const reader = new FileReader();
@@ -65,7 +66,8 @@ const PetImageUploader: React.FC<PetImageUploaderProps> = ({
     e.preventDefault(); // Prevent form submission
     e.stopPropagation(); // Prevent event bubbling
     setImagePreview(null);
-    onImageSelected(null);
+    // Pass null for the new file and the old URL for deletion
+    onImageSelected(null, imagePreview);
   };
 
   return (

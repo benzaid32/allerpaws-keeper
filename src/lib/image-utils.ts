@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Available image categories
@@ -54,13 +55,74 @@ export const BACKGROUND_PATTERNS = [
   "https://whspcnovvaqeztgtcsjl.supabase.co/storage/v1/object/public/app-images/patterns/pattern-4.svg"
 ];
 
+// Delete an image from Supabase storage
+export async function deleteImage(imageUrl: string | null): Promise<boolean> {
+  if (!imageUrl) return true; // Nothing to delete
+  
+  try {
+    // Check if it's a default image or placeholder - don't delete these
+    const isDefaultImage = Object.values(DEFAULT_IMAGES).some(category => 
+      Object.values(category).includes(imageUrl)
+    );
+    
+    if (isDefaultImage || Object.values(PLACEHOLDER_IMAGES).includes(imageUrl)) {
+      console.log('Skipping deletion of default/placeholder image');
+      return true;
+    }
+    
+    // Extract bucket name and path from URL
+    const url = new URL(imageUrl);
+    const pathParts = url.pathname.split('/');
+    
+    // Find the bucket name and file path
+    let bucketName = '';
+    let filePath = '';
+    
+    // Extract bucket from path (after /object/public/)
+    const publicIndex = pathParts.indexOf('public');
+    if (publicIndex !== -1 && publicIndex + 1 < pathParts.length) {
+      bucketName = pathParts[publicIndex + 1];
+      filePath = pathParts.slice(publicIndex + 2).join('/');
+    }
+    
+    if (!bucketName || !filePath) {
+      console.error('Could not parse bucket and file path from URL:', imageUrl);
+      return false;
+    }
+    
+    console.log(`Deleting image from ${bucketName}/${filePath}`);
+    
+    // Delete the file
+    const { error } = await supabase.storage
+      .from(bucketName)
+      .remove([filePath]);
+      
+    if (error) {
+      console.error(`Error deleting image from ${bucketName}:`, error);
+      return false;
+    }
+    
+    console.log(`Successfully deleted image: ${filePath}`);
+    return true;
+  } catch (error) {
+    console.error("Error in deleteImage:", error);
+    return false;
+  }
+}
+
 // Upload an image to Supabase storage
 export async function uploadImage(
   file: File,
   category: ImageCategory,
-  fileName?: string
+  fileName?: string,
+  oldImageUrl?: string | null
 ): Promise<string | null> {
   try {
+    // Delete old image if provided
+    if (oldImageUrl) {
+      await deleteImage(oldImageUrl);
+    }
+    
     // Generate a unique file name if not provided
     if (!fileName) {
       const fileExt = file.name.split('.').pop();
