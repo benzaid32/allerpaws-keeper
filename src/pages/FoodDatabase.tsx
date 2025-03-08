@@ -14,7 +14,7 @@ import { useFoodDatabaseTabs } from "@/hooks/use-food-database-tabs";
 
 const FoodDatabase = () => {
   const navigate = useNavigate();
-  const { activeTab, setActiveTab } = useFoodDatabaseTabs();
+  const { activeTab, handleTabChange } = useFoodDatabaseTabs();
   const { selectedFoods } = useFoodComparison();
   const { analysisResult } = useFoodAnalysis();
 
@@ -27,7 +27,7 @@ const FoodDatabase = () => {
         <h1 className="text-2xl font-bold">Food Database</h1>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="search">Search</TabsTrigger>
           <TabsTrigger value="analyze" className="relative">
@@ -55,7 +55,7 @@ const FoodDatabase = () => {
         </TabsContent>
 
         <TabsContent value="compare" className="mt-4">
-          <CompareTab onSwitchToSearch={() => setActiveTab('search')} />
+          <CompareTab onSwitchToSearch={() => handleTabChange('search')} />
         </TabsContent>
       </Tabs>
 
