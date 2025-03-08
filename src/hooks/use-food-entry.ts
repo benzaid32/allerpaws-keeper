@@ -38,6 +38,14 @@ export const useFoodEntry = () => {
       // Create a unique ID for the food entry
       const entryId = uuidv4();
       
+      // Get the current user's ID
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) throw userError;
+      if (!userData.user) throw new Error("You must be logged in to add a food entry");
+      
+      const userId = userData.user.id;
+      
       // Prepare the food entry data
       const entryData = {
         id: entryId,
@@ -87,6 +95,67 @@ export const useFoodEntry = () => {
     }
   };
   
+  // New function to save a food product from search to the database
+  const saveSearchResultToDatabase = async (food: FoodProduct, petId: string, notes?: string) => {
+    try {
+      setIsSubmitting(true);
+      
+      // Get the current user's ID
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) throw userError;
+      if (!userData.user) throw new Error("You must be logged in to add a food entry");
+      
+      // Create a unique ID for the food entry
+      const entryId = uuidv4();
+      
+      // Current date
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Insert into food_entries table
+      const { error: entryError } = await supabase
+        .from("food_entries")
+        .insert({
+          id: entryId,
+          pet_id: petId,
+          date: today,
+          notes: notes || null,
+        });
+      
+      if (entryError) throw entryError;
+      
+      // Insert into food_items table
+      const { error: itemError } = await supabase
+        .from("food_items")
+        .insert({
+          id: uuidv4(),
+          entry_id: entryId,
+          name: food.name,
+          type: food.type.toLowerCase(),
+          ingredients: food.ingredients || null,
+        });
+      
+      if (itemError) throw itemError;
+      
+      toast({
+        title: "Food saved to diary",
+        description: `${food.name} has been added to your food diary`,
+      });
+      
+      // Navigate back to food diary
+      navigate("/food-diary");
+    } catch (error) {
+      console.error("Error saving food product:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save food product to diary",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   return {
     isSubmitting,
     activeTab,
@@ -94,6 +163,7 @@ export const useFoodEntry = () => {
     selectedFood,
     setSelectedFood,
     handleSelectFood,
-    handleSubmit
+    handleSubmit,
+    saveSearchResultToDatabase
   };
 };

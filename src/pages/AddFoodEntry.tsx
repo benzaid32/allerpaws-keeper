@@ -20,7 +20,8 @@ const AddFoodEntry = () => {
     selectedFood, 
     setSelectedFood, 
     handleSelectFood, 
-    handleSubmit 
+    handleSubmit,
+    saveSearchResultToDatabase
   } = useFoodEntry();
   
   const { 
@@ -54,6 +55,8 @@ const AddFoodEntry = () => {
                 handleSearch={handleSearch}
                 handleSelectFood={handleSelectFood}
                 onSwitchToManual={() => setActiveTab("manual")}
+                isSubmitting={isSubmitting}
+                saveSearchResultToDatabase={saveSearchResultToDatabase}
               />
             </TabsContent>
             
