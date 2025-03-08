@@ -29,7 +29,7 @@ const Header = () => {
           <a href="#features" className="text-[#033b5c] hover:text-[#33c1db] font-medium transition-colors">FEATURES</a>
         </nav>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           <Button 
             onClick={() => navigate("/auth")}
             variant="ghost" 
@@ -40,7 +40,7 @@ const Header = () => {
           
           <Button 
             onClick={() => navigate("/auth?signup=true")}
-            className="bg-[#033b5c] text-white hover:bg-[#033b5c]/90 rounded-full px-6"
+            className="bg-[#033b5c] text-white hover:bg-[#033b5c]/90 rounded-full px-4 md:px-6 py-1 md:py-2 h-9 md:h-auto text-sm md:text-base"
           >
             Sign Up
           </Button>
