@@ -5,8 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Pet } from "@/lib/types";
 import { PawPrint } from "lucide-react";
-import PetsList from "./PetsList";
+import { PetsList } from "@/components/pets/PetsList"; // Import from the correct location
 import AddPetCard from "./AddPetCard";
+import { EmptyPetsList } from "@/components/pets/EmptyPetsList";
 
 interface PetsSectionProps {
   pets: Pet[];
@@ -14,6 +15,23 @@ interface PetsSectionProps {
 
 const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
   const navigate = useNavigate();
+
+  // Add handlers for pet actions
+  const handleViewPet = (petId: string) => {
+    navigate(`/edit-pet/${petId}`);
+  };
+
+  const handleEditPet = (petId: string) => {
+    navigate(`/edit-pet/${petId}`);
+  };
+
+  const handleDeletePet = (petId: string) => {
+    console.log("Delete pet not implemented in dashboard view");
+  };
+
+  const handleAddPet = () => {
+    navigate('/add-pet');
+  };
 
   return (
     <motion.div 
@@ -39,11 +57,20 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
 
       {pets.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <PetsList pets={pets} />
+          {/* Use the PetsList component with required props */}
+          <PetsList 
+            pets={pets}
+            onViewPet={handleViewPet}
+            onEditPet={handleEditPet}
+            onDeletePet={handleDeletePet}
+            onAddPet={handleAddPet}
+            isDeleting={false}
+            deletingPetId={null}
+          />
           <AddPetCard />
         </div>
       ) : (
-        <PetsList pets={pets} />
+        <EmptyPetsList onAddPet={handleAddPet} />
       )}
     </motion.div>
   );
