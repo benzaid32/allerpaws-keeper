@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Search } from "lucide-react";
+import { Plus, Calendar, Search, Database } from "lucide-react";
 import MobileLayout from "@/components/layout/MobileLayout";
 import MobileCard from "@/components/ui/mobile-card";
 import { useToast } from "@/hooks/use-toast";
@@ -21,8 +21,9 @@ interface FoodEntry {
   pet_id: string;
   notes?: string;
   date: string;
-  food_name?: string;
-  food_type?: string;
+  food_name: string;
+  food_type: string;
+  food_product_id?: string;
 }
 
 const FoodDiary = () => {
@@ -55,16 +56,12 @@ const FoodDiary = () => {
           throw error;
         }
         
-        // Transform the data to match our component's expected format
-        const formattedEntries = data.map(entry => {
-          // Join with food_items to get food details if needed
-          // For now, use dummy values for food_name and food_type
-          return {
-            ...entry,
-            food_name: "Food Item", // This would ideally come from a join with food_items
-            food_type: "regular"    // This would ideally come from a join with food_items
-          } as FoodEntry;
-        });
+        // Transform the data to ensure all expected fields
+        const formattedEntries = data.map(entry => ({
+          ...entry,
+          food_name: entry.food_name || "Unnamed Food",
+          food_type: entry.food_type || "regular"
+        })) as FoodEntry[];
         
         setEntries(formattedEntries);
       } catch (error) {
@@ -175,16 +172,24 @@ const FoodDiary = () => {
                   >
                     <div className="flex justify-between">
                       <div>
-                        <h3 className="font-medium text-lg">{entry.food_name || "Unnamed Food"}</h3>
+                        <h3 className="font-medium text-lg">{entry.food_name}</h3>
                         <div className="text-sm text-muted-foreground">
                           {getPetName(entry.pet_id)}
                         </div>
                       </div>
                       <div className="flex flex-col items-end">
-                        <Badge variant="outline">{entry.food_type || "unknown"}</Badge>
+                        <div className="flex items-center gap-1">
+                          <Badge variant="outline">{entry.food_type}</Badge>
+                          {entry.food_product_id && (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                              <Database className="h-3 w-3" />
+                              DB
+                            </Badge>
+                          )}
+                        </div>
                         <div className="text-xs text-muted-foreground mt-1 flex items-center">
                           <Calendar className="h-3 w-3 mr-1" />
-                          {formatDate(entry.created_at)}
+                          {formatDate(entry.date)}
                         </div>
                       </div>
                     </div>
@@ -222,6 +227,13 @@ const FoodDiary = () => {
               onClick={() => navigate("/elimination-diet")}
             >
               Back to Diet Plan
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/food-database")}
+            >
+              Food Database
             </Button>
           </div>
         </div>
