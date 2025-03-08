@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -42,6 +41,8 @@ import Help from './pages/Help';
 import Blog from './pages/Blog';
 import Careers from './pages/Careers';
 import Landing from './pages/Landing';
+
+import FoodDetailsPage from './pages/FoodDetailsPage';
 
 // Create a stylish, mobile-friendly landing page using the components
 const OriginalLanding = () => {
@@ -276,6 +277,7 @@ function App() {
                   <Route path="/add-symptom" element={<ProtectedRoute><AddSymptomEntry /></ProtectedRoute>} />
                   <Route path="/edit-symptom/:id" element={<ProtectedRoute><EditSymptomEntry /></ProtectedRoute>} />
                   <Route path="/elimination-diet" element={<ProtectedRoute><EliminationDiet /></ProtectedRoute>} />
+                  <Route path="/food/:id" element={<ProtectedRoute><FoodDetailsPage /></ProtectedRoute>} />
                   
                   {/* Authentication */}
                   <Route path="/auth" element={<Auth />} />
