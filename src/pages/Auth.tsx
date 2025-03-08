@@ -91,13 +91,13 @@ const Auth = () => {
           transition={{ duration: 0.5, delay: 0.4 }}
         >
           <img 
-            src="/lovable-uploads/199b5421-e758-4d9d-b434-0dd294164b58.png" 
-            alt="Dog" 
+            src="/lovable-uploads/0bc9c4dc-86db-4bac-8ed9-9b00a727811b.png" 
+            alt="Happy dog" 
             className="h-24 md:h-32 transform -rotate-6 hover:rotate-0 transition-all duration-300"
           />
           <img 
-            src="/lovable-uploads/4667b09b-8f1b-4f41-bd46-b762b1a75339.png" 
-            alt="Cat" 
+            src="/lovable-uploads/bfe8fffa-8ddd-4e75-83bb-d78b9fc09201.png" 
+            alt="Tabby cat" 
             className="h-24 md:h-32 transform rotate-6 hover:rotate-0 transition-all duration-300"
           />
         </motion.div>
