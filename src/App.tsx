@@ -4,7 +4,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ui/theme-provider";
-import { AppRoutes } from '@/components/routing/AppRoutes';
+import AppRoutes from '@/components/routing/AppRoutes';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { DataSyncProvider } from '@/contexts/DataSyncContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
@@ -34,15 +34,17 @@ function App() {
       <AuthProvider>
         <SubscriptionProvider>
           <DataSyncProvider>
-            <ServiceWorkerManager />
-            <NotificationPermissionManager />
-            <BackgroundSyncManager>
-              <div className={`app-container ${isAnimating ? 'animating' : ''}`}>
-                <AppRoutes />
-              </div>
-              <Toaster />
-              <SonnerToaster position="top-center" />
-            </BackgroundSyncManager>
+            <ServiceWorkerManager>
+              <NotificationPermissionManager>
+                <BackgroundSyncManager>
+                  <div className={`app-container ${isAnimating ? 'animating' : ''}`}>
+                    <AppRoutes />
+                  </div>
+                  <Toaster />
+                  <SonnerToaster position="top-center" />
+                </BackgroundSyncManager>
+              </NotificationPermissionManager>
+            </ServiceWorkerManager>
           </DataSyncProvider>
         </SubscriptionProvider>
       </AuthProvider>

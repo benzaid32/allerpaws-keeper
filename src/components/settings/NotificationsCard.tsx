@@ -5,25 +5,17 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import MobileCard from "@/components/ui/mobile-card";
-import { CombinedPermissionState, NotificationInstructions } from "@/lib/notification-types";
+import { useNotifications } from "@/hooks/use-notifications";
 
-interface NotificationsCardProps {
-  notifications: boolean;
-  updateNotifications: (enabled: boolean) => void;
-  permissionState: CombinedPermissionState;
-  requestPermission: () => Promise<boolean>;
-  checkPermissions: () => Promise<void>;
-  getNotificationInstructions: () => NotificationInstructions;
-}
-
-const NotificationsCard: React.FC<NotificationsCardProps> = ({
-  notifications,
-  updateNotifications,
-  permissionState,
-  requestPermission,
-  checkPermissions,
-  getNotificationInstructions
-}) => {
+const NotificationsCard: React.FC = () => {
+  const { 
+    notifications, 
+    updateNotifications, 
+    permissionState, 
+    requestPermission, 
+    checkPermissions,
+    getNotificationInstructions 
+  } = useNotifications();
   const [showInstructions, setShowInstructions] = useState(false);
   
   // Get platform-specific instructions

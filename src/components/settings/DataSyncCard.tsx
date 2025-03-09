@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDataSync } from "@/contexts/DataSyncContext";
-import { Loader2, CloudSync, CloudOff } from "lucide-react";
+import { Loader2, Cloud, CloudOff } from "lucide-react";
 
 export const DataSyncCard = () => {
   const { 
@@ -46,7 +46,7 @@ export const DataSyncCard = () => {
         <CardTitle className="flex items-center justify-between">
           <span>Data Synchronization</span>
           {isOnlineOnly ? (
-            <CloudSync className="h-5 w-5 text-primary" />
+            <Cloud className="h-5 w-5 text-primary" />
           ) : (
             <CloudOff className="h-5 w-5 text-muted-foreground" />
           )}
@@ -113,7 +113,7 @@ export const DataSyncCard = () => {
                   </>
                 ) : (
                   <>
-                    <CloudSync className="mr-2 h-4 w-4" />
+                    <Cloud className="mr-2 h-4 w-4" />
                     Sync Now
                   </>
                 )}
@@ -131,3 +131,5 @@ export const DataSyncCard = () => {
     </Card>
   );
 };
+
+export default DataSyncCard;

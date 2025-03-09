@@ -2,12 +2,12 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import MobileLayout from "@/components/layout/MobileLayout";
-import { AccountCard } from "@/components/settings/AccountCard";
-import { NotificationsCard } from "@/components/settings/NotificationsCard";
-import { ThemeCard } from "@/components/settings/ThemeCard";
-import { SubscriptionCard } from "@/components/settings/SubscriptionCard";
-import { DataSyncCard } from "@/components/settings/DataSyncCard";
-import { PetManagementCard } from "@/components/settings/PetManagementCard";
+import AccountCard from "@/components/settings/AccountCard";
+import NotificationsCard from "@/components/settings/NotificationsCard";
+import ThemeCard from "@/components/settings/ThemeCard";
+import SubscriptionCard from "@/components/settings/SubscriptionCard";
+import DataSyncCard from "@/components/settings/DataSyncCard";
+import PetManagementCard from "@/components/settings/PetManagementCard";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";

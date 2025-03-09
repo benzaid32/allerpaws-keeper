@@ -4,13 +4,20 @@ import { useNavigate } from "react-router-dom";
 import { User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MobileCard from "@/components/ui/mobile-card";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface AccountCardProps {
-  onSignOut: () => Promise<void>;
-}
-
-const AccountCard: React.FC<AccountCardProps> = ({ onSignOut }) => {
+const AccountCard: React.FC = () => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
+  
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate("/onboarding");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
   
   return (
     <MobileCard
@@ -26,7 +33,7 @@ const AccountCard: React.FC<AccountCardProps> = ({ onSignOut }) => {
           Edit Profile
         </Button>
         <Button 
-          onClick={onSignOut} 
+          onClick={handleSignOut} 
           variant="destructive" 
           className="w-full"
         >

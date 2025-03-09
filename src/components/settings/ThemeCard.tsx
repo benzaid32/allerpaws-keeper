@@ -4,13 +4,11 @@ import { Sun, Moon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import MobileCard from "@/components/ui/mobile-card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useTheme } from "@/components/ui/theme-provider";
 
-interface ThemeCardProps {
-  theme: "light" | "dark";
-  updateTheme: (theme: "light" | "dark") => void;
-}
-
-const ThemeCard: React.FC<ThemeCardProps> = ({ theme, updateTheme }) => {
+const ThemeCard: React.FC = () => {
+  const { theme, setTheme } = useTheme();
+  
   return (
     <MobileCard
       icon={<Sun className="h-5 w-5 text-primary" />}
@@ -22,7 +20,7 @@ const ThemeCard: React.FC<ThemeCardProps> = ({ theme, updateTheme }) => {
           <ToggleGroup 
             type="single" 
             value={theme} 
-            onValueChange={(value) => value && updateTheme(value as "light" | "dark")}
+            onValueChange={(value) => value && setTheme(value)}
             className="justify-start"
           >
             <ToggleGroupItem value="light" aria-label="Light mode">

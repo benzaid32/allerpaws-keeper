@@ -5,18 +5,11 @@ import { Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MobileCard from "@/components/ui/mobile-card";
 import CurrentPlan from "@/components/subscription/CurrentPlan";
-import { UserSubscription } from "@/types/subscriptions";
+import { useUserSubscription } from "@/hooks/use-user-subscription";
 
-interface SubscriptionCardProps {
-  subscription: UserSubscription | null;
-  isLoading: boolean;
-}
-
-const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ 
-  subscription, 
-  isLoading 
-}) => {
+const SubscriptionCard: React.FC = () => {
   const navigate = useNavigate();
+  const { subscription, isLoading } = useUserSubscription();
   
   return (
     <MobileCard
