@@ -29,7 +29,8 @@ const Auth = () => {
   // Redirect to dashboard if user is already logged in
   useEffect(() => {
     if (user && !isLoading) {
-      navigate("/");
+      console.log("User is authenticated, redirecting to dashboard");
+      navigate("/", { replace: true });
     }
   }, [user, isLoading, navigate]);
 
@@ -38,7 +39,7 @@ const Auth = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-4">
-          <LoadingSpinner className="h-12 w-12" />
+          <LoadingSpinner size="lg" />
           <p className="text-lg font-medium">Checking authentication...</p>
         </div>
       </div>

@@ -1,14 +1,31 @@
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { RouteType } from './types';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
-// Create a simple ProtectedRoute component here since the import doesn't exist
+// Create a proper ProtectedRoute component that uses the auth context
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('authenticated') === 'true';
-  if (!isAuthenticated) {
-    return <Navigate to="/onboarding" replace />;
+  const { user, isLoading } = useAuth();
+  const location = useLocation();
+  
+  // Show loading state while authentication is being checked
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
+        <p className="mt-4 text-muted-foreground">Verifying authentication...</p>
+      </div>
+    );
   }
+  
+  // If not authenticated, redirect to auth page
+  if (!user) {
+    return <Navigate to="/onboarding" state={{ from: location }} replace />;
+  }
+  
+  // If authenticated, render the protected content
   return <>{children}</>;
 };
 

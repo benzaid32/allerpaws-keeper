@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const getSession = async () => {
       try {
         setLoading(true);
+        console.log("Getting initial session...");
         const {
           data: { session },
           error
@@ -65,8 +66,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(session?.user ?? null);
       setSession(session);
       
-      if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_IN') {
+        console.log("User signed in, updating state");
+      } else if (event === 'SIGNED_OUT') {
         // Clear any cached data on sign out
+        console.log("User signed out, clearing data");
         localStorage.removeItem('tempPetData');
       }
     });
