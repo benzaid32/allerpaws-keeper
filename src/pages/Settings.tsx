@@ -18,7 +18,6 @@ const Settings = () => {
   const { theme, notifications, updateTheme, updateNotifications } = useSettings();
   const { subscription, isLoading } = useSubscriptionContext();
   const { 
-    sendTestNotification, 
     permissionState, 
     requestPermission, 
     isSystemBlocked,
@@ -78,7 +77,6 @@ const Settings = () => {
           updateNotifications={updateNotifications}
           permissionState={permissionState}
           requestPermission={requestPermission}
-          sendTestNotification={sendTestNotification}
           checkPermissions={checkPermissions}
           getNotificationInstructions={getNotificationInstructions}
         />

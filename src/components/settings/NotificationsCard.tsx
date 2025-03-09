@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Bell, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import MobileCard from "@/components/ui/mobile-card";
 import { CombinedPermissionState, NotificationInstructions } from "@/lib/notification-types";
@@ -27,7 +26,6 @@ const NotificationsCard: React.FC<NotificationsCardProps> = ({
   checkPermissions,
   getNotificationInstructions
 }) => {
-  const [testSent, setTestSent] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   
   // Get platform-specific instructions
@@ -55,36 +53,6 @@ const NotificationsCard: React.FC<NotificationsCardProps> = ({
     // Update the setting
     console.log("Settings: Updating notification setting to", enabled);
     updateNotifications(enabled);
-  };
-
-  const handleTestNotification = async () => {
-    // Force check permissions first
-    console.log("Settings: Testing notifications - checking permissions");
-    await checkPermissions();
-    
-    // If permission is not granted, request it first
-    if (permissionState !== "granted") {
-      console.log("Settings: Permission not granted, requesting...");
-      const granted = await requestPermission();
-      
-      if (!granted) {
-        console.log("Settings: Permission request denied");
-        setShowInstructions(true);
-        return; // Permission denied, can't send test notification
-      }
-    }
-    
-    // Send test notification
-    console.log("Settings: Sending test notification");
-    const success = await sendTestNotification();
-    setTestSent(success);
-    
-    if (success) {
-      console.log("Settings: Test notification sent successfully");
-    } else {
-      console.log("Settings: Failed to send test notification");
-      setShowInstructions(true);
-    }
   };
   
   return (
@@ -146,34 +114,6 @@ const NotificationsCard: React.FC<NotificationsCardProps> = ({
               <li key={index}>{step}</li>
             ))}
           </ol>
-        </div>
-      )}
-      
-      {notifications && (
-        <div className="mt-4 pt-4 border-t">
-          <p className="text-sm text-muted-foreground mb-3">
-            Test if notifications are working correctly on your device
-          </p>
-          <Button 
-            onClick={handleTestNotification} 
-            variant="outline" 
-            className="w-full"
-            size="sm"
-          >
-            <Bell className="mr-2 h-4 w-4" />
-            Send Test Notification
-          </Button>
-          
-          {testSent && (
-            <div className="flex items-center mt-3 p-2 bg-primary/10 rounded text-sm">
-              <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-              <span>Test notification sent! Check your notifications.</span>
-            </div>
-          )}
-          
-          <p className="text-xs text-muted-foreground mt-2">
-            This will send a test notification with sound and vibration in a moment
-          </p>
         </div>
       )}
     </MobileCard>
