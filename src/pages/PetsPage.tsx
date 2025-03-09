@@ -16,6 +16,7 @@ const PetsPage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingPetId, setDeletingPetId] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<"grid" | "list">("grid");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch pets on component mount
   useEffect(() => {
@@ -24,7 +25,7 @@ const PetsPage = () => {
   }, [fetchPets]);
 
   const handleViewPet = (petId: string) => {
-    navigate(`/edit-pet/${petId}`);
+    navigate(`/pet/${petId}`);
   };
 
   const handleEditPet = (petId: string) => {
@@ -56,6 +57,26 @@ const PetsPage = () => {
   const handleAddPet = () => {
     navigate("/add-pet");
   };
+  
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true);
+      await fetchPets(true);
+      toast({
+        title: "Refreshed",
+        description: "Pet list has been refreshed",
+      });
+    } catch (error) {
+      console.error("Error refreshing pets:", error);
+      toast({
+        title: "Refresh failed",
+        description: "Could not refresh pet list",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <MobileLayout title="Pet Management">
@@ -65,6 +86,8 @@ const PetsPage = () => {
           displayMode={displayMode}
           setDisplayMode={setDisplayMode}
           petCount={pets?.length || 0}
+          onRefresh={handleRefresh}
+          isRefreshing={isRefreshing}
         />
 
         <PetsList

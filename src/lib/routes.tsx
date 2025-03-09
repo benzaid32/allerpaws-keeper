@@ -40,6 +40,7 @@ const AddFoodEntry = React.lazy(() => import('@/pages/AddFoodEntry'));
 const EditFoodEntry = React.lazy(() => import('@/pages/EditFoodEntry'));
 const FoodDatabase = React.lazy(() => import('@/pages/FoodDatabase'));
 const FoodDetailsPage = React.lazy(() => import('@/pages/FoodDetailsPage')); 
+const FoodEntry = React.lazy(() => import('@/pages/FoodEntry')); // Added for food entry view
 const Settings = React.lazy(() => import('@/pages/Settings')); 
 const Reminders = React.lazy(() => import('@/pages/Reminders')); 
 const Auth = React.lazy(() => import('@/pages/Auth')); 
@@ -47,7 +48,10 @@ const EliminationDiet = React.lazy(() => import('@/pages/EliminationDiet'));
 const PetsPage = React.lazy(() => import('@/pages/PetsPage')); // Pet management page
 const AddPet = React.lazy(() => import('@/pages/AddPet'));
 const EditPet = React.lazy(() => import('@/pages/EditPet'));
-const AddSymptomEntry = React.lazy(() => import('@/pages/AddSymptomEntry')); // Add route for symptom entry
+const PetProfile = React.lazy(() => import('@/pages/PetProfile')); // Pet profile view page
+const AddSymptomEntry = React.lazy(() => import('@/pages/AddSymptomEntry')); 
+const ViewSymptomEntry = React.lazy(() => import('@/pages/ViewSymptomEntry'));
+const NotFound = React.lazy(() => import('@/pages/NotFound')); // 404 page for invalid routes
 
 // Define routes
 export const routes: RouteType[] = [
@@ -104,6 +108,14 @@ export const routes: RouteType[] = [
     ),
   },
   {
+    path: '/view-symptom/:id',
+    element: (
+      <ProtectedRoute>
+        <ViewSymptomEntry />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: '/food-diary',
     element: (
       <ProtectedRoute>
@@ -132,6 +144,14 @@ export const routes: RouteType[] = [
     element: (
       <ProtectedRoute>
         <EditFoodEntry />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/food-entry/:id',
+    element: (
+      <ProtectedRoute>
+        <FoodEntry />
       </ProtectedRoute>
     ),
   },
@@ -207,5 +227,20 @@ export const routes: RouteType[] = [
         </Suspense>
       </ProtectedRoute>
     ),
+  },
+  {
+    path: '/pet/:id',
+    element: (
+      <ProtectedRoute>
+        <Suspense fallback={<LoadingSpinner size="lg" />}>
+          <PetProfile />
+        </Suspense>
+      </ProtectedRoute>
+    ),
+  },
+  // Catch-all route for 404 
+  {
+    path: '*',
+    element: <NotFound />,
   },
 ];

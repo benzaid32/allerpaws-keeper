@@ -1,9 +1,10 @@
 
-import React, { Suspense } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import React, { Suspense, useEffect } from 'react';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { routes } from '@/lib/routes';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useAuth } from '@/contexts/AuthContext';
 
 const pageVariants = {
   initial: {
@@ -31,6 +32,23 @@ const LoadingFallback = () => (
 
 const AppRoutes: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
+  
+  // Global route guard to handle authentication
+  useEffect(() => {
+    if (!isLoading && !user) {
+      // If not authenticated and not on auth page, redirect to onboarding
+      if (location.pathname !== '/onboarding') {
+        navigate('/onboarding', { replace: true });
+      }
+    } else if (!isLoading && user) {
+      // If authenticated and on auth page, redirect to dashboard
+      if (location.pathname === '/onboarding') {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [user, isLoading, location.pathname, navigate]);
   
   return (
     <AnimatePresence mode="wait">

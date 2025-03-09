@@ -6,7 +6,8 @@ import {
   Database, 
   Settings,
   Bell,
-  Activity
+  Activity,
+  PawPrint
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
@@ -22,6 +23,7 @@ export const navItems: NavItem[] = [
   { path: "/symptoms-management", label: "Manage Symptoms", icon: Activity },
   { path: "/elimination-diet", label: "Diet", icon: BookOpen },
   { path: "/food-database", label: "Foods", icon: Database },
+  { path: "/pets", label: "Pets", icon: PawPrint },
   { path: "/reminders", label: "Reminders", icon: Bell },
   { path: "/settings", label: "Settings", icon: Settings },
 ];
