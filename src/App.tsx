@@ -51,7 +51,7 @@ const PublicPageLayout = ({ children }) => {
   );
 };
 
-// Component to handle redirects from 404 page
+// Component to handle redirects from localStorage after page reload
 const RedirectHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,14 +60,16 @@ const RedirectHandler = () => {
     // Check if there's a redirect path stored in localStorage
     const redirectPath = localStorage.getItem('redirectAfterLoad');
     if (redirectPath) {
-      // Clear the stored path
+      // Clear the stored path to prevent future redirects
       localStorage.removeItem('redirectAfterLoad');
       
-      // Navigate to the stored path
-      console.log('Redirecting to:', redirectPath);
-      navigate(redirectPath);
+      // Only navigate if we're not already on the correct path
+      if (location.pathname !== redirectPath) {
+        console.log('Redirecting to stored path:', redirectPath);
+        navigate(redirectPath, { replace: true });
+      }
     }
-  }, [navigate, location]);
+  }, [navigate, location.pathname]);
   
   return null;
 };

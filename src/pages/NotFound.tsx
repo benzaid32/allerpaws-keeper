@@ -9,10 +9,15 @@ const NotFound = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
+    console.log("Not Found page accessed for path:", location.pathname);
+    
+    // If this is a direct browser refresh, try to recover by checking if the path
+    // should be valid in our app (doesn't have an extension)
+    if (!location.pathname.includes('.')) {
+      console.log("This might be a valid app route, going to set redirectAfterLoad");
+      // Store current path for potential redirect after app initialization
+      localStorage.setItem('redirectAfterLoad', location.pathname);
+    }
   }, [location.pathname]);
 
   return (
