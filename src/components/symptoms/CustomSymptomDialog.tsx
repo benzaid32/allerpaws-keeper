@@ -65,7 +65,7 @@ const CustomSymptomDialog: React.FC<CustomSymptomDialogProps> = ({
         name: name.trim(),
         description: description.trim() || null,
         severity_options: severityOptions,
-        is_custom: true,
+        is_custom: true, // Make sure this is explicitly set to true
         created_by_user_id: user.id
       };
       
