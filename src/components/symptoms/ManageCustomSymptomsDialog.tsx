@@ -54,7 +54,19 @@ const ManageCustomSymptomsDialog: React.FC<ManageCustomSymptomsDialogProps> = ({
         
       if (error) throw error;
       
-      setCustomSymptoms(data || []);
+      // Map database results to Symptom type
+      const mappedSymptoms: Symptom[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || "",
+        severity: "mild", // Default value since this is required by the Symptom type
+        severity_options: item.severity_options,
+        icon: undefined,
+        isCustom: item.is_custom || false,
+        created_by_user_id: item.created_by_user_id
+      }));
+      
+      setCustomSymptoms(mappedSymptoms);
     } catch (error: any) {
       console.error("Error fetching custom symptoms:", error.message);
       toast({
