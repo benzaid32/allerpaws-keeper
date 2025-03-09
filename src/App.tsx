@@ -1,78 +1,15 @@
+
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useRouteError } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { HelmetProvider } from "react-helmet-async";
-import Auth from './pages/Auth';
-import Dashboard from './pages/Dashboard';
-import Settings from './pages/Settings';
-import Profile from './pages/Profile';
-import ManagePets from './pages/ManagePets';
-import AddPet from './pages/AddPet';
-import EditPet from './pages/EditPet';
-import FoodDatabase from './pages/FoodDatabase';
-import SymptomDiary from './pages/SymptomDiary';
-import AddSymptomEntry from './pages/AddSymptomEntry';
-import EditSymptomEntry from './pages/EditSymptomEntry';
-import EliminationDiet from './pages/EliminationDiet';
-import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
-import Pricing from './pages/Pricing';
-import Reminders from './pages/Reminders';
+import { routes, RedirectHandler } from './lib/routes';
 import { LoadingSpinner } from './components/ui/loading-spinner';
 import { useToast } from './hooks/use-toast';
-import { APP_NAME } from './lib/constants';
 import InstallBanner from './components/pwa/InstallBanner';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsAndConditions from './pages/TermsAndConditions';
-import CookiePolicy from './pages/CookiePolicy';
-import FAQs from './pages/FAQs';
-import Help from './pages/Help';
-import Blog from './pages/Blog';
-import Careers from './pages/Careers';
-import Landing from './pages/Landing';
-import NotFound from './pages/NotFound';
-
-import FoodDetailsPage from './pages/FoodDetailsPage';
-import FoodDiary from './pages/FoodDiary';
-import AddFoodEntry from './pages/AddFoodEntry';
-import FoodEntry from './pages/FoodEntry';
-import EditFoodEntry from './pages/EditFoodEntry';
-
-// Layout component to wrap public pages with common elements
-const PublicPageLayout = ({ children }) => {
-  return (
-    <div className="min-h-screen bg-background">
-      {children}
-    </div>
-  );
-};
-
-// Component to handle redirects from localStorage after page reload
-const RedirectHandler = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  useEffect(() => {
-    // Check if there's a redirect path stored in localStorage
-    const redirectPath = localStorage.getItem('redirectAfterLoad');
-    if (redirectPath) {
-      // Clear the stored path to prevent future redirects
-      localStorage.removeItem('redirectAfterLoad');
-      
-      // Only navigate if we're not already on the correct path
-      if (location.pathname !== redirectPath) {
-        console.log('Redirecting to stored path:', redirectPath);
-        navigate(redirectPath, { replace: true });
-      }
-    }
-  }, [navigate, location.pathname]);
-  
-  return null;
-};
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -176,49 +113,13 @@ function App() {
                 <Toaster />
                 <InstallBanner />
                 <Routes>
-                  {/* Landing page as public route */}
-                  <Route path="/" element={<Landing />} />
-                  
-                  {/* Protected routes */}
-                  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                  <Route path="/pets" element={<ProtectedRoute><ManagePets /></ProtectedRoute>} />
-                  <Route path="/add-pet" element={<ProtectedRoute><AddPet /></ProtectedRoute>} />
-                  <Route path="/edit-pet/:id" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
-                  <Route path="/pet/:id" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
-                  <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
-                  <Route path="/symptom-diary" element={<ProtectedRoute><SymptomDiary /></ProtectedRoute>} />
-                  <Route path="/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />
-                  <Route path="/add-symptom" element={<ProtectedRoute><AddSymptomEntry /></ProtectedRoute>} />
-                  <Route path="/symptom-diary/new" element={<ProtectedRoute><AddSymptomEntry /></ProtectedRoute>} />
-                  <Route path="/edit-symptom/:id" element={<ProtectedRoute><EditSymptomEntry /></ProtectedRoute>} />
-                  <Route path="/symptom-diary/:id" element={<ProtectedRoute><EditSymptomEntry /></ProtectedRoute>} />
-                  <Route path="/elimination-diet" element={<ProtectedRoute><EliminationDiet /></ProtectedRoute>} />
-                  <Route path="/food/:id" element={<ProtectedRoute><FoodDetailsPage /></ProtectedRoute>} />
-                  <Route path="/food-diary" element={<ProtectedRoute><FoodDiary /></ProtectedRoute>} />
-                  <Route path="/add-food-entry" element={<ProtectedRoute><AddFoodEntry /></ProtectedRoute>} />
-                  <Route path="/food-entry/:id" element={<ProtectedRoute><FoodEntry /></ProtectedRoute>} />
-                  <Route path="/edit-food-entry/:id" element={<ProtectedRoute><EditFoodEntry /></ProtectedRoute>} />
-                  
-                  {/* Authentication */}
-                  <Route path="/auth" element={<Auth />} />
-                  
-                  {/* Public pages */}
-                  <Route path="/landing" element={<Navigate to="/" replace />} />
-                  <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/terms" element={<TermsAndConditions />} />
-                  <Route path="/privacy" element={<PrivacyPolicy />} />
-                  <Route path="/cookies" element={<CookiePolicy />} />
-                  <Route path="/faqs" element={<FAQs />} />
-                  <Route path="/help" element={<Help />} />
-                  <Route path="/blog" element={<Blog />} />
-                  <Route path="/careers" element={<Careers />} />
-                  
-                  {/* 404 Not Found - must be last */}
-                  <Route path="*" element={<NotFound />} />
+                  {routes.map((route, index) => (
+                    <Route 
+                      key={route.path || index}
+                      path={route.path}
+                      element={route.element}
+                    />
+                  ))}
                 </Routes>
               </SubscriptionProvider>
             </AuthProvider>
