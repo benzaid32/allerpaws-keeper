@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -24,18 +23,17 @@ const TermsAndConditions = () => {
         <div className="prose dark:prose-invert max-w-none">
           <p>Last updated: {new Date().toLocaleDateString()}</p>
           
-          <h2>1. Acceptance of Terms</h2>
-          <p>
-            By accessing and using AllerPaws (the "Service"), you acknowledge that you have read, 
-            understood, and agree to be bound by these Terms and Conditions. If you do not agree 
-            with any part of these terms, you may not use our Service.
+          <h2 className="text-xl font-bold mb-4">1. ACCEPTANCE OF TERMS</h2>
+          <p className="mb-4">
+            By accessing and using Aller Paws (the "Service"), you acknowledge that you have read,
+            understood, and agree to be bound by these Terms and Conditions.
           </p>
           
-          <h2>2. Description of Service</h2>
-          <p>
-            AllerPaws is a platform designed to help pet owners track and manage their pets' food 
-            allergies. The Service includes symptom tracking, allergen identification, and food 
-            recommendations based on user input.
+          <h2 className="text-xl font-bold mb-4">2. DESCRIPTION OF SERVICE</h2>
+          <p className="mb-4">
+            Aller Paws is a platform designed to help pet owners track and manage their pets' food
+            allergies and sensitivities. The Service provides tools for recording symptoms, tracking diets,
+            and generating insights and recommendations based on user input.
           </p>
           
           <h2>3. User Accounts</h2>
@@ -45,28 +43,27 @@ const TermsAndConditions = () => {
             activities that occur under your account.
           </p>
           
-          <h2>4. Pet Health Disclaimer</h2>
-          <p>
-            AllerPaws is not a substitute for professional veterinary advice, diagnosis, or treatment. 
-            Always seek the advice of your veterinarian with any questions you may have regarding your 
-            pet's health condition.
+          <h2 className="text-xl font-bold mb-4">5. DISCLAIMER</h2>
+          <p className="mb-4">
+            Aller Paws is not a substitute for professional veterinary advice, diagnosis, or treatment.
+            Always seek the advice of your veterinarian with any questions you may have regarding your
+            pet's medical condition.
           </p>
           
-          <h2>5. Data Privacy</h2>
+          <h2>6. Data Privacy</h2>
           <p>
             Your privacy is important to us. Please refer to our Privacy Policy for information on how 
             we collect, use, and disclose information from our users.
           </p>
           
-          <h2>6. Changes to Terms</h2>
+          <h2>7. Changes to Terms</h2>
           <p>
             We reserve the right to modify these terms at any time. We will provide notice of any 
             significant changes by updating the date at the top of these terms and by maintaining a 
             current version of the terms at our website.
           </p>
           
-          <h2>7. Contact Us</h2>
-          <p>
+          <p className="mt-8">
             If you have any questions about these Terms, please contact us at support@allerpaws.com.
           </p>
         </div>

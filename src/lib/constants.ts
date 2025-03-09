@@ -1,6 +1,16 @@
-
-export const APP_NAME = "AllerPaws";
-export const APP_DESCRIPTION = "Track, manage and prevent pet food allergies";
+export const APP_NAME = "Aller Paws";
+export const APP_DESCRIPTION = "Track, manage and prevent pet food allergies with our easy-to-use tools";
+export const APP_TAGLINE = "The #1 pet food allergy management platform for dogs and cats";
+export const APP_KEYWORDS = [
+  "pet food allergy tracker",
+  "dog food allergies",
+  "cat food allergies",
+  "pet symptom tracker",
+  "elimination diet for pets",
+  "pet allergy management",
+  "food sensitivities in pets",
+  "hypoallergenic pet food"
+];
 
 // Elimination diet phases
 export const ELIMINATION_PHASES = [
@@ -81,7 +91,7 @@ export const SEVERITY_LEVELS = ["mild", "moderate", "severe"] as const;
 export const ONBOARDING_STEPS = [
   {
     id: "welcome",
-    title: "Welcome to AllerPaws",
+    title: "Welcome to Aller Paws",
     description: "Your pet's food allergy management solution"
   },
   {
@@ -102,7 +112,7 @@ export const ONBOARDING_STEPS = [
   {
     id: "register",
     title: "Create Account",
-    description: "Get started with AllerPaws"
+    description: "Get started with Aller Paws"
   }
 ];
 
@@ -160,3 +170,11 @@ export const COMMON_SYMPTOMS = [
 export const COMMON_ALLERGENS = [
   "Beef", "Chicken", "Dairy", "Egg", "Wheat", "Corn", "Soy", "Fish"
 ];
+
+// SEO-optimized content snippets
+export const SEO_CONTENT = {
+  homepageIntro: "Discover what's causing your pet's food allergies with Aller Paws, the most comprehensive pet allergy management app. Track symptoms, identify triggers, and create safe meal plans for your dog or cat.",
+  foodDiaryDesc: "Keep a detailed record of everything your pet eats and any reactions they experience. Our smart analysis helps identify patterns between foods and symptoms.",
+  symptomTrackerDesc: "Log your pet's symptoms including itching, digestive issues, and skin problems. Our visual timeline helps you and your vet identify allergy patterns.",
+  eliminationDietDesc: "Follow our vet-approved elimination diet protocol to safely identify your pet's food triggers and sensitivities."
+};

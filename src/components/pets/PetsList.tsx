@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Pet } from "@/lib/types";
 import { PetCard } from "./PetCard";
@@ -14,6 +13,7 @@ interface PetsListProps {
   isDeleting: boolean;
   deletingPetId: string | null;
   isLoading?: boolean;
+  displayMode?: "grid" | "list";
 }
 
 export const PetsList: React.FC<PetsListProps> = ({
@@ -25,6 +25,7 @@ export const PetsList: React.FC<PetsListProps> = ({
   isDeleting,
   deletingPetId,
   isLoading = false,
+  displayMode = "grid",
 }) => {
   if (isLoading) {
     return <LoadingSpinner />;
@@ -39,18 +40,38 @@ export const PetsList: React.FC<PetsListProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      {pets.map((pet) => (
-        <PetCard
-          key={pet.id}
-          pet={pet}
-          onViewPet={onViewPet}
-          onEditPet={onEditPet}
-          onDeletePet={onDeletePet}
-          isDeleting={isDeleting}
-          deletingPetId={deletingPetId}
-        />
-      ))}
-    </div>
+    <>
+      {displayMode === "grid" ? (
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {pets.map((pet) => (
+            <PetCard
+              key={pet.id}
+              pet={pet}
+              onViewPet={onViewPet}
+              onEditPet={onEditPet}
+              onDeletePet={onDeletePet}
+              isDeleting={isDeleting}
+              deletingPetId={deletingPetId}
+              compact={false}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {pets.map((pet) => (
+            <PetCard
+              key={pet.id}
+              pet={pet}
+              onViewPet={onViewPet}
+              onEditPet={onEditPet}
+              onDeletePet={onDeletePet}
+              isDeleting={isDeleting}
+              deletingPetId={deletingPetId}
+              compact={true}
+            />
+          ))}
+        </div>
+      )}
+    </>
   );
 };

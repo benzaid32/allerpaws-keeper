@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Pet } from "@/lib/types";
 import MobileCard from "@/components/ui/mobile-card";
@@ -14,6 +13,7 @@ interface PetCardProps {
   onDeletePet: (petId: string) => void;
   isDeleting: boolean;
   deletingPetId: string | null;
+  compact?: boolean;
 }
 
 export const PetCard: React.FC<PetCardProps> = ({
@@ -23,6 +23,7 @@ export const PetCard: React.FC<PetCardProps> = ({
   onDeletePet,
   isDeleting,
   deletingPetId,
+  compact = false,
 }) => {
   const [imageError, setImageError] = useState(false);
   
@@ -45,11 +46,11 @@ export const PetCard: React.FC<PetCardProps> = ({
     <MobileCard
       key={pet.id}
       onClick={() => onViewPet(pet.id)}
-      className="hover:border-primary/30"
+      className={`hover:border-primary/30 ${compact ? 'py-2 px-3' : ''}`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12 border border-muted">
+          <Avatar className={`${compact ? 'h-10 w-10' : 'h-12 w-12'} border border-muted`}>
             {pet.imageUrl && !imageError ? (
               <AvatarImage 
                 src={getImageUrl()} 
@@ -66,7 +67,7 @@ export const PetCard: React.FC<PetCardProps> = ({
             )}
           </Avatar>
           <div>
-            <h3 className="font-semibold text-lg">{pet.name}</h3>
+            <h3 className={`font-semibold ${compact ? 'text-base' : 'text-lg'}`}>{pet.name}</h3>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="capitalize">
                 {pet.species}
@@ -90,7 +91,7 @@ export const PetCard: React.FC<PetCardProps> = ({
         />
       </div>
       
-      {pet.knownAllergies && pet.knownAllergies.length > 0 && (
+      {!compact && pet.knownAllergies && pet.knownAllergies.length > 0 && (
         <div className="mt-3 pt-3 border-t">
           <span className="text-sm text-muted-foreground block mb-2">Allergies: </span>
           <div className="flex flex-wrap gap-1">

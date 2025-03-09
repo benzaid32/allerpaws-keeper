@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -21,14 +20,9 @@ const SignOutOverlay: React.FC = () => {
           >
             Signing out...
           </motion.p>
-          <motion.p 
-            className="text-sm text-muted-foreground"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            Thank you for using AllerPaws!
-          </motion.p>
+          <h2 className="text-xl font-medium text-center">
+            Thank you for using Aller Paws!
+          </h2>
         </div>
       </motion.div>
     </div>

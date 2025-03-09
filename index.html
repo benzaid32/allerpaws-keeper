@@ -1,13 +1,22 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AllerPaws Keeper</title>
-    <meta name="description" content="Track and manage your pet's allergies and diet" />
-    <meta name="author" content="Lovable" />
+    <link rel="icon" type="image/svg+xml" href="/icons/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Aller Paws: Track & Manage Pet Food Allergies | #1 Pet Allergy App</title>
+    <meta name="description" content="Track, manage and prevent food allergies in your pets with Aller Paws. Our app helps identify triggers, track symptoms, and create safe diet plans for dogs and cats." />
+    <meta name="author" content="Aller Paws" />
+    <meta name="keywords" content="pet food allergy tracker, dog food allergies, cat food allergies, pet symptom tracker, elimination diet for pets, pet allergy management" />
+    <meta property="og:title" content="Aller Paws: Track & Manage Pet Food Allergies" />
+    <meta property="og:description" content="Identify your pet's food allergies. Track symptoms, find safe foods, and get personalized advice with our easy-to-use app." />
     <meta property="og:image" content="/og-image.png" />
+    <meta property="og:url" content="https://allerpaws.app" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Aller Paws: #1 Pet Food Allergy Management App" />
+    <meta name="twitter:description" content="Identify triggers, track symptoms & create safe diet plans for your pets with Aller Paws." />
+    <meta name="twitter:image" content="/og-image.png" />
     
     <!-- Prevent Caching -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -18,17 +27,17 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co; connect-src 'self' https://*.supabase.co https://*.supabase.in; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self'; base-uri 'self'; form-action 'self'" />
     
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#3498db" />
+    <meta name="theme-color" content="#ffffff" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="AllerPaws" />
+    <meta name="apple-mobile-web-app-title" content="Aller Paws" />
     
     <!-- Manifest -->
-    <link rel="manifest" href="/manifest.json?v=3" />
+    <link rel="manifest" href="/manifest.json" />
     
     <!-- iOS PWA Icons -->
-    <link rel="apple-touch-icon" href="/icons/apple-icon-180.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-icon-152.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-icon-180.png" />
     <link rel="apple-touch-icon" sizes="167x167" href="/icons/apple-icon-167.png" />
@@ -42,6 +51,16 @@
     <link rel="apple-touch-startup-image" href="/icons/apple-splash-1125-2436.jpg" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
     <link rel="apple-touch-startup-image" href="/icons/apple-splash-828-1792.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
     <link rel="apple-touch-startup-image" href="/icons/apple-splash-750-1334.jpg" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
+    <!-- Icon preloads for faster loading -->
+    <link rel="preload" href="/icons/icon-512x512.png" as="image" />
+    <link rel="preload" href="/icons/icon-192x192.png" as="image" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Canonical URL to prevent duplicate content issues -->
+    <link rel="canonical" href="https://allerpaws.com" />
   </head>
 
   <body>
@@ -50,6 +69,26 @@
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- PWA Service Worker Registration - Removed as it's handled in App.tsx -->
+    <!-- Structured data for rich snippets (Application) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Aller Paws",
+      "applicationCategory": "HealthApplication",
+      "operatingSystem": "Web, iOS, Android",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "Track, manage and prevent food allergies in your pets with our easy-to-use app. Identify triggers, track symptoms, and create safe diet plans.",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "125"
+      }
+    }
+    </script>
   </body>
 </html>

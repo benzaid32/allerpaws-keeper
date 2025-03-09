@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -65,91 +64,68 @@ const Dashboard = () => {
         isSigningOut={isSigningOut}
       />
       
-      {/* Welcome banner with improved mobile styling - removed duplicate header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-6"
-      >
-        <Card className="bg-gradient-to-r from-primary/90 to-primary/70 border-none shadow-lg text-white p-4">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-            <div className="mb-2 sm:mb-0">
-              <h2 className="text-xl font-bold mb-1">Welcome back, {firstName}!</h2>
-              <p className="text-white/90 text-sm">Track your pet's health journey with AllerPaws</p>
-            </div>
-            {isPremium && (
-              <Badge className="bg-yellow-400/90 text-primary-foreground flex items-center gap-1 px-3 py-1 self-start sm:self-auto">
-                <Sparkles className="h-3 w-3" />
-                PREMIUM
-              </Badge>
-            )}
-          </div>
-        </Card>
-      </motion.div>
-      
-      <StatsCards 
-        recentActivity={recentActivity} 
-        symptomsThisWeek={symptomsThisWeek} 
-      />
-      
-      {/* Quick Actions - more mobile friendly with fixed navigation */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3"
-      >
-        <Button 
-          onClick={handleLogSymptom}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white h-auto py-3 shadow-md"
+      <div className="space-y-5">
+        <StatsCards 
+          recentActivity={recentActivity} 
+          symptomsThisWeek={symptomsThisWeek} 
+        />
+        
+        {/* Quick Actions - more mobile friendly with fixed navigation */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
         >
-          <PlusCircle className="mr-2 h-4 w-4" /> 
-          Log Symptom
-        </Button>
-        <Button 
-          onClick={handleLogFood}
-          className="bg-gradient-to-r from-green-500 to-green-600 text-white h-auto py-3 shadow-md"
+          <Button 
+            onClick={handleLogSymptom}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white h-auto py-3 shadow-md"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" /> 
+            Log Symptom
+          </Button>
+          <Button 
+            onClick={handleLogFood}
+            className="bg-gradient-to-r from-green-500 to-green-600 text-white h-auto py-3 shadow-md"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" /> 
+            Log Food
+          </Button>
+        </motion.div>
+        
+        <PetsSection pets={pets} />
+        
+        {/* Reminders Preview */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
         >
-          <PlusCircle className="mr-2 h-4 w-4" /> 
-          Log Food
-        </Button>
-      </motion.div>
-      
-      <PetTipCard />
-      
-      <PetsSection pets={pets} />
-      
-      {/* Reminders Preview */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.7 }}
-        className="mb-8"
-      >
-        <Card className="bg-white/80 shadow-sm border border-primary/10 hover:shadow-md transition-all">
-          <div className="p-4">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-medium flex items-center">
-                <Bell className="h-4 w-4 text-primary mr-2" />
-                Upcoming Reminders
-              </h3>
-              <Button variant="ghost" size="sm" className="text-primary h-8 px-2" onClick={() => navigate('/reminders')}>
-                View All
-                <ArrowRight className="ml-1 h-3 w-3" />
-              </Button>
+          <Card className="bg-white/80 shadow-sm border border-primary/10 hover:shadow-md transition-all">
+            <div className="p-4">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-medium flex items-center">
+                  <Bell className="h-4 w-4 text-primary mr-2" />
+                  Upcoming Reminders
+                </h3>
+                <Button variant="ghost" size="sm" className="text-primary h-8 px-2" onClick={() => navigate('/reminders')}>
+                  View All
+                  <ArrowRight className="ml-1 h-3 w-3" />
+                </Button>
+              </div>
+              <div className="text-center py-3 text-muted-foreground text-sm">
+                No upcoming reminders
+              </div>
             </div>
-            <div className="text-center py-3 text-muted-foreground text-sm">
-              No upcoming reminders
-            </div>
-          </div>
-        </Card>
-      </motion.div>
+          </Card>
+        </motion.div>
+      </div>
 
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.6 }}
+        className="mt-5"
       >
         <BottomNavigation />
       </motion.div>

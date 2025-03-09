@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -159,7 +158,7 @@ function App() {
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-4">
           <LoadingSpinner className="h-12 w-12" />
-          <p className="text-lg font-medium">Starting AllerPaws...</p>
+          <p className="text-lg font-medium">Starting Aller Paws...</p>
         </div>
       </div>
     );

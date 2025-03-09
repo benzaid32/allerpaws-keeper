@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -54,7 +53,7 @@ const EmptyPetState = ({ onManagePets }: { onManagePets: () => void }) => {
     <div className="text-center py-12 border rounded-lg bg-muted/30">
       <h3 className="text-lg font-medium mb-2">No pets yet</h3>
       <p className="text-muted-foreground mb-6">
-        Start by adding your first pet to AllerPaws.
+        Start by adding your first pet to Aller Paws.
       </p>
       <Button onClick={onManagePets}>Add Your Pet</Button>
     </div>

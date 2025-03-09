@@ -1,12 +1,28 @@
-
 {
-  "name": "AllerPaws Keeper",
-  "short_name": "AllerPaws",
-  "description": "Track and manage your pet's allergies and diet",
-  "start_url": "/",
+  "name": "Aller Paws - Pet Food Allergy Tracker",
+  "short_name": "Aller Paws",
+  "description": "Track, manage and prevent food allergies in dogs, cats and other pets. Identify triggers, monitor symptoms, and create safe feeding plans.",
+  "start_url": "/?utm_source=pwa",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3498db",
+  "categories": ["pets", "health", "lifestyle", "medical", "food"],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Dashboard showing pet health overview"
+    },
+    {
+      "src": "/screenshots/food-diary.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Food diary tracking for identifying allergens"
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
@@ -68,15 +84,34 @@
       "name": "Log Symptom",
       "short_name": "Log",
       "description": "Log a new symptom for your pet",
-      "url": "/symptom-diary/new",
+      "url": "/symptom-diary/new?utm_source=shortcut",
       "icons": [{ "src": "/icons/shortcut-symptom.png", "sizes": "96x96" }]
     },
     {
       "name": "View Pets",
       "short_name": "Pets",
       "description": "Manage your pets",
-      "url": "/pets",
+      "url": "/pets?utm_source=shortcut",
       "icons": [{ "src": "/icons/shortcut-pets.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Food Diary",
+      "short_name": "Food",
+      "description": "Track your pet's food intake",
+      "url": "/food-diary?utm_source=shortcut",
+      "icons": [{ "src": "/icons/shortcut-food.png", "sizes": "96x96" }]
     }
-  ]
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.allerpaws.app",
+      "id": "com.allerpaws.app"
+    },
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/app/allerpaws/id1234567890"
+    }
+  ],
+  "prefer_related_applications": false
 }

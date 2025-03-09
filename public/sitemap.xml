@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Main Landing Page -->
+  <url>
+    <loc>https://allerpaws.com/</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Marketing/Info Pages -->
+  <url>
+    <loc>https://allerpaws.com/about</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://allerpaws.com/contact</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://allerpaws.com/pricing</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://allerpaws.com/faqs</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Legal Pages -->
+  <url>
+    <loc>https://allerpaws.com/terms</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://allerpaws.com/privacy</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://allerpaws.com/cookies</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  
+  <!-- Help & Support -->
+  <url>
+    <loc>https://allerpaws.com/help</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Blog & Educational Content -->
+  <url>
+    <loc>https://allerpaws.com/blog</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Blog Articles -->
+  <url>
+    <loc>https://allerpaws.com/blog/identify-food-allergies-dogs</loc>
+    <lastmod>2025-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://allerpaws.com/blog/dog-wheat-allergy-case-study</loc>
+    <lastmod>2025-02-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://allerpaws.com/blog/cat-elimination-diet-guide</loc>
+    <lastmod>2025-02-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://allerpaws.com/blog/hypoallergenic-dog-treat-recipes</loc>
+    <lastmod>2025-01-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Feature Pages -->
+  <url>
+    <loc>https://allerpaws.com/features/symptom-tracking</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://allerpaws.com/features/food-diary</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://allerpaws.com/features/elimination-diet</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Authentication Pages (low priority since they're not main content) -->
+  <url>
+    <loc>https://allerpaws.com/auth</loc>
+    <lastmod>2025-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset> 
