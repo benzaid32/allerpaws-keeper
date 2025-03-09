@@ -1,4 +1,3 @@
-
 export type Pet = {
   id: string;
   name: string;
@@ -99,4 +98,10 @@ export type NavigationItem = {
 export type NotificationSettings = {
   enabled: boolean;
   lastUpdated: Date;
+};
+
+// Add RouteType definition
+export type RouteType = {
+  path: string;
+  element: React.ReactNode;
 };

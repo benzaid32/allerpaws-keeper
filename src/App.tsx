@@ -6,7 +6,6 @@ import { Toaster } from "@/components/ui/toaster"
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
-import { RedirectHandler } from './lib/routes';
 import InstallBanner from './components/pwa/InstallBanner';
 import ServiceWorkerManager from './components/pwa/ServiceWorkerManager';
 import BackgroundSyncManager from './components/pwa/BackgroundSyncManager';
@@ -27,7 +26,6 @@ function App() {
                 <BrowserRouter>
                   <AuthProvider>
                     <SubscriptionProvider>
-                      <RedirectHandler />
                       <Toaster />
                       <InstallBanner />
                       <AppInitializer onInitialized={() => setIsInitialized(true)}>
