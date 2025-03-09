@@ -12,7 +12,6 @@ interface NotificationsCardProps {
   updateNotifications: (enabled: boolean) => void;
   permissionState: CombinedPermissionState;
   requestPermission: () => Promise<boolean>;
-  sendTestNotification: () => Promise<boolean>;
   checkPermissions: () => Promise<void>;
   getNotificationInstructions: () => NotificationInstructions;
 }
@@ -22,7 +21,6 @@ const NotificationsCard: React.FC<NotificationsCardProps> = ({
   updateNotifications,
   permissionState,
   requestPermission,
-  sendTestNotification,
   checkPermissions,
   getNotificationInstructions
 }) => {
