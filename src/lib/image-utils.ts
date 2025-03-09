@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Available image categories
@@ -49,9 +50,9 @@ export const PLACEHOLDER_IMAGES = {
 // Local fallback patterns to use when Supabase storage fails
 const FALLBACK_PATTERNS = [
   "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0wIDBoNjB2NjBIMHoiLz48cGF0aCBmaWxsPSIjRjVGN0ZCIiBkPSJNMzAgNWE1IDUgMCAxIDEgMCAxMCA1IDUgMCAwIDEgMC0xMHptMCAyMGE1IDUgMCAxIDEgMCAxMCA1IDUgMCAwIDEgMC0xMHptMCAyMGE1IDUgMCAxIDEgMCAxMCA1IDUgMCAwIDEgMC0xMHpNMTAgMTVhNSA1IDAgMSAxIDAgMTAgNSA1IDAgMCAxIDAtMTB6bTIwIDBhNSA1IDAgMSAxIDAgMTAgNSA1IDAgMCAxIDAtMTB6bTIwIDBhNSA1IDAgMSAxIDAgMTAgNSA1IDAgMCAxIDAtMTB6TTEwIDM1YTUgNSAwIDEgMSAwIDEwIDUgNSAwIDAgMSAwLTEwem0yMCAwYTUgNSAwIDEgMSAwIDEwIDUgNSAwIDAgMSAwLTEwem0yMCAwYTUgNSAwIDEgMSAwIDEwIDUgNSAwIDAgMSAwLTEweiIvPjwvZz48L3N2Zz4=",
-  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0wIDBoNjB2NjBIMHoiLz48cGF0aCBmaWxsPSIjRjVGN0ZCIiBkPSJNMzAgNWE1IDUgMCAxIDEgMCAxMCA1IDUgMCAwIDEgMC0xMHptMCAyMGE1IDUgMCAxIDEgMCAxMCA1IDUgMCAwIDEgMC0xMHptMCAyMGE1IDUgMCAxIDEgMCAxMCA1IDUgMCAwIDEgMC0xMHpNMTAgMTVhNSA1IDAgMSAxIDAgMTAgNSA1IDAgMCAxIDAtMTB6bTIwIDBhNSA1IDAgMSAxIDAgMTAgNSA1IDAgMCAxIDAtMTB6bTIwIDBhNSA1IDAgMSAxIDAgMTAgNSA1IDAgMCAxIDAtMTB6TTEwIDM1YTUgNSAwIDEgMSAwIDEwIDUgNSAwIDAgMSAwLTEwem0yMCAwYTUgNSAwIDEgMSAwIDEwIDUgNSAwIDAgMSAwLTEwem0yMCAwYTUgNSAwIDEgMSAwIDEwIDUgNSAwIDAgMSAwLTEweiIvPjwvZz48L3N2Zz4=",
   "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjZmZmIj48L3JlY3Q+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjRjVGN0ZCIj48L3JlY3Q+PHJlY3QgeT0iMTAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI0Y1RjdGQiI+PC9yZWN0Pjwvc3ZnPg==",
-  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjZmZmIj48L3JlY3Q+PHBhdGggZD0iTTAgMGg0MHY0MEgwem00MCA0MGg0MHY0MEg0MHoiIGZpbGw9IiNGNUY3RkIiIGZpbGwtcnVsZT0ibm9uemVybyI+PC9wYXRoPjwvc3ZnPg=="
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjZmZmIj48L3JlY3Q+PHBhdGggZD0iTTAgMGg0MHY0MEgwem00MCA0MGg0MHY0MEg0MHoiIGZpbGw9IiNGNUY3RkIiIGZpbGwtcnVsZT0ibm9uemVybyI+PC9wYXRoPjwvc3ZnPg==",
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjZmZmIj48L3JlY3Q+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iNCIgZmlsbD0iI0Y1RjdGQiI+PC9jaXJjbGU+PGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iNCIgZmlsbD0iI0Y1RjdGQiI+PC9jaXJjbGU+PGNpcmNsZSBjeD0iNDgiIGN5PSIxNiIgcj0iNCIgZmlsbD0iI0Y1RjdGQiI+PC9jaXJjbGU+PGNpcmNsZSBjeD0iMTYiIGN5PSI0OCIgcj0iNCIgZmlsbD0iI0Y1RjdGQiI+PC9jaXJjbGU+PGNpcmNsZSBjeD0iNDgiIGN5PSI0OCIgcj0iNCIgZmlsbD0iI0Y1RjdGQiI+PC9jaXJjbGU+PC9zdmc+"
 ];
 
 // Cheerful background patterns - these will try to load from Supabase, but we'll have fallbacks
@@ -221,7 +222,6 @@ export function getDefaultImage(category: keyof typeof DEFAULT_IMAGES, type: str
 
 // Get a random background pattern with fallback to local data URIs if Supabase fails
 export function getRandomPattern(): string {
-  // First try to use the Supabase patterns
   const randomSupabaseIndex = Math.floor(Math.random() * BACKGROUND_PATTERNS.length);
   return BACKGROUND_PATTERNS[randomSupabaseIndex];
 }
@@ -232,9 +232,37 @@ export function getFallbackPattern(): string {
   return FALLBACK_PATTERNS[randomFallbackIndex];
 }
 
-// This function is removed as it shouldn't be done client-side
-// Keeping a stub for compatibility but it just returns true
+// Check if a storage bucket exists
 export async function ensureStorageBucket(bucketName: string): Promise<boolean> {
-  console.log(`Note: ensureStorageBucket is deprecated for client-side use. Bucket '${bucketName}' should be created via SQL.`);
-  return true;
+  try {
+    // Check if the bucket exists
+    const { data, error } = await supabase.storage.getBucket(bucketName);
+    
+    if (error && error.message.includes('does not exist')) {
+      console.log(`Bucket ${bucketName} doesn't exist, trying to create it...`);
+      
+      // Try to create the bucket
+      const { error: createError } = await supabase.storage.createBucket(bucketName, {
+        public: true
+      });
+      
+      if (createError) {
+        console.error(`Error creating bucket ${bucketName}:`, createError);
+        return false;
+      }
+      
+      console.log(`Successfully created bucket ${bucketName}`);
+      return true;
+    } else if (error) {
+      console.error(`Error checking bucket ${bucketName}:`, error);
+      return false;
+    }
+    
+    // Bucket exists
+    console.log(`Bucket ${bucketName} exists`);
+    return true;
+  } catch (error) {
+    console.error("Error in ensureStorageBucket:", error);
+    return false;
+  }
 }

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { getRandomPattern, getFallbackPattern } from "@/lib/image-utils";
@@ -23,11 +23,26 @@ const PatternBackground: React.FC<PatternBackgroundProps> = ({
 }) => {
   // State to track if the Supabase pattern failed to load
   const [patternLoadFailed, setPatternLoadFailed] = useState(false);
+  const [patternImage, setPatternImage] = useState<string | null>(null);
   
-  // Use provided pattern URL or get a random one
+  // Initialize the pattern
+  useEffect(() => {
+    // Use provided pattern URL or get a random one
+    const initialPattern = patternUrl || getRandomPattern();
+    setPatternImage(initialPattern);
+  }, [patternUrl]);
+  
+  // Handle pattern loading errors
+  const handlePatternError = () => {
+    console.warn("Pattern image failed to load, using fallback");
+    setPatternLoadFailed(true);
+    setPatternImage(getFallbackPattern());
+  };
+  
+  // Use fallback pattern if the Supabase pattern failed to load
   const pattern = patternLoadFailed 
     ? getFallbackPattern() 
-    : (patternUrl || getRandomPattern());
+    : (patternImage || getRandomPattern());
   
   // Color overlay based on the color prop
   const colorOverlay = {
@@ -35,12 +50,6 @@ const PatternBackground: React.FC<PatternBackgroundProps> = ({
     secondary: "bg-secondary/5",
     accent: "bg-accent/5",
     none: ""
-  };
-
-  // Handle pattern loading errors
-  const handlePatternError = () => {
-    console.warn("Pattern image failed to load, using fallback");
-    setPatternLoadFailed(true);
   };
 
   return (

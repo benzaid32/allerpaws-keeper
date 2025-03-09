@@ -21,6 +21,44 @@ const PATTERN_SVG_DATA = [
   }
 ];
 
+// Check if the storage bucket exists and create it if it doesn't
+async function ensureStorageBucket(bucketName: string): Promise<boolean> {
+  try {
+    // Try to get the bucket info
+    const { data: bucketData, error: bucketError } = await supabase.storage
+      .getBucket(bucketName);
+    
+    if (bucketError && bucketError.message.includes('does not exist')) {
+      console.log(`Bucket ${bucketName} doesn't exist, creating it...`);
+      
+      // Create the bucket
+      const { data, error } = await supabase.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 1024 * 1024, // 1MB limit for SVG files
+        allowedMimeTypes: ['image/svg+xml']
+      });
+      
+      if (error) {
+        console.error(`Error creating bucket ${bucketName}:`, error);
+        return false;
+      }
+      
+      console.log(`Successfully created bucket ${bucketName}`);
+      return true;
+    } else if (bucketError) {
+      console.error(`Error checking bucket ${bucketName}:`, bucketError);
+      return false;
+    }
+    
+    // Bucket exists
+    console.log(`Bucket ${bucketName} already exists`);
+    return true;
+  } catch (error) {
+    console.error(`Error in ensureStorageBucket:`, error);
+    return false;
+  }
+}
+
 /**
  * Upload patterns to Supabase storage
  * Call this function once to initialize patterns in storage
@@ -29,28 +67,23 @@ export async function uploadPatterns(): Promise<void> {
   try {
     console.log("Starting pattern uploads...");
     
+    // Ensure the app-images bucket exists
+    const bucketExists = await ensureStorageBucket("app-images");
+    if (!bucketExists) {
+      console.error("Cannot upload patterns: storage bucket doesn't exist and couldn't be created");
+      return;
+    }
+    
     for (const pattern of PATTERN_SVG_DATA) {
       console.log(`Uploading ${pattern.name}...`);
       
       try {
-        // Convert base64 to Blob
-        const base64String = pattern.data;
-        const byteCharacters = atob(base64String);
-        const byteArrays = [];
+        // Create a data URL from the base64 data
+        const dataUrl = `data:image/svg+xml;base64,${pattern.data}`;
         
-        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-          const slice = byteCharacters.slice(offset, offset + 512);
-          
-          const byteNumbers = new Array(slice.length);
-          for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-          }
-          
-          const byteArray = new Uint8Array(byteNumbers);
-          byteArrays.push(byteArray);
-        }
-        
-        const blob = new Blob(byteArrays, { type: "image/svg+xml" });
+        // Convert data URL to blob using fetch API (more reliable than manual conversion)
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
         
         // Create a File from the Blob
         const file = new File([blob], pattern.name, { type: "image/svg+xml" });
@@ -60,7 +93,8 @@ export async function uploadPatterns(): Promise<void> {
           .from("app-images")
           .upload(`patterns/${pattern.name}`, file, {
             cacheControl: "31536000", // 1 year cache
-            upsert: true
+            upsert: true,
+            contentType: "image/svg+xml"
           });
         
         if (error) {
@@ -82,12 +116,26 @@ export async function uploadPatterns(): Promise<void> {
 // Function to check if patterns exist and upload them if they don't
 export async function ensurePatterns(): Promise<void> {
   try {
+    // First, make sure the storage bucket exists
+    const bucketExists = await ensureStorageBucket("app-images");
+    if (!bucketExists) {
+      console.error("Cannot ensure patterns: storage bucket doesn't exist and couldn't be created");
+      return;
+    }
+    
     const { data: files, error } = await supabase.storage
       .from("app-images")
       .list("patterns");
     
     if (error) {
-      console.error("Error checking patterns:", error);
+      if (error.message.includes('The resource was not found') || 
+          error.message.includes('does not exist')) {
+        // This likely means the patterns folder doesn't exist yet, upload the patterns
+        console.log("Patterns folder not found, uploading patterns now");
+        await uploadPatterns();
+      } else {
+        console.error("Error checking patterns:", error);
+      }
       return;
     }
     
