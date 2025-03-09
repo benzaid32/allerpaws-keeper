@@ -20,8 +20,10 @@ const HeroSection = () => {
           >
             <div className="h-[450px] md:h-[500px] w-full rounded-2xl overflow-hidden">
               <BeforeAfterComparison 
-                beforeImage="/lovable-uploads/f2de4c09-3c68-48fd-b08f-d633d17f17cb.png"
-                afterImage="/lovable-uploads/c709b62e-5ef5-4679-8619-68389522dd8f.png"
+                beforeImage="/lovable-uploads/5b876602-f6d7-4fd7-9097-960a81032ab4.png"
+                afterImage="/lovable-uploads/0c91b822-a92b-4c7d-87ed-299db532b2c0.png"
+                beforeLabel="Before AllerPaws"
+                afterLabel="After AllerPaws"
               />
             </div>
           </motion.div>
