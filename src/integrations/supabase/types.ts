@@ -428,20 +428,26 @@ export type Database = {
       }
       symptoms: {
         Row: {
+          created_by_user_id: string | null
           description: string | null
           id: string
+          is_custom: boolean | null
           name: string
           severity_options: string[]
         }
         Insert: {
+          created_by_user_id?: string | null
           description?: string | null
           id?: string
+          is_custom?: boolean | null
           name: string
           severity_options?: string[]
         }
         Update: {
+          created_by_user_id?: string | null
           description?: string | null
           id?: string
+          is_custom?: boolean | null
           name?: string
           severity_options?: string[]
         }

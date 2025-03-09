@@ -15,8 +15,10 @@ export type Symptom = {
   name: string;
   description: string;
   severity: "mild" | "moderate" | "severe";
+  severity_options?: string[];
   icon?: string;
   isCustom?: boolean;
+  created_by_user_id?: string;
 };
 
 export type SymptomEntry = {

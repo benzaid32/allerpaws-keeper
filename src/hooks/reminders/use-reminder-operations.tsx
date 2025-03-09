@@ -1,338 +1,120 @@
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { Reminder } from "@/lib/types";
-import { ReminderFormData } from "@/hooks/reminders/use-reminder-form";
-import { useNotifications } from "@/hooks/use-notifications";
-import { v4 as uuidv4 } from "uuid";
-import { markUserChanges } from "@/lib/sync-utils";
 
-interface UseReminderOperationsProps {
-  fetchData: () => Promise<void>;
-  setReminders: React.Dispatch<React.SetStateAction<Reminder[]>>;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setSubmitting: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-export const useReminderOperations = ({
-  fetchData,
-  setReminders,
-  setOpen,
-  setSubmitting,
-}: UseReminderOperationsProps) => {
-  const { user } = useAuth();
+export const useReminderOperations = () => {
   const { toast } = useToast();
-  const { 
-    permissionState, 
-    requestPermission, 
-    scheduleNotification 
-  } = useNotifications();
-  
-  // Helper functions
-  const parseTime = (timeString: string): { hours: number; minutes: number } => {
-    const [hours, minutes] = timeString.split(":").map(Number);
-    return { hours, minutes };
-  };
-  
-  const calculateNextOccurrence = (
-    time: string, 
-    days: string[]
-  ): Date | null => {
-    if (!days.length) return null;
-    
-    const daysMap: { [key: string]: number } = {
-      sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6
-    };
-    
-    const { hours, minutes } = parseTime(time);
-    const now = new Date();
-    const todayDay = now.getDay();
-    const nowHours = now.getHours();
-    const nowMinutes = now.getMinutes();
-    
-    // Sort days by proximity to today
-    const sortedDays = [...days].sort((a, b) => {
-      const dayA = daysMap[a];
-      const dayB = daysMap[b];
-      
-      const distanceA = (dayA - todayDay + 7) % 7;
-      const distanceB = (dayB - todayDay + 7) % 7;
-      
-      return distanceA - distanceB;
-    });
-    
-    for (const day of sortedDays) {
-      const targetDay = daysMap[day];
-      let daysToAdd = (targetDay - todayDay + 7) % 7;
-      
-      // If it's today, check if the time has already passed
-      if (daysToAdd === 0) {
-        const isPastOrPresent = 
-          nowHours > hours || 
-          (nowHours === hours && nowMinutes >= minutes);
-        
-        if (isPastOrPresent) {
-          // If time has passed, move to the next week
-          daysToAdd = 7;
-        }
-      }
-      
-      const nextDate = new Date(now);
-      nextDate.setDate(now.getDate() + daysToAdd);
-      nextDate.setHours(hours, minutes, 0, 0);
-      
-      return nextDate;
-    }
-    
-    return null;
-  };
-  
-  const scheduleReminderNotification = async (
-    reminder: ReminderFormData
-  ): Promise<boolean> => {
-    if (permissionState !== "granted") {
-      const granted = await requestPermission();
-      if (!granted) {
-        toast({
-          title: "Notification permission required",
-          description: "Notifications won't be sent for this reminder",
-        });
-        return false;
-      }
-    }
-    
-    // Calculate when to send the notification
-    const nextOccurrence = calculateNextOccurrence(reminder.time, reminder.days);
-    if (!nextOccurrence) return false;
-    
-    // Generate a numeric ID that's compatible with notification systems
-    // Ensure it's within safe integer range for all platforms
-    const numericId = Math.abs(parseInt(reminder.id.replace(/\D/g, '').slice(0, 8)) || Math.floor(Math.random() * 100000));
-    
-    // Create notification content
-    const title = reminder.title;
-    let body = reminder.description || "Reminder from Allerpaws Keeper";
-    
-    // If reminder is for a specific pet, include their name
-    if (reminder.petId !== "none" && reminder.petName) {
-      body = `For ${reminder.petName}: ${body}`;
-    }
-    
-    // Schedule the notification using the updated notification hook
+  const [loading, setLoading] = useState(false);
+
+  const fetchReminders = async () => {
+    setLoading(true);
     try {
-      const result = await scheduleNotification(
-        numericId,
-        title,
-        body,
-        nextOccurrence.getTime()
-      );
-      
-      // Ensure we always return a boolean
-      return result === true;
-    } catch (error) {
-      console.error("Failed to schedule reminder notification:", error);
-      return false;
-    }
-  };
-  
-  const handleSubmit = async (
-    e: React.FormEvent,
-    formData: ReminderFormData,
-    isEditing: boolean
-  ) => {
-    e.preventDefault();
-    if (!user) return;
-    
-    try {
-      setSubmitting(true);
-      
-      // Format data for database
-      const reminderData = {
-        title: formData.title,
-        description: formData.description,
-        time: formData.time,
-        days: formData.days,
-        pet_id: formData.petId === "none" ? null : formData.petId,
-        active: formData.active,
-        user_id: user.id
-      };
-      
-      let reminderId = formData.id;
-      
-      if (isEditing) {
-        // Update existing reminder
-        const { error } = await supabase
-          .from("reminders")
-          .update(reminderData)
-          .eq("id", formData.id);
-          
-        if (error) throw error;
-        
-        // Mark changes for sync
-        markUserChanges('reminders');
-        
-        toast({
-          title: "Reminder updated",
-          description: "Your reminder has been updated successfully",
-        });
-      } else {
-        // Create new reminder with generated ID
-        reminderId = uuidv4();
-        
-        const { error } = await supabase
-          .from("reminders")
-          .insert({
-            ...reminderData,
-            id: reminderId
-          });
-          
-        if (error) throw error;
-        
-        // Mark changes for sync
-        markUserChanges('reminders');
-        
-        toast({
-          title: "Reminder created",
-          description: "Your new reminder has been created successfully",
-        });
-      }
-      
-      // Close the dialog and refresh data
-      setOpen(false);
-      
-      // Force a data refresh to update the UI immediately
-      await fetchData(true);
-      
-      // Emit a custom event to notify that data has changed
-      window.dispatchEvent(new CustomEvent('data-sync-complete', { 
-        detail: { dataType: 'reminders' } 
-      }));
-      
-      // Only schedule notification if reminder is active
-      if (formData.active) {
-        const fullReminder = {
-          ...formData,
-          id: reminderId
-        };
-        
-        const notificationScheduled = await scheduleReminderNotification(fullReminder);
-        
-        if (notificationScheduled) {
-          console.log("Notification scheduled successfully");
-        } else {
-          console.log("Failed to schedule notification");
-        }
-      }
+      const { data, error } = await supabase
+        .from("reminders")
+        .select("*");
+
+      if (error) throw error;
+
+      return data as Reminder[];
     } catch (error: any) {
-      console.error("Error saving reminder:", error.message);
+      console.error("Error fetching reminders:", error.message);
       toast({
         title: "Error",
-        description: "Failed to save reminder. Please try again.",
+        description: "Failed to fetch reminders.",
+        variant: "destructive",
+      });
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addReminder = async (reminder: Reminder) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("reminders")
+        .insert(reminder)
+        .select("*");
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Reminder added successfully.",
+      });
+
+      return data;
+    } catch (error: any) {
+      console.error("Error adding reminder:", error.message);
+      toast({
+        title: "Error",
+        description: "Failed to add reminder.",
         variant: "destructive",
       });
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
-  
-  const handleToggleActive = async (reminder: Reminder) => {
-    if (!user) return;
-    
+
+  const updateReminder = async (reminderId: string, updates: Partial<Reminder>) => {
+    setLoading(true);
     try {
-      const newActiveState = !reminder.active;
-      
-      // Update in the database
       const { error } = await supabase
         .from("reminders")
-        .update({ active: newActiveState })
-        .eq("id", reminder.id);
-        
+        .update(updates)
+        .eq("id", reminderId);
+
       if (error) throw error;
-      
-      // Mark changes for sync
-      markUserChanges('reminders');
-      
-      // Update local state for immediate UI feedback
-      setReminders(prev =>
-        prev.map(r =>
-          r.id === reminder.id ? { ...r, active: newActiveState } : r
-        )
-      );
-      
-      // Schedule notification if activated
-      if (newActiveState) {
-        const reminderFormData: ReminderFormData = {
-          id: reminder.id,
-          title: reminder.title,
-          description: reminder.description || "",
-          time: reminder.time,
-          days: reminder.days,
-          petId: reminder.petId || "none",
-          petName: reminder.petName,
-          active: true
-        };
-        
-        await scheduleReminderNotification(reminderFormData);
-      }
-      
+
       toast({
-        title: newActiveState ? "Reminder activated" : "Reminder deactivated",
-        description: `Your reminder has been ${newActiveState ? "activated" : "deactivated"} successfully`,
+        title: "Success",
+        description: "Reminder updated successfully.",
       });
     } catch (error: any) {
-      console.error("Error toggling reminder:", error.message);
+      console.error("Error updating reminder:", error.message);
       toast({
         title: "Error",
-        description: "Failed to update reminder. Please try again.",
+        description: "Failed to update reminder.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
-  
-  const handleDelete = async (reminder: Reminder) => {
-    if (!user) return;
-    
+
+  const deleteReminder = async (reminderId: string) => {
+    setLoading(true);
     try {
-      // Delete from database
       const { error } = await supabase
         .from("reminders")
         .delete()
-        .eq("id", reminder.id);
-        
+        .eq("id", reminderId);
+
       if (error) throw error;
-      
-      // Mark changes for sync
-      markUserChanges('reminders');
-      
-      // Immediately update the local state
-      setReminders(prev => prev.filter(r => r.id !== reminder.id));
-      
-      // Also force a data refresh to ensure UI is up-to-date
-      await fetchData(true);
-      
-      // Emit a custom event to notify that data has changed
-      window.dispatchEvent(new CustomEvent('data-sync-complete', { 
-        detail: { dataType: 'reminders' } 
-      }));
-      
+
       toast({
         title: "Success",
-        description: "Reminder deleted successfully",
+        description: "Reminder deleted successfully.",
       });
     } catch (error: any) {
       console.error("Error deleting reminder:", error.message);
       toast({
         title: "Error",
-        description: "Failed to delete reminder",
+        description: "Failed to delete reminder.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
-  
+
   return {
-    handleSubmit,
-    handleToggleActive,
-    handleDelete
+    fetchReminders,
+    addReminder,
+    updateReminder,
+    deleteReminder,
+    loading,
   };
 };

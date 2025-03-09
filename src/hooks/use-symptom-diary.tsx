@@ -180,7 +180,10 @@ export const useSymptomDiary = () => {
             symptom_id,
             severity,
             notes,
-            symptoms:symptom_id (name, is_custom)
+            symptoms:symptom_id (
+              name, 
+              is_custom
+            )
           )
         `)
         .eq("pets.user_id", user.id)
