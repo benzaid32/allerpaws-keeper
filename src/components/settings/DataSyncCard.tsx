@@ -18,7 +18,9 @@ const DataSyncCard: React.FC = () => {
     changeSyncFrequency,
     syncNow,
     isSyncing,
-    syncStatus
+    syncStatus,
+    isOnlineOnly,
+    toggleOnlineMode
   } = useDataSync();
   
   const formatLastSyncTime = () => {
@@ -36,8 +38,24 @@ const DataSyncCard: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between mb-2">
           <div className="space-y-1">
+            <Label htmlFor="online-mode-toggle" className="text-base font-normal">
+              Online Mode
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              {isOnlineOnly ? "Sync data with cloud immediately" : "Store data locally first"}
+            </p>
+          </div>
+          <Switch
+            id="online-mode-toggle"
+            checked={isOnlineOnly}
+            onCheckedChange={toggleOnlineMode}
+          />
+        </div>
+        
+        <div className="flex items-center justify-between mb-2">
+          <div className="space-y-1">
             <Label htmlFor="sync-toggle" className="text-base font-normal">
-              Sync with Cloud
+              Cloud Backup
             </Label>
             <p className="text-sm text-muted-foreground">
               Backup your data to your account
@@ -67,6 +85,7 @@ const DataSyncCard: React.FC = () => {
                   <SelectItem value="daily">Daily</SelectItem>
                   <SelectItem value="weekly">Weekly</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="never">Never</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -113,6 +132,16 @@ const DataSyncCard: React.FC = () => {
             <AlertTitle>Local Storage Only</AlertTitle>
             <AlertDescription>
               Your data is only stored on this device and will be lost if you clear your browser data or uninstall the app.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {!isOnlineOnly && (
+          <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-900/30">
+            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <AlertTitle className="text-blue-800 dark:text-blue-400">Offline-First Mode</AlertTitle>
+            <AlertDescription className="text-blue-700 dark:text-blue-500">
+              Your data is stored locally first and synced to the cloud based on your sync settings.
             </AlertDescription>
           </Alert>
         )}
