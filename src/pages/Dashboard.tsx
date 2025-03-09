@@ -9,9 +9,10 @@ import { useUserSubscription } from "@/hooks/use-user-subscription";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, PlusCircle, ArrowRight, Bell, RefreshCw } from "lucide-react";
+import { Sparkles, PlusCircle, ArrowRight, Bell, RefreshCw, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { forceNextSync } from "@/lib/sync-utils";
+import { useRemindersData } from "@/hooks/reminders/use-reminders-data";
 
 // Import refactored components
 import DashboardBackground from "@/components/dashboard/DashboardBackground";
@@ -27,6 +28,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { pets, loading, fetchPets, isOffline } = usePets();
   const { recentActivity, symptomsThisWeek, loading: statsLoading } = useDashboardStats();
+  const { reminders, loading: reminderLoading } = useRemindersData();
   const { hasPremiumAccess } = useUserSubscription();
   const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -75,7 +77,7 @@ const Dashboard = () => {
     return <SignOutOverlay />;
   }
 
-  if (loading || statsLoading) {
+  if (loading || statsLoading || reminderLoading) {
     return <DashboardLoading />;
   }
 
@@ -86,6 +88,22 @@ const Dashboard = () => {
   const handleLogFood = () => {
     navigate('/add-food-entry');
   };
+
+  // Format time for reminders
+  const formatTime = (time: string) => {
+    try {
+      const [hours, minutes] = time.split(':');
+      const hour = parseInt(hours, 10);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${minutes} ${ampm}`;
+    } catch (e) {
+      return time;
+    }
+  };
+
+  // Get up to 3 active reminders
+  const upcomingReminders = reminders?.filter(r => r.active)?.slice(0, 3) || [];
 
   return (
     <DashboardBackground>
@@ -118,6 +136,65 @@ const Dashboard = () => {
           </motion.div>
         )}
         
+        {/* Reminders Section - Moved up for greater prominence */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mb-3" 
+        >
+          <Card className="bg-gradient-to-r from-primary/10 to-primary/5 shadow-sm border border-primary/20 hover:shadow-md transition-all">
+            <div className="p-4">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-medium flex items-center text-primary">
+                  <Bell className="h-5 w-5 text-primary mr-2" />
+                  Upcoming Reminders
+                </h3>
+                <Button variant="outline" size="sm" className="text-primary border-primary/30 h-8 px-3 hover:bg-primary/10" onClick={() => navigate('/reminders')}>
+                  View All
+                  <ArrowRight className="ml-1 h-3 w-3" />
+                </Button>
+              </div>
+              
+              {upcomingReminders.length > 0 ? (
+                <div className="space-y-2">
+                  {upcomingReminders.map((reminder) => (
+                    <div key={reminder.id} className="p-2 bg-white/70 rounded-md flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
+                          <Bell className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{reminder.title}</p>
+                          <p className="text-xs text-muted-foreground">{formatTime(reminder.time)}</p>
+                        </div>
+                      </div>
+                      {reminder.petName && (
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
+                          {reminder.petName}
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-4 bg-white/60 rounded-md">
+                  <AlertTriangle className="h-6 w-6 text-amber-500 mb-2" />
+                  <p className="text-sm text-muted-foreground">No active reminders set</p>
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="mt-1 text-primary"
+                    onClick={() => navigate('/reminders')}
+                  >
+                    Set up reminders
+                  </Button>
+                </div>
+              )}
+            </div>
+          </Card>
+        </motion.div>
+        
         <StatsCards 
           recentActivity={recentActivity} 
           symptomsThisWeek={symptomsThisWeek} 
@@ -127,7 +204,7 @@ const Dashboard = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
           className="grid grid-cols-1 sm:grid-cols-2 gap-3"
         >
           <Button 
@@ -147,31 +224,6 @@ const Dashboard = () => {
         </motion.div>
         
         <PetsSection pets={pets} />
-        
-        {/* Reminders Preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-        >
-          <Card className="bg-white/80 shadow-sm border border-primary/10 hover:shadow-md transition-all">
-            <div className="p-4">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-medium flex items-center">
-                  <Bell className="h-4 w-4 text-primary mr-2" />
-                  Upcoming Reminders
-                </h3>
-                <Button variant="ghost" size="sm" className="text-primary h-8 px-2" onClick={() => navigate('/reminders')}>
-                  View All
-                  <ArrowRight className="ml-1 h-3 w-3" />
-                </Button>
-              </div>
-              <div className="text-center py-3 text-muted-foreground text-sm">
-                No upcoming reminders
-              </div>
-            </div>
-          </Card>
-        </motion.div>
         
         {/* Manual refresh button for when user wants to force update */}
         <div className="flex justify-center pt-2 pb-6">
