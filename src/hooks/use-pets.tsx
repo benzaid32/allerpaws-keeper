@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -159,9 +158,12 @@ export function usePets() {
       // If we're in a PWA, register for background sync
       if ('serviceWorker' in navigator && 'SyncManager' in window && navigator.serviceWorker.controller) {
         navigator.serviceWorker.ready.then(registration => {
-          registration.sync.register('sync-pets').catch(err => {
-            console.error('Failed to register background sync for pets:', err);
-          });
+          // Check if sync is available on the registration
+          if ('sync' in registration) {
+            registration.sync.register('sync-pets').catch(err => {
+              console.error('Failed to register background sync for pets:', err);
+            });
+          }
         });
       }
     } catch (error: any) {

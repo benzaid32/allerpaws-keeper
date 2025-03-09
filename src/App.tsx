@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useRouteError } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -87,12 +86,17 @@ function App() {
         try {
           const registration = await navigator.serviceWorker.ready;
           
-          // Register sync for different data types
-          await registration.sync.register('sync-pets');
-          await registration.sync.register('sync-symptoms');
-          await registration.sync.register('sync-food');
-          
-          console.log('Background sync registered successfully');
+          // Check if sync is available on the registration
+          if ('sync' in registration) {
+            // Register sync for different data types
+            await registration.sync.register('sync-pets');
+            await registration.sync.register('sync-symptoms');
+            await registration.sync.register('sync-food');
+            
+            console.log('Background sync registered successfully');
+          } else {
+            console.log('Background sync API not available on this browser');
+          }
         } catch (error) {
           console.error('Error setting up background sync:', error);
         }

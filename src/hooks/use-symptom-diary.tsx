@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -123,9 +122,12 @@ export const useSymptomDiary = () => {
       // If we're in a PWA, register for background sync
       if ('serviceWorker' in navigator && 'SyncManager' in window && navigator.serviceWorker.controller) {
         navigator.serviceWorker.ready.then(registration => {
-          registration.sync.register('sync-symptoms').catch(err => {
-            console.error('Failed to register background sync for symptoms:', err);
-          });
+          // Check if sync is available on the registration
+          if ('sync' in registration) {
+            registration.sync.register('sync-symptoms').catch(err => {
+              console.error('Failed to register background sync for symptoms:', err);
+            });
+          }
         });
       }
     } catch (error: any) {

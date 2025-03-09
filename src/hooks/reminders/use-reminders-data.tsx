@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,6 +97,18 @@ export const useRemindersData = () => {
       setReminders(formattedReminders);
       
       console.log(`Fetched ${formattedReminders.length} reminders at ${timestamp}`);
+      
+      // If we're in a PWA, register for background sync
+      if ('serviceWorker' in navigator && 'SyncManager' in window && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then(registration => {
+          // Check if sync is available on the registration
+          if ('sync' in registration) {
+            registration.sync.register('sync-reminders').catch(err => {
+              console.error('Failed to register background sync for reminders:', err);
+            });
+          }
+        });
+      }
     } catch (error: any) {
       console.error("Error fetching data:", error.message);
       
