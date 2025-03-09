@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Info, ArrowRight, ChevronRight, CheckCircle2 } from "lucide-react";
 import MobileCard from "@/components/ui/mobile-card";
-import { ListChecks, Clipboard, DogBowl } from "lucide-react";
+import { ListChecks, Clipboard, Utensils } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { EliminationPhase } from "@/lib/types";
 import { motion } from "framer-motion";
@@ -115,7 +115,7 @@ const DietGuide: React.FC<DietGuideProps> = ({
             {activePhase.recommendedFoods && (
               <div>
                 <h3 className="text-sm font-medium flex items-center mb-2">
-                  <DogBowl className="h-4 w-4 mr-2 text-primary" />
+                  <Utensils className="h-4 w-4 mr-2 text-primary" />
                   Recommended Foods
                 </h3>
                 <div className="flex flex-wrap gap-2">

@@ -11,7 +11,7 @@ import {
   CalendarDays,
   RefreshCw,
   ChevronRight,
-  DogBowl
+  Utensils
 } from "lucide-react";
 import MobileCard from "@/components/ui/mobile-card";
 import { Card, CardContent } from "@/components/ui/card";
@@ -144,7 +144,7 @@ const DietProgress: React.FC<DietProgressProps> = ({
           
           <div className="bg-background rounded-lg p-3 border shadow-sm">
             <h3 className="text-sm font-medium mb-2 flex items-center">
-              <DogBowl className="h-4 w-4 mr-1.5 text-primary" />
+              <Utensils className="h-4 w-4 mr-1.5 text-primary" />
               Key Tips
             </h3>
             <ul className="space-y-2.5">
