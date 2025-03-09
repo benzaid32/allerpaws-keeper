@@ -47,7 +47,15 @@ export const PLACEHOLDER_IMAGES = {
   user: "https://whspcnovvaqeztgtcsjl.supabase.co/storage/v1/object/public/app-images/placeholders/user-placeholder.png"
 };
 
-// Cheerful background patterns
+// Local fallback patterns to use when Supabase storage fails
+const FALLBACK_PATTERNS = [
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0wIDBoNjB2NjBIMHoiLz48cGF0aCBmaWxsPSIjRjVGN0ZCIiBkPSJNMzAgNWE1IDUgMCAxIDEgMCAxMCA1IDUgMCAwIDEgMC0xMHptMCAyMGE1IDUgMCAxIDEgMCAxMCA1IDUgMCAwIDEgMC0xMHptMCAyMGE1IDUgMCAxIDEgMCAxMCA1IDUgMCAwIDEgMC0xMHpNMTAgMTVhNSA1IDAgMSAxIDAgMTAgNSA1IDAgMCAxIDAtMTB6bTIwIDBhNSA1IDAgMSAxIDAgMTAgNSA1IDAgMCAxIDAtMTB6bTIwIDBhNSA1IDAgMSAxIDAgMTAgNSA1IDAgMCAxIDAtMTB6TTEwIDM1YTUgNSAwIDEgMSAwIDEwIDUgNSAwIDAgMSAwLTEwem0yMCAwYTUgNSAwIDEgMSAwIDEwIDUgNSAwIDAgMSAwLTEwem0yMCAwYTUgNSAwIDEgMSAwIDEwIDUgNSAwIDAgMSAwLTEweiIvPjwvZz48L3N2Zz4=",
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik0wIDBoNjB2NjBIMHoiLz48cGF0aCBmaWxsPSIjRjVGN0ZCIiBkPSJNMzAgNWE1IDUgMCAxIDEgMCAxMCA1IDUgMCAwIDEgMC0xMHptMCAyMGE1IDUgMCAxIDEgMCAxMCA1IDUgMCAwIDEgMC0xMHptMCAyMGE1IDUgMCAxIDEgMCAxMCA1IDUgMCAwIDEgMC0xMHpNMTAgMTVhNSA1IDAgMSAxIDAgMTAgNSA1IDAgMCAxIDAtMTB6bTIwIDBhNSA1IDAgMSAxIDAgMTAgNSA1IDAgMCAxIDAtMTB6bTIwIDBhNSA1IDAgMSAxIDAgMTAgNSA1IDAgMCAxIDAtMTB6TTEwIDM1YTUgNSAwIDEgMSAwIDEwIDUgNSAwIDAgMSAwLTEwem0yMCAwYTUgNSAwIDEgMSAwIDEwIDUgNSAwIDAgMSAwLTEwem0yMCAwYTUgNSAwIDEgMSAwIDEwIDUgNSAwIDAgMSAwLTEweiIvPjwvZz48L3N2Zz4=",
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjZmZmIj48L3JlY3Q+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjRjVGN0ZCIj48L3JlY3Q+PHJlY3QgeT0iMTAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI0Y1RjdGQiI+PC9yZWN0Pjwvc3ZnPg==",
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjZmZmIj48L3JlY3Q+PHBhdGggZD0iTTAgMGg0MHY0MEgwem00MCA0MGg0MHY0MEg0MHoiIGZpbGw9IiNGNUY3RkIiIGZpbGwtcnVsZT0ibm9uemVybyI+PC9wYXRoPjwvc3ZnPg=="
+];
+
+// Cheerful background patterns - these will try to load from Supabase, but we'll have fallbacks
 export const BACKGROUND_PATTERNS = [
   "https://whspcnovvaqeztgtcsjl.supabase.co/storage/v1/object/public/app-images/patterns/pattern-1.svg",
   "https://whspcnovvaqeztgtcsjl.supabase.co/storage/v1/object/public/app-images/patterns/pattern-2.svg",
@@ -212,10 +220,26 @@ export function getDefaultImage(category: keyof typeof DEFAULT_IMAGES, type: str
          PLACEHOLDER_IMAGES.pet;
 }
 
-// Get a random background pattern
+// Get a random background pattern with fallback to local data URIs if Supabase fails
 export function getRandomPattern(): string {
-  const randomIndex = Math.floor(Math.random() * BACKGROUND_PATTERNS.length);
-  return BACKGROUND_PATTERNS[randomIndex];
+  // First try to use the Supabase patterns
+  const randomSupabaseIndex = Math.floor(Math.random() * BACKGROUND_PATTERNS.length);
+  const supabasePattern = BACKGROUND_PATTERNS[randomSupabaseIndex];
+  
+  // Check if pattern is available by making a HEAD request
+  const img = new Image();
+  img.onerror = () => {
+    console.warn(`Failed to load pattern from Supabase: ${supabasePattern}, using fallback pattern`);
+    // We'll use the fallback in the src.onerror handler of the component
+  };
+  
+  return supabasePattern;
+}
+
+// Fallback function to get a local pattern when Supabase storage fails
+export function getFallbackPattern(): string {
+  const randomFallbackIndex = Math.floor(Math.random() * FALLBACK_PATTERNS.length);
+  return FALLBACK_PATTERNS[randomFallbackIndex];
 }
 
 // This function is removed as it shouldn't be done client-side

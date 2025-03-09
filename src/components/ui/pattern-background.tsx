@@ -1,7 +1,8 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { getRandomPattern } from "@/lib/image-utils";
+import { getRandomPattern, getFallbackPattern } from "@/lib/image-utils";
 
 interface PatternBackgroundProps {
   children: React.ReactNode;
@@ -20,8 +21,13 @@ const PatternBackground: React.FC<PatternBackgroundProps> = ({
   animate = true,
   color = "primary"
 }) => {
+  // State to track if the Supabase pattern failed to load
+  const [patternLoadFailed, setPatternLoadFailed] = useState(false);
+  
   // Use provided pattern URL or get a random one
-  const pattern = patternUrl || getRandomPattern();
+  const pattern = patternLoadFailed 
+    ? getFallbackPattern() 
+    : (patternUrl || getRandomPattern());
   
   // Color overlay based on the color prop
   const colorOverlay = {
@@ -29,6 +35,12 @@ const PatternBackground: React.FC<PatternBackgroundProps> = ({
     secondary: "bg-secondary/5",
     accent: "bg-accent/5",
     none: ""
+  };
+
+  // Handle pattern loading errors
+  const handlePatternError = () => {
+    console.warn("Pattern image failed to load, using fallback");
+    setPatternLoadFailed(true);
   };
 
   return (
@@ -42,7 +54,15 @@ const PatternBackground: React.FC<PatternBackgroundProps> = ({
           backgroundSize: "300px",
           opacity: opacity
         }}
-      />
+      >
+        {/* Hidden image to detect loading errors */}
+        <img 
+          src={pattern} 
+          alt="" 
+          className="hidden" 
+          onError={handlePatternError}
+        />
+      </div>
       
       {/* Color overlay */}
       {color !== "none" && (
