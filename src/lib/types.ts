@@ -16,19 +16,21 @@ export type Symptom = {
   description: string;
   severity: "mild" | "moderate" | "severe";
   icon?: string;
+  isCustom?: boolean;
 };
 
 export type SymptomEntry = {
   id: string;
   petId: string;
-  petName?: string; // Added missing property
+  petName?: string;
   date: string;
-  time?: string; // Added missing property
+  time?: string;
   symptoms: {
     symptomId: string;
     name?: string;
     severity: "mild" | "moderate" | "severe";
     notes?: string;
+    isCustom?: boolean;
   }[];
   notes?: string;
 };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -179,7 +180,7 @@ export const useSymptomDiary = () => {
             symptom_id,
             severity,
             notes,
-            symptoms:symptom_id (name)
+            symptoms:symptom_id (name, is_custom)
           )
         `)
         .eq("pets.user_id", user.id)
@@ -198,7 +199,8 @@ export const useSymptomDiary = () => {
           symptomId: detail.symptom_id,
           name: detail.symptoms?.name,
           severity: detail.severity as "mild" | "moderate" | "severe",
-          notes: detail.notes
+          notes: detail.notes,
+          isCustom: detail.symptoms?.is_custom
         })) || [],
         notes: entry.notes
       }));

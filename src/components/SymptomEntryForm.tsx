@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -6,16 +7,19 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, Plus, X, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase, isQueryError, safelyUnwrapResult } from "@/integrations/supabase/client";
 import { markUserChanges } from "@/lib/sync-utils";
+import CustomSymptomDialog from "@/components/symptoms/CustomSymptomDialog";
 
 interface Symptom {
   id: string;
   name: string;
   description?: string;
   severity_options: string[];
+  is_custom?: boolean;
+  created_by_user_id?: string;
 }
 
 interface SymptomEntryFormProps {
@@ -41,6 +45,7 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
   const [symptomNote, setSymptomNote] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [fetchingSymptoms, setFetchingSymptoms] = useState(true);
+  const [customSymptomDialogOpen, setCustomSymptomDialogOpen] = useState(false);
   const { toast } = useToast();
   
   const { register, handleSubmit, formState: { errors }, reset } = useForm<FormValues>({
@@ -68,7 +73,9 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
             id: item.id,
             name: item.name,
             description: item.description,
-            severity_options: item.severity_options || ['mild', 'moderate', 'severe']
+            severity_options: item.severity_options || ['mild', 'moderate', 'severe'],
+            is_custom: item.is_custom,
+            created_by_user_id: item.created_by_user_id
           }));
           
           setSymptoms(mappedSymptoms);
@@ -130,6 +137,26 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
     const updatedSymptoms = [...selectedSymptoms];
     updatedSymptoms.splice(index, 1);
     setSelectedSymptoms(updatedSymptoms);
+  };
+
+  const handleCustomSymptomCreated = (symptomId: string, symptomName: string) => {
+    // Add the new symptom to our local symptoms list
+    const newSymptom: Symptom = {
+      id: symptomId,
+      name: symptomName,
+      severity_options: ['mild', 'moderate', 'severe'],
+      is_custom: true
+    };
+    
+    setSymptoms(prev => [...prev, newSymptom]);
+    
+    // Select the newly created symptom
+    setCurrentSymptom(symptomId);
+    
+    toast({
+      title: "Custom symptom added",
+      description: `"${symptomName}" is now available for selection.`,
+    });
   };
   
   const onSubmit = async (values: FormValues) => {
@@ -271,9 +298,20 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
                   <SelectContent>
                     {symptoms.map((symptom) => (
                       <SelectItem key={symptom.id} value={symptom.id}>
-                        {symptom.name}
+                        {symptom.name} {symptom.is_custom && "(Custom)"}
                       </SelectItem>
                     ))}
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start pl-2 text-primary hover:text-primary/90 font-normal"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCustomSymptomDialogOpen(true);
+                      }}
+                    >
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Add Custom Symptom
+                    </Button>
                   </SelectContent>
                 </Select>
               </div>
@@ -374,6 +412,13 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
           "Save Entry"
         )}
       </Button>
+
+      {/* Custom Symptom Dialog */}
+      <CustomSymptomDialog
+        open={customSymptomDialogOpen}
+        onOpenChange={setCustomSymptomDialogOpen}
+        onSymptomCreated={handleCustomSymptomCreated}
+      />
     </form>
   );
 };
