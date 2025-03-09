@@ -59,3 +59,40 @@ export function clearTemporaryPetData(): void {
     console.error('Failed to clear temporary pet data:', error);
   }
 }
+
+// Check for storage quota - to help warn users before storage is full
+export async function checkStorageQuota(): Promise<{
+  usage: number;
+  quota: number;
+  percentUsed: number;
+}> {
+  try {
+    if ('storage' in navigator && 'estimate' in navigator.storage) {
+      const estimate = await navigator.storage.estimate();
+      const usage = estimate.usage || 0;
+      const quota = estimate.quota || 0;
+      const percentUsed = quota === 0 ? 0 : Math.round((usage / quota) * 100);
+      
+      return { usage, quota, percentUsed };
+    }
+    
+    // Fallback for browsers without Storage API support
+    return { usage: 0, quota: 0, percentUsed: 0 };
+  } catch (error) {
+    console.error('Error checking storage quota:', error);
+    return { usage: 0, quota: 0, percentUsed: 0 };
+  }
+}
+
+// Format bytes to human readable format
+export function formatBytes(bytes: number, decimals = 2): string {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}

@@ -13,6 +13,34 @@ const changedDataTypes = {
   reminders: false
 };
 
+// Flag to track if changes should be synced to the server
+let shouldSyncToServer = true;
+
+// Function to set whether changes should be synced to the server
+export function setSyncToServer(value: boolean) {
+  shouldSyncToServer = value;
+  console.log(`Sync to server ${value ? 'enabled' : 'disabled'}`);
+  
+  // Update localStorage to reflect this setting
+  try {
+    localStorage.setItem('allerpaws_syncToServer', value.toString());
+  } catch (e) {
+    console.warn(`Could not update sync setting in localStorage`, e);
+  }
+}
+
+// Function to check if changes should be synced to the server
+export function getSyncToServer(): boolean {
+  // Check localStorage first
+  try {
+    const setting = localStorage.getItem('allerpaws_syncToServer');
+    return setting === null ? true : setting === 'true';
+  } catch (e) {
+    console.warn(`Could not read sync setting from localStorage`, e);
+    return shouldSyncToServer;
+  }
+}
+
 // Function to mark that user has made changes
 export function markUserChanges(dataType?: 'pets' | 'symptoms' | 'food' | 'reminders') {
   console.log(`User changes marked for sync${dataType ? ` (${dataType})` : ''}`);
@@ -105,7 +133,8 @@ export function logSyncState() {
   console.log({
     hasUserMadeChanges,
     initialLoadCompleted,
-    changedDataTypes
+    changedDataTypes,
+    shouldSyncToServer
   });
 }
 

@@ -1,89 +1,68 @@
 
-import React, { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useSettings } from "@/hooks/use-settings";
-import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
-import { useNotifications } from "@/hooks/use-notifications";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import MobileLayout from "@/components/layout/MobileLayout";
-
-// Import component cards
-import SubscriptionCard from "@/components/settings/SubscriptionCard";
-import ThemeCard from "@/components/settings/ThemeCard";
-import PetManagementCard from "@/components/settings/PetManagementCard";
-import NotificationsCard from "@/components/settings/NotificationsCard";
-import AccountCard from "@/components/settings/AccountCard";
+import { AccountCard } from "@/components/settings/AccountCard";
+import { NotificationsCard } from "@/components/settings/NotificationsCard";
+import { ThemeCard } from "@/components/settings/ThemeCard";
+import { SubscriptionCard } from "@/components/settings/SubscriptionCard";
+import { DataSyncCard } from "@/components/settings/DataSyncCard";
+import { PetManagementCard } from "@/components/settings/PetManagementCard";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { forceNextSync } from "@/lib/sync-utils";
 
 const Settings = () => {
-  const { signOut } = useAuth();
-  const { theme, notifications, updateTheme, updateNotifications } = useSettings();
-  const { subscription, isLoading } = useSubscriptionContext();
-  const { 
-    permissionState, 
-    requestPermission, 
-    isSystemBlocked,
-    getNotificationInstructions,
-    checkPermissions
-  } = useNotifications();
-  const [permissionChecked, setPermissionChecked] = useState(false);
+  const { toast } = useToast();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Check notification permissions when component mounts
-  useEffect(() => {
-    const checkNotificationPermissions = async () => {
-      console.log("Settings: Checking notification permissions on mount");
-      await checkPermissions();
-      setPermissionChecked(true);
-    };
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
     
-    checkNotificationPermissions();
-  }, [checkPermissions]);
-
-  // Add additional logging to debug
-  console.log("Settings page - subscription data:", subscription);
-  console.log("Settings page - isLoading:", isLoading);
-  console.log("Settings page - notification permission state:", permissionState);
-  console.log("Settings page - notification system blocked:", isSystemBlocked);
-
-  const handleSignOut = async () => {
-    try {
-      console.log("Settings page: Initiating sign out process");
-      await signOut();
-      // The page will be redirected by the signOut function in AuthContext
-    } catch (error) {
-      console.error("Settings page: Error during sign out:", error);
-    }
+    // Force a refresh of all data
+    forceNextSync();
+    
+    // Simulate refresh delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    toast({
+      title: "Data Refreshed",
+      description: "All app data has been refreshed",
+    });
+    
+    setIsRefreshing(false);
   };
 
   return (
     <MobileLayout title="Settings">
-      <div className="space-y-5">
-        {/* Subscription Card */}
-        <SubscriptionCard
-          subscription={subscription}
-          isLoading={isLoading}
-        />
-
-        {/* Theme Settings Card */}
-        <ThemeCard
-          theme={theme}
-          updateTheme={updateTheme}
-        />
-
-        {/* Pet Management Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="pb-20"
+      >
+        <div className="flex justify-end mb-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+          </Button>
+        </div>
+        
+        {/* New Data Sync Card */}
+        <DataSyncCard />
+        
+        <AccountCard />
+        <SubscriptionCard />
+        <NotificationsCard />
+        <ThemeCard />
         <PetManagementCard />
-
-        {/* Notifications Card */}
-        <NotificationsCard
-          notifications={notifications}
-          updateNotifications={updateNotifications}
-          permissionState={permissionState}
-          requestPermission={requestPermission}
-          checkPermissions={checkPermissions}
-          getNotificationInstructions={getNotificationInstructions}
-        />
-
-        {/* Account Card */}
-        <AccountCard onSignOut={handleSignOut} />
-      </div>
+      </motion.div>
     </MobileLayout>
   );
 };
