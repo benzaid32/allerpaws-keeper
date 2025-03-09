@@ -12,8 +12,6 @@ export const useEliminationDiet = () => {
   const [totalDays, setTotalDays] = useState<number>(0);
   const [daysInCurrentPhase, setDaysInCurrentPhase] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [showGuide, setShowGuide] = useState(true);
-  const [showProgress, setShowProgress] = useState(false);
 
   // Load data from local storage
   useEffect(() => {
@@ -23,7 +21,6 @@ export const useEliminationDiet = () => {
       
       if (savedStartDate) {
         setStartDate(savedStartDate);
-        setShowProgress(true);
         
         // Calculate days passed and current phase
         const start = new Date(savedStartDate);
@@ -83,11 +80,11 @@ export const useEliminationDiet = () => {
     setDaysInCurrentPhase(0);
     setActivePhaseId("1");
     setLocalStorage("eliminationStartDate", today);
-    setShowProgress(true);
     
     toast({
       title: "Elimination Diet Started",
       description: "Your elimination diet plan has been started",
+      variant: "success",
     });
   };
 
@@ -99,10 +96,6 @@ export const useEliminationDiet = () => {
     totalDays,
     daysInCurrentPhase,
     loading,
-    showGuide,
-    setShowGuide,
-    showProgress,
-    setShowProgress,
     resetEliminationDiet,
     startEliminationDiet,
     phases: ELIMINATION_PHASES

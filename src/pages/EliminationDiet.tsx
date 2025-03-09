@@ -7,6 +7,8 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import DietGuide from "@/components/elimination-diet/DietGuide";
 import DietProgress from "@/components/elimination-diet/DietProgress";
 import { useEliminationDiet } from "@/hooks/use-elimination-diet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { motion } from "framer-motion";
 
 const EliminationDiet = () => {
   const navigate = useNavigate();
@@ -18,10 +20,6 @@ const EliminationDiet = () => {
     totalDays,
     daysInCurrentPhase,
     loading,
-    showGuide,
-    setShowGuide,
-    showProgress,
-    setShowProgress,
     resetEliminationDiet,
     startEliminationDiet,
     phases
@@ -37,6 +35,9 @@ const EliminationDiet = () => {
     );
   }
 
+  // Default tab is guide if not started, progress if already started
+  const defaultTab = startDate ? "progress" : "guide";
+
   return (
     <MobileLayout 
       title="Elimination Diet" 
@@ -44,57 +45,42 @@ const EliminationDiet = () => {
       onBack={() => navigate("/dashboard")}
     >
       <PatternBackground color="primary">
-        <div className="space-y-4">
-          {/* Toggle between Guide and Progress */}
-          <div className="flex rounded-lg overflow-hidden border mb-2">
-            <button
-              className={`flex-1 py-2 text-sm font-medium ${
-                showGuide ? "bg-primary text-primary-foreground" : "bg-muted/30"
-              }`}
-              onClick={() => {
-                setShowGuide(true);
-                setShowProgress(false);
-              }}
-            >
-              Guide
-            </button>
-            <button
-              className={`flex-1 py-2 text-sm font-medium ${
-                showProgress ? "bg-primary text-primary-foreground" : "bg-muted/30"
-              }`}
-              onClick={() => {
-                setShowGuide(false);
-                setShowProgress(true);
-              }}
-              disabled={!startDate}
-            >
-              My Progress
-            </button>
-          </div>
-
-          {showGuide && (
-            <DietGuide
-              activePhaseId={activePhaseId}
-              setActivePhaseId={setActivePhaseId}
-              startDate={startDate}
-              startEliminationDiet={startEliminationDiet}
-              phases={phases}
-            />
-          )}
-
-          {showProgress && startDate && (
-            <DietProgress
-              startDate={startDate}
-              totalDays={totalDays}
-              currentPhase={currentPhase}
-              daysInCurrentPhase={daysInCurrentPhase}
-              resetEliminationDiet={resetEliminationDiet}
-              setShowGuide={setShowGuide}
-              setShowProgress={setShowProgress}
-              phases={phases}
-            />
-          )}
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="space-y-4"
+        >
+          <Tabs defaultValue={defaultTab} className="w-full">
+            <TabsList className="grid grid-cols-2 mb-4">
+              <TabsTrigger value="guide" className="text-sm">Diet Guide</TabsTrigger>
+              <TabsTrigger value="progress" className="text-sm" disabled={!startDate}>My Progress</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="guide" className="mt-0">
+              <DietGuide
+                activePhaseId={activePhaseId}
+                setActivePhaseId={setActivePhaseId}
+                startDate={startDate}
+                startEliminationDiet={startEliminationDiet}
+                phases={phases}
+              />
+            </TabsContent>
+            
+            <TabsContent value="progress" className="mt-0">
+              {startDate && (
+                <DietProgress
+                  startDate={startDate}
+                  totalDays={totalDays}
+                  currentPhase={currentPhase}
+                  daysInCurrentPhase={daysInCurrentPhase}
+                  resetEliminationDiet={resetEliminationDiet}
+                  phases={phases}
+                />
+              )}
+            </TabsContent>
+          </Tabs>
+        </motion.div>
       </PatternBackground>
     </MobileLayout>
   );
