@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,9 +93,27 @@ export const useRemindersData = () => {
     };
 
     window.addEventListener('data-sync-complete', handleSyncComplete);
+    
+    // Also listen for storage events from other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'reminders_updated' || e.key === null) {
+        console.log('Storage change detected that affects reminders, refreshing');
+        if (!syncInProgress) {
+          syncInProgress = true;
+          setTimeout(() => {
+            fetchData(true).finally(() => {
+              syncInProgress = false;
+            });
+          }, 300);
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener('data-sync-complete', handleSyncComplete);
+      window.removeEventListener('storage', handleStorageChange);
       if (syncTimeout) {
         window.clearTimeout(syncTimeout);
       }
@@ -118,7 +135,8 @@ export const useRemindersData = () => {
     
     console.log(`Reminders fetch check - Force: ${forceRefresh}, Changes: ${hasRemindersChanges}, Initial load: ${initialLoadCompleted}, Offline: ${isOffline}`);
     
-    // Skip if no changes AND initial load completed AND not forced AND not offline
+    // Always fetch if forcing refresh, detecting changes, or it's the initial load
+    // Only skip if no changes AND initial load completed AND not forced AND not offline
     if (!forceRefresh && !hasRemindersChanges && initialLoadCompleted && !isOffline) {
       console.log('Skipping reminders fetch - no changes detected and initial load completed');
       return;
@@ -186,6 +204,13 @@ export const useRemindersData = () => {
       // After successful fetch, reset the changes flag and mark initial load complete
       resetChangesFlag('reminders');
       markInitialLoadCompleted();
+      
+      // Notify other browser tabs about the update
+      try {
+        localStorage.setItem('reminders_updated', timestamp.toString());
+      } catch (e) {
+        console.warn('Could not update localStorage for cross-tab notification', e);
+      }
       
       // If we're in a PWA, register for background sync
       const currentTime = Date.now();

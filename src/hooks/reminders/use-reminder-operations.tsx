@@ -200,7 +200,14 @@ export const useReminderOperations = ({
       
       // Close the dialog and refresh data
       setOpen(false);
-      await fetchData();
+      
+      // Force a data refresh to update the UI immediately
+      await fetchData(true);
+      
+      // Emit a custom event to notify that data has changed
+      window.dispatchEvent(new CustomEvent('data-sync-complete', { 
+        detail: { dataType: 'reminders' } 
+      }));
       
       // Only schedule notification if reminder is active
       if (formData.active) {
@@ -298,21 +305,26 @@ export const useReminderOperations = ({
       // Mark changes for sync
       markUserChanges('reminders');
       
-      // Update local state for immediate UI feedback
+      // Immediately update the local state
       setReminders(prev => prev.filter(r => r.id !== reminder.id));
       
-      toast({
-        title: "Reminder deleted",
-        description: "Your reminder has been deleted successfully",
-      });
+      // Also force a data refresh to ensure UI is up-to-date
+      await fetchData(true);
       
-      // Refresh data to ensure everything is in sync
-      await fetchData();
+      // Emit a custom event to notify that data has changed
+      window.dispatchEvent(new CustomEvent('data-sync-complete', { 
+        detail: { dataType: 'reminders' } 
+      }));
+      
+      toast({
+        title: "Success",
+        description: "Reminder deleted successfully",
+      });
     } catch (error: any) {
       console.error("Error deleting reminder:", error.message);
       toast({
         title: "Error",
-        description: "Failed to delete reminder. Please try again.",
+        description: "Failed to delete reminder",
         variant: "destructive",
       });
     }

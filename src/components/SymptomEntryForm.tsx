@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase, isQueryError, safelyUnwrapResult } from "@/integrations/supabase/client";
+import { markUserChanges } from "@/lib/sync-utils";
 
 interface Symptom {
   id: string;
@@ -183,6 +183,22 @@ const SymptomEntryForm: React.FC<SymptomEntryFormProps> = ({ petId, onSuccess })
       if (errors.length > 0) {
         console.error("Errors inserting symptom details:", errors);
         throw new Error("Some symptom details could not be saved");
+      }
+      
+      // Mark that user has made changes to symptoms data
+      markUserChanges('symptoms');
+      
+      // Emit a custom event to notify that data has changed
+      window.dispatchEvent(new CustomEvent('data-sync-complete', { 
+        detail: { dataType: 'symptoms', tag: 'sync-symptoms' } 
+      }));
+      
+      // Notify other browser tabs about the update
+      try {
+        const timestamp = new Date().getTime();
+        localStorage.setItem('symptoms_updated', timestamp.toString());
+      } catch (e) {
+        console.warn('Could not update localStorage for cross-tab notification', e);
       }
       
       toast({

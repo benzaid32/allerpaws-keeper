@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,7 +65,8 @@ export const useSymptomDiary = () => {
     
     const handleSyncComplete = (event: Event) => {
       const customEvent = event as CustomEvent;
-      if (customEvent.detail?.tag === 'sync-symptoms') {
+      if (customEvent.detail?.tag === 'sync-symptoms' || 
+          customEvent.detail?.dataType === 'symptoms') {
         // Prevent duplicate refreshes for the same sync event
         if (syncInProgress) return;
         
@@ -92,9 +92,27 @@ export const useSymptomDiary = () => {
     };
 
     window.addEventListener('data-sync-complete', handleSyncComplete);
+    
+    // Also listen for storage events from other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'symptoms_updated' || e.key === null) {
+        console.log('Storage change detected that affects symptoms, refreshing');
+        if (!syncInProgress) {
+          syncInProgress = true;
+          setTimeout(() => {
+            fetchEntries(true).finally(() => {
+              syncInProgress = false;
+            });
+          }, 300);
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener('data-sync-complete', handleSyncComplete);
+      window.removeEventListener('storage', handleStorageChange);
       if (syncTimeout) {
         window.clearTimeout(syncTimeout);
       }
@@ -116,7 +134,12 @@ export const useSymptomDiary = () => {
     // 2. No user changes detected
     // 3. Already completed initial load
     // 4. Not offline
-    if (!forceRefresh && !hasChanges() && isInitialLoadCompleted() && !isOffline) {
+    const hasSymptomChanges = hasChanges('symptoms');
+    const initialLoadCompleted = isInitialLoadCompleted();
+    
+    console.log(`Symptoms fetch check - Force: ${forceRefresh}, Changes: ${hasSymptomChanges}, Initial load: ${initialLoadCompleted}, Offline: ${isOffline}`);
+    
+    if (!forceRefresh && !hasSymptomChanges && initialLoadCompleted && !isOffline) {
       console.log('Skipping symptom fetch - no user changes detected and initial load completed');
       return;
     }
@@ -184,8 +207,16 @@ export const useSymptomDiary = () => {
       console.log(`Loaded ${formattedEntries.length} symptom entries`);
 
       // After successful fetch, reset the changes flag and mark initial load as complete
-      resetChangesFlag();
+      resetChangesFlag('symptoms');
       markInitialLoadCompleted();
+      
+      // Notify other browser tabs about the update
+      try {
+        const timestamp = new Date().getTime();
+        localStorage.setItem('symptoms_updated', timestamp.toString());
+      } catch (e) {
+        console.warn('Could not update localStorage for cross-tab notification', e);
+      }
       
       // Register for background sync, but throttle it to prevent infinite loops
       const currentTime = Date.now();
@@ -250,10 +281,18 @@ export const useSymptomDiary = () => {
       if (entryError) throw entryError;
 
       // Mark that user has made changes
-      markUserChanges();
+      markUserChanges('symptoms');
       
       // Update local state by removing the deleted entry
       setEntries(entries.filter(entry => entry.id !== entryId));
+      
+      // Force a data refresh to ensure UI is up-to-date
+      await fetchEntries(true);
+      
+      // Emit a custom event to notify that data has changed
+      window.dispatchEvent(new CustomEvent('data-sync-complete', { 
+        detail: { dataType: 'symptoms', tag: 'sync-symptoms' } 
+      }));
 
       toast({
         title: "Success",
