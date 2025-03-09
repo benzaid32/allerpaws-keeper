@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useRouteError } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -12,9 +13,11 @@ import InstallBanner from './components/pwa/InstallBanner';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const [waitingServiceWorker, setWaitingServiceWorker] = useState<ServiceWorker | null>(null);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
   const { toast } = useToast();
 
-  // Register service worker for PWA
+  // Register service worker for PWA with enhanced error handling and update detection
   useEffect(() => {
     const registerServiceWorker = async () => {
       if ('serviceWorker' in navigator) {
@@ -22,7 +25,54 @@ function App() {
           const registration = await navigator.serviceWorker.register('/service-worker.js', {
             scope: '/'
           });
+          
           console.log('Service Worker registered with scope:', registration.scope);
+          
+          // Check if there's an updated service worker waiting
+          if (registration.waiting) {
+            setWaitingServiceWorker(registration.waiting);
+            setUpdateAvailable(true);
+          }
+          
+          // Handle new service workers that come in after registration
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (!newWorker) return;
+            
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                setWaitingServiceWorker(newWorker);
+                setUpdateAvailable(true);
+                
+                // Notify user of update
+                toast({
+                  title: "Update Available",
+                  description: "A new version is available. Refresh to update.",
+                  action: <button onClick={updateServiceWorker} className="bg-primary text-white px-3 py-1 rounded">Update</button>,
+                  duration: 0 // Don't auto-dismiss
+                });
+              }
+            });
+          });
+          
+          // Set up message event handler
+          navigator.serviceWorker.addEventListener('message', (event) => {
+            console.log('Message from service worker:', event.data);
+            
+            // Handle sync complete messages
+            if (event.data && event.data.type === 'SYNC_COMPLETE') {
+              toast({
+                title: "Sync Complete",
+                description: `${event.data.tag.replace('sync-', '').toUpperCase()} data has been synchronized`,
+                duration: 3000
+              });
+              
+              // Trigger a refresh of relevant data
+              window.dispatchEvent(new CustomEvent('data-sync-complete', { 
+                detail: { tag: event.data.tag }
+              }));
+            }
+          });
         } catch (error) {
           console.error('Service Worker registration failed:', error);
         }
@@ -30,7 +80,42 @@ function App() {
     };
 
     registerServiceWorker();
-  }, []);
+    
+    // Set up periodic background sync (if supported)
+    const setupBackgroundSync = async () => {
+      if ('serviceWorker' in navigator && 'SyncManager' in window) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          
+          // Register sync for different data types
+          await registration.sync.register('sync-pets');
+          await registration.sync.register('sync-symptoms');
+          await registration.sync.register('sync-food');
+          
+          console.log('Background sync registered successfully');
+        } catch (error) {
+          console.error('Error setting up background sync:', error);
+        }
+      } else {
+        console.log('Background sync not supported by browser');
+      }
+    };
+    
+    setupBackgroundSync();
+  }, [toast]);
+  
+  // Function to update service worker
+  const updateServiceWorker = () => {
+    if (!waitingServiceWorker) return;
+    
+    // Send skip waiting message to service worker
+    waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
+    
+    // The service worker will activate and control the page
+    // We need to reload to ensure the new version is used
+    setUpdateAvailable(false);
+    window.location.reload();
+  };
 
   // Request notification permissions early
   useEffect(() => {
@@ -57,11 +142,25 @@ function App() {
     requestNotificationPermissions();
   }, []);
 
-  // Initialize the app and handle service workers
+  // Initialize the app with cache-clearing for PWA data
   useEffect(() => {
     const initializeApp = async () => {
       try {
         console.log("App initialized");
+        
+        // For PWAs, clear data caches on startup
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+          if ('caches' in window) {
+            try {
+              // Only clear the dynamic data cache, not static assets
+              await caches.delete('allerpaws-dynamic-v1');
+              await caches.delete('allerpaws-api-v1');
+              console.log('Cleared dynamic data caches on PWA startup');
+            } catch (error) {
+              console.error('Error clearing caches:', error);
+            }
+          }
+        }
         
         // Add a small delay to ensure all components are properly loaded
         // This helps with refresh issues on dashboard pages

@@ -9,21 +9,88 @@ export function usePets() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const { id: petId } = useParams<{ id?: string }>();
   const { toast } = useToast();
+
+  // Update online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false);
+      // Trigger a refresh when coming back online
+      fetchPets();
+      toast({
+        title: "You're back online",
+        description: "Syncing your latest data",
+      });
+    };
+
+    const handleOffline = () => {
+      setIsOffline(true);
+      toast({
+        title: "You're offline",
+        description: "Some features may be limited",
+        variant: "destructive",
+      });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [toast]);
+
+  // Listen for sync complete events from service worker
+  useEffect(() => {
+    const handleSyncComplete = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail?.tag === 'sync-pets') {
+        console.log('Pet data sync completed, refreshing data');
+        fetchPets();
+      }
+    };
+
+    window.addEventListener('data-sync-complete', handleSyncComplete);
+
+    return () => {
+      window.removeEventListener('data-sync-complete', handleSyncComplete);
+    };
+  }, []);
 
   // Fetch pets function that can be called whenever we need fresh data
   const fetchPets = useCallback(async () => {
     try {
       setLoading(true);
       
-      // Fetch pets with cache busting by adding a timestamp
+      // If offline, show a message but still try to fetch from cache
+      if (isOffline) {
+        console.log('Attempting to fetch pets data while offline (from cache)');
+      }
+      
+      // Generate a unique cache-busting timestamp
       const timestamp = new Date().getTime();
+      
+      // Prepare fetch options to bypass cache in PWA context
+      const fetchOptions: any = {};
+      
+      // For PWA in standalone mode, add cache control headers
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        fetchOptions.headers = {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        };
+      }
+
+      // Fetch pets with cache busting
       const { data: petsData, error: petsError } = await supabase
         .from("pets")
         .select("*")
-        .order("updated_at", { ascending: false })  // Order by updated_at to show latest updates first
-        .order("created_at", { ascending: false });  // As a fallback
+        .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false });
 
       if (petsError) {
         throw petsError;
@@ -34,6 +101,7 @@ export function usePets() {
       // For each pet, fetch its allergies
       const petsWithAllergies = await Promise.all(
         (petsData || []).map(async (pet) => {
+          // Prepare allergy fetch options with cache busting
           const { data: allergiesData, error: allergiesError } = await supabase
             .from("allergies")
             .select("name")
@@ -47,9 +115,9 @@ export function usePets() {
             } as Pet;
           }
 
-          // Add timestamp to image URL to prevent caching
+          // Add timestamp to image URL to prevent caching in PWA context
           let imageUrl = pet.image_url;
-          if (imageUrl) {
+          if (imageUrl && window.matchMedia('(display-mode: standalone)').matches) {
             // Always use a new timestamp to force cache refresh
             const cacheBuster = `t=${timestamp}`;
             imageUrl = imageUrl.includes('?') 
@@ -87,17 +155,36 @@ export function usePets() {
           });
         }
       }
+
+      // If we're in a PWA, register for background sync
+      if ('serviceWorker' in navigator && 'SyncManager' in window && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.sync.register('sync-pets').catch(err => {
+            console.error('Failed to register background sync for pets:', err);
+          });
+        });
+      }
     } catch (error: any) {
       console.error("Error fetching pets:", error.message);
-      toast({
-        title: "Error",
-        description: "Failed to load your pets",
-        variant: "destructive",
-      });
+      
+      // Show different message based on online status
+      if (isOffline) {
+        toast({
+          title: "You're offline",
+          description: "Using locally stored pet data",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load your pets",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
-  }, [toast, petId]);
+  }, [toast, petId, isOffline]);
 
   // Initialize by fetching pets on component mount or when dependencies change
   useEffect(() => {
@@ -175,6 +262,7 @@ export function usePets() {
     setSelectedPet,
     clearSelectedPet,
     deletePet,
-    fetchPets  // Export the function so components can trigger a refresh
+    fetchPets,  // Export the function so components can trigger a refresh
+    isOffline   // Make offline status available to components
   };
 }

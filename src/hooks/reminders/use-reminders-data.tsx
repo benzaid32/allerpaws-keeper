@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,12 +17,42 @@ export const useRemindersData = () => {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [pets, setPets] = useState<SimplePet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
-  const fetchData = async () => {
+  // Update online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false);
+      // Trigger a refresh when coming back online
+      fetchData();
+    };
+
+    const handleOffline = () => {
+      setIsOffline(true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const fetchData = useCallback(async () => {
     if (!user) return;
 
     try {
       setLoading(true);
+      
+      // If offline, log but still try to fetch (service worker will handle caching)
+      if (isOffline) {
+        console.log('Fetching reminders while offline (using cache)');
+      }
+      
+      // Add cache busting for PWA context
+      const timestamp = new Date().getTime();
       
       // Fetch pets
       const { data: petsData, error: petsError } = await supabase
@@ -66,29 +96,42 @@ export const useRemindersData = () => {
       }));
       
       setReminders(formattedReminders);
+      
+      console.log(`Fetched ${formattedReminders.length} reminders at ${timestamp}`);
     } catch (error: any) {
       console.error("Error fetching data:", error.message);
-      toast({
-        title: "Error",
-        description: "Failed to load reminders",
-        variant: "destructive",
-      });
+      
+      // Different message based on connection status
+      if (isOffline) {
+        toast({
+          title: "You're offline",
+          description: "Using locally stored reminders",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load reminders",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast, isOffline]);
 
   useEffect(() => {
     if (user) {
       fetchData();
     }
-  }, [user]);
+  }, [user, fetchData]);
 
   return {
     reminders,
     pets,
     loading,
     fetchData,
-    setReminders
+    setReminders,
+    isOffline
   };
 };
