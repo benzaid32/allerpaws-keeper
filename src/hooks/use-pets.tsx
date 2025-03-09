@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +17,8 @@ export function usePets() {
   const [isSyncing, setIsSyncing] = useState(false);
   const { id: petId } = useParams<{ id?: string }>();
   const { toast } = useToast();
+  const initialLoadDone = useRef(false);
+  const syncListenerAdded = useRef(false);
 
   // Update online/offline status
   useEffect(() => {
@@ -49,7 +52,12 @@ export function usePets() {
 
   // Listen for sync complete events from service worker, with debouncing
   useEffect(() => {
+    if (syncListenerAdded.current) return;
+    
+    syncListenerAdded.current = true;
     let syncInProgress = false;
+    let syncTimeout: number | null = null;
+    
     const handleSyncComplete = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.tag === 'sync-pets') {
@@ -58,12 +66,22 @@ export function usePets() {
         
         syncInProgress = true;
         console.log('Pet data sync completed, refreshing data');
-        fetchPets().finally(() => {
-          // Reset after a delay to prevent rapid successive events
-          setTimeout(() => {
-            syncInProgress = false;
-          }, 1000);
-        });
+        
+        // Clear any existing timeout
+        if (syncTimeout) {
+          window.clearTimeout(syncTimeout);
+        }
+        
+        // Create new timeout for debouncing
+        syncTimeout = window.setTimeout(() => {
+          fetchPets().finally(() => {
+            // Reset after a delay to prevent rapid successive events
+            setTimeout(() => {
+              syncInProgress = false;
+              syncTimeout = null;
+            }, 1000);
+          });
+        }, 300); // Debounce for 300ms
       }
     };
 
@@ -71,6 +89,9 @@ export function usePets() {
 
     return () => {
       window.removeEventListener('data-sync-complete', handleSyncComplete);
+      if (syncTimeout) {
+        window.clearTimeout(syncTimeout);
+      }
     };
   }, []);
 
@@ -220,8 +241,15 @@ export function usePets() {
 
   // Initialize by fetching pets on component mount or when dependencies change
   useEffect(() => {
+    if (initialLoadDone.current) return;
+    
+    initialLoadDone.current = true;
     console.log("usePets: Initial data load");
-    fetchPets();
+    
+    // Small delay to prevent cascade of fetches
+    setTimeout(() => {
+      fetchPets();
+    }, 50);
     
     // Set up an event listener to refresh data when the app comes back into focus
     // This is important to catch updates made in other tabs or after returning to the app
@@ -233,9 +261,6 @@ export function usePets() {
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // We're no longer setting up a periodic refresh interval
-    // This removes the continuous refreshing behavior
     
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);

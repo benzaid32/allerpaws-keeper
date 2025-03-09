@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useRouteError } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
@@ -15,14 +15,26 @@ import InstallBanner from './components/pwa/InstallBanner';
 let backgroundSyncRegistered = false;
 const SYNC_REGISTRATION_DELAY = 5000; // Delay initial sync registration
 
+// Add type declarations for window object
+declare global {
+  interface Window {
+    __allerpawsEventsRegistered?: boolean;
+  }
+}
+
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [waitingServiceWorker, setWaitingServiceWorker] = useState<ServiceWorker | null>(null);
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const { toast } = useToast();
+  const serviceWorkerRegistered = useRef(false);
+  const initDone = useRef(false);
 
   // Register service worker for PWA with enhanced error handling and update detection
   useEffect(() => {
+    if (serviceWorkerRegistered.current) return;
+    
+    serviceWorkerRegistered.current = true;
     const registerServiceWorker = async () => {
       if ('serviceWorker' in navigator) {
         try {
@@ -59,24 +71,28 @@ function App() {
             });
           });
           
-          // Set up message event handler
-          navigator.serviceWorker.addEventListener('message', (event) => {
-            console.log('Message from service worker:', event.data);
+          // Set up message event handler only once
+          if (!window.__allerpawsEventsRegistered) {
+            window.__allerpawsEventsRegistered = true;
             
-            // Handle sync complete messages
-            if (event.data && event.data.type === 'SYNC_COMPLETE') {
-              toast({
-                title: "Sync Complete",
-                description: `${event.data.tag.replace('sync-', '').toUpperCase()} data has been synchronized`,
-                duration: 3000
-              });
+            navigator.serviceWorker.addEventListener('message', (event) => {
+              console.log('Message from service worker:', event.data);
               
-              // Trigger a refresh of relevant data
-              window.dispatchEvent(new CustomEvent('data-sync-complete', { 
-                detail: { tag: event.data.tag }
-              }));
-            }
-          });
+              // Handle sync complete messages
+              if (event.data && event.data.type === 'SYNC_COMPLETE') {
+                toast({
+                  title: "Sync Complete",
+                  description: `${event.data.tag.replace('sync-', '').toUpperCase()} data has been synchronized`,
+                  duration: 3000
+                });
+                
+                // Trigger a refresh of relevant data
+                window.dispatchEvent(new CustomEvent('data-sync-complete', { 
+                  detail: { tag: event.data.tag }
+                }));
+              }
+            });
+          }
         } catch (error) {
           console.error('Service Worker registration failed:', error);
         }
@@ -85,32 +101,58 @@ function App() {
 
     registerServiceWorker();
     
-    // Set up periodic background sync (if supported)
+    // Set up background sync with careful throttling
     const setupBackgroundSync = async () => {
-      if ('serviceWorker' in navigator && 'SyncManager' in window) {
-        try {
-          const registration = await navigator.serviceWorker.ready;
-          
-          // Check if sync is available on the registration
-          if ('sync' in registration) {
-            // Register sync for different data types
-            await registration.sync.register('sync-pets');
-            await registration.sync.register('sync-symptoms');
-            await registration.sync.register('sync-food');
+      // Only perform this once and only if supported
+      if (backgroundSyncRegistered || !('serviceWorker' in navigator) || !('SyncManager' in window)) {
+        return;
+      }
+      
+      try {
+        // Wait for service worker to be ready before registering sync
+        setTimeout(async () => {
+          try {
+            const registration = await navigator.serviceWorker.ready;
             
-            console.log('Background sync registered successfully');
-          } else {
-            console.log('Background sync API not available on this browser');
+            // Check if sync is available on the registration
+            if ('sync' in registration) {
+              // Stagger registrations to avoid overwhelming the system
+              setTimeout(() => {
+                registration.sync.register('sync-pets').catch(err => {
+                  console.error('Error registering pets sync:', err);
+                });
+              }, 0);
+              
+              setTimeout(() => {
+                registration.sync.register('sync-symptoms').catch(err => {
+                  console.error('Error registering symptoms sync:', err);
+                });
+              }, 1000);
+              
+              setTimeout(() => {
+                registration.sync.register('sync-food').catch(err => {
+                  console.error('Error registering food sync:', err);
+                });
+              }, 2000);
+              
+              backgroundSyncRegistered = true;
+              console.log('Background syncs registered with staggered timing');
+            } else {
+              console.log('Background sync API not available on this browser');
+            }
+          } catch (error) {
+            console.error('Error in delayed sync setup:', error);
           }
-        } catch (error) {
-          console.error('Error setting up background sync:', error);
-        }
-      } else {
-        console.log('Background sync not supported by browser');
+        }, SYNC_REGISTRATION_DELAY);
+      } catch (error) {
+        console.error('Error setting up background sync:', error);
       }
     };
     
-    setupBackgroundSync();
+    // Call setupBackgroundSync after a delay
+    setTimeout(() => {
+      setupBackgroundSync();
+    }, 2000);
   }, [toast]);
   
   // Function to update service worker
@@ -136,7 +178,7 @@ function App() {
           if ('serviceWorker' in navigator) {
             try {
               // Ensure service worker is ready for notifications
-              const registration = await navigator.serviceWorker.ready;
+              await navigator.serviceWorker.ready;
               console.log("Service worker ready for notifications");
             } catch (error) {
               console.error("Error preparing service worker for notifications:", error);
@@ -151,44 +193,11 @@ function App() {
     requestNotificationPermissions();
   }, []);
 
-  // Setup background sync with throttling
-  useEffect(() => {
-    const setupBackgroundSync = async () => {
-      if ('serviceWorker' in navigator && 'SyncManager' in window && !backgroundSyncRegistered) {
-        try {
-          // Delay registration to prevent immediate syncing when app starts
-          setTimeout(async () => {
-            const registration = await navigator.serviceWorker.ready;
-            
-            // Check if sync is available on the registration
-            if ('sync' in registration) {
-              // Register sync for different data types
-              await registration.sync.register('sync-pets');
-              await registration.sync.register('sync-symptoms');
-              await registration.sync.register('sync-food');
-              
-              backgroundSyncRegistered = true;
-              console.log('Background sync registered successfully with delay');
-            } else {
-              console.log('Background sync API not available on this browser');
-            }
-          }, SYNC_REGISTRATION_DELAY);
-        } catch (error) {
-          console.error('Error setting up background sync:', error);
-        }
-      } else {
-        console.log('Background sync not supported by browser or already registered');
-      }
-    };
-    
-    // Only set up background sync if the app is fully loaded
-    if (!isLoading) {
-      setupBackgroundSync();
-    }
-  }, [isLoading]);
-
   // Initialize the app with cache-clearing for PWA data
   useEffect(() => {
+    if (initDone.current) return;
+    
+    initDone.current = true;
     const initializeApp = async () => {
       try {
         console.log("App initialized");
@@ -232,7 +241,7 @@ function App() {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     // Add error handling for uncaught errors
-    const handleUnhandledError = (event) => {
+    const handleUnhandledError = (event: any) => {
       console.error('Unhandled error:', event.error || event.message);
       toast({
         title: "Something went wrong",

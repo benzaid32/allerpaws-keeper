@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +16,8 @@ export const useSymptomDiary = () => {
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
+  const initialLoadDone = useRef(false);
+  const syncListenerAdded = useRef(false);
 
   // Update online/offline status
   useEffect(() => {
@@ -48,7 +51,12 @@ export const useSymptomDiary = () => {
 
   // Listen for sync complete events from service worker
   useEffect(() => {
+    if (syncListenerAdded.current) return;
+    
+    syncListenerAdded.current = true;
     let syncInProgress = false;
+    let syncTimeout: number | null = null;
+    
     const handleSyncComplete = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.tag === 'sync-symptoms') {
@@ -57,12 +65,22 @@ export const useSymptomDiary = () => {
         
         syncInProgress = true;
         console.log('Symptom data sync completed, refreshing data');
-        fetchEntries().finally(() => {
-          // Reset after a delay to prevent rapid successive events
-          setTimeout(() => {
-            syncInProgress = false;
-          }, 1000);
-        });
+        
+        // Clear any existing timeout
+        if (syncTimeout) {
+          window.clearTimeout(syncTimeout);
+        }
+        
+        // Create new timeout for debouncing
+        syncTimeout = window.setTimeout(() => {
+          fetchEntries().finally(() => {
+            // Reset after a delay to prevent rapid successive events
+            setTimeout(() => {
+              syncInProgress = false;
+              syncTimeout = null;
+            }, 1000);
+          });
+        }, 300); // Debounce for 300ms
       }
     };
 
@@ -70,6 +88,9 @@ export const useSymptomDiary = () => {
 
     return () => {
       window.removeEventListener('data-sync-complete', handleSyncComplete);
+      if (syncTimeout) {
+        window.clearTimeout(syncTimeout);
+      }
     };
   }, []);
 
@@ -140,18 +161,6 @@ export const useSymptomDiary = () => {
       }));
       
       setEntries(formattedEntries);
-      
-      // If we're in a PWA, register for background sync
-      if ('serviceWorker' in navigator && 'SyncManager' in window && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.ready.then(registration => {
-          // Check if sync is available on the registration
-          if ('sync' in registration) {
-            registration.sync.register('sync-symptoms').catch(err => {
-              console.error('Failed to register background sync for symptoms:', err);
-            });
-          }
-        });
-      }
       
       // Register for background sync, but throttle it to prevent infinite loops
       const currentTime = Date.now();
@@ -233,8 +242,12 @@ export const useSymptomDiary = () => {
   };
 
   useEffect(() => {
-    if (user) {
-      fetchEntries();
+    if (user && !initialLoadDone.current) {
+      initialLoadDone.current = true;
+      // Small delay to prevent overlap with other loading processes
+      setTimeout(() => {
+        fetchEntries();
+      }, 150);
     }
   }, [user, fetchEntries]);
 

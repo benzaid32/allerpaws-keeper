@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePets } from "@/hooks/use-pets";
@@ -30,11 +31,18 @@ const Dashboard = () => {
   const userName = user?.user_metadata?.full_name || "Pet Parent";
   const firstName = userName.split(' ')[0];
   const isPremium = hasPremiumAccess;
+  const initialFetchDone = useRef(false);
 
-  // Fetch data only once when the dashboard is loaded 
+  // Fetch data only once when the dashboard is loaded and not on every render
   useEffect(() => {
-    console.log("Dashboard mounted - fetching data once");
-    fetchPets();
+    if (!initialFetchDone.current) {
+      console.log("Dashboard mounted - fetching data once");
+      initialFetchDone.current = true;
+      // Small timeout to prevent overlap with other initialization
+      setTimeout(() => {
+        fetchPets();
+      }, 100);
+    }
   }, [fetchPets]);
 
   // If signing out, show a full-screen loading indicator

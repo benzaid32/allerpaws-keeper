@@ -15,6 +15,9 @@ if (typeof window !== 'undefined') {
   }
 }
 
+// Prevent multiple registration of service worker events
+window.__allerpawsEventsRegistered = window.__allerpawsEventsRegistered || false;
+
 // Mount the app
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error('Failed to find the root element');
