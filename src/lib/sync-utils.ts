@@ -1,3 +1,4 @@
+
 // Flag to track if user has made any changes
 let hasUserMadeChanges = false;
 
@@ -20,6 +21,17 @@ export function markUserChanges(dataType?: 'pets' | 'symptoms' | 'food' | 'remin
   // If a specific data type is provided, mark it as changed
   if (dataType) {
     changedDataTypes[dataType] = true;
+    
+    // Dispatch an event to trigger refreshes in the same tab
+    const event = new Event(`${dataType}-data-changed`);
+    window.dispatchEvent(event);
+    
+    // Update localStorage to notify other tabs
+    try {
+      localStorage.setItem(`${dataType}_updated`, Date.now().toString());
+    } catch (e) {
+      console.warn(`Could not update localStorage for cross-tab notification of ${dataType}`, e);
+    }
   }
 }
 
@@ -95,4 +107,19 @@ export function logSyncState() {
     initialLoadCompleted,
     changedDataTypes
   });
+}
+
+// Trigger refresh for specific data type
+export function triggerDataRefresh(dataType: 'pets' | 'symptoms' | 'food' | 'reminders') {
+  console.log(`Triggering refresh for ${dataType}`);
+  
+  // Dispatch event for same-tab updates
+  window.dispatchEvent(new Event(`${dataType}-data-changed`));
+  
+  // Update localStorage for cross-tab updates
+  try {
+    localStorage.setItem(`${dataType}_updated`, Date.now().toString());
+  } catch (e) {
+    console.warn(`Could not update localStorage for cross-tab notification of ${dataType}`, e);
+  }
 }

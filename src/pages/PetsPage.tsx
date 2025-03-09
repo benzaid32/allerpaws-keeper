@@ -8,6 +8,7 @@ import { usePets } from "@/hooks/use-pets";
 import { useToast } from "@/hooks/use-toast";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { PetsActionBar } from "@/components/pets/PetsActionBar";
+import { markUserChanges } from "@/lib/sync-utils";
 
 const PetsPage = () => {
   const navigate = useNavigate();
@@ -34,6 +35,31 @@ const PetsPage = () => {
     loadPets();
   }, []);
 
+  // Listen for storage events from other pages/tabs
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'pets_updated' || e.key === null) {
+        console.log('Storage change detected for pets, refreshing data');
+        fetchPets(true);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Listen for custom event for same-tab updates
+    const handlePetsChanged = () => {
+      console.log('Pets data changed event detected, refreshing');
+      fetchPets(true);
+    };
+    
+    window.addEventListener('pets-data-changed', handlePetsChanged);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('pets-data-changed', handlePetsChanged);
+    };
+  }, [fetchPets]);
+
   const handleViewPet = (petId: string) => {
     navigate(`/pet/${petId}`);
   };
@@ -47,6 +73,18 @@ const PetsPage = () => {
       setDeletingPetId(petId);
       setIsDeleting(true);
       await deletePet(petId);
+      
+      // Mark changes for sync and dispatch event
+      markUserChanges('pets');
+      window.dispatchEvent(new Event('pets-data-changed'));
+      
+      // Update localStorage to notify other tabs
+      try {
+        localStorage.setItem('pets_updated', Date.now().toString());
+      } catch (e) {
+        console.warn('Could not update localStorage for cross-tab notification', e);
+      }
+      
       toast({
         title: "Success",
         description: "Pet deleted successfully",

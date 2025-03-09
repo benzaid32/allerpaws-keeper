@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Pet } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { markUserChanges } from "@/lib/sync-utils";
 
 interface PetDetailsCardProps {
   pet: Pet;
@@ -73,6 +74,9 @@ const PetDetailsCard: React.FC<PetDetailsCardProps> = ({ pet, setPet }) => {
         age: formData.age ? parseInt(formData.age, 10) : undefined,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
       } : null);
+      
+      // Mark changes for sync and trigger refresh
+      markUserChanges('pets');
       
       setEditing(false);
       

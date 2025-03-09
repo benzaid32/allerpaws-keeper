@@ -10,6 +10,7 @@ import { Pet } from "@/lib/types";
 import { supabase, isQueryError } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SEVERITY_LEVELS } from "@/lib/constants";
+import { markUserChanges } from "@/lib/sync-utils";
 
 interface AllergiesCardProps {
   pet: Pet;
@@ -43,6 +44,9 @@ const AllergiesCard: React.FC<AllergiesCardProps> = ({ pet, setPet }) => {
         knownAllergies: [...prev.knownAllergies, newAllergen.trim()]
       } : null);
       
+      // Mark changes for sync and trigger refresh
+      markUserChanges('pets');
+      
       setNewAllergen("");
       
       toast({
@@ -74,6 +78,9 @@ const AllergiesCard: React.FC<AllergiesCardProps> = ({ pet, setPet }) => {
         ...prev,
         knownAllergies: prev.knownAllergies.filter(a => a !== allergen)
       } : null);
+      
+      // Mark changes for sync and trigger refresh
+      markUserChanges('pets');
       
       toast({
         title: "Allergen removed",

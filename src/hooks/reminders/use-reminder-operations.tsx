@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Reminder } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { markUserChanges, triggerDataRefresh } from "@/lib/sync-utils";
 
 // Define props for hook to match expected usage in components
 interface UseReminderOperationsProps {
@@ -57,6 +58,9 @@ export const useReminderOperations = (props?: UseReminderOperationsProps) => {
 
       if (error) throw error;
 
+      // Mark changes and trigger refresh
+      markUserChanges('reminders');
+      
       toast({
         title: "Success",
         description: "Reminder added successfully.",
@@ -84,6 +88,9 @@ export const useReminderOperations = (props?: UseReminderOperationsProps) => {
         .eq("id", reminderId);
 
       if (error) throw error;
+      
+      // Mark changes and trigger refresh
+      markUserChanges('reminders');
 
       toast({
         title: "Success",
@@ -110,6 +117,9 @@ export const useReminderOperations = (props?: UseReminderOperationsProps) => {
         .eq("id", reminderId);
 
       if (error) throw error;
+      
+      // Mark changes and trigger refresh
+      markUserChanges('reminders');
 
       toast({
         title: "Success",

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,8 @@ import {
   resetChangesFlag, 
   isInitialLoadCompleted,
   markInitialLoadCompleted,
-  forceNextSync
+  forceNextSync,
+  triggerDataRefresh
 } from "@/lib/sync-utils";
 
 // Track when the last sync was registered to prevent duplicate registrations
@@ -53,6 +55,20 @@ export const useRemindersData = () => {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Listen for reminders-data-changed events
+  useEffect(() => {
+    const handleRemindersChanged = () => {
+      console.log('Reminders data changed event detected, refreshing');
+      fetchData(true);
+    };
+    
+    window.addEventListener('reminders-data-changed', handleRemindersChanged);
+    
+    return () => {
+      window.removeEventListener('reminders-data-changed', handleRemindersChanged);
     };
   }, []);
 

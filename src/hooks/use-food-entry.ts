@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from "uuid";
 import { FoodProduct } from "@/lib/types";
+import { markUserChanges, triggerDataRefresh } from "@/lib/sync-utils";
 
 // Interface for form data
 interface FoodEntryFormData {
@@ -76,6 +77,10 @@ export const useFoodEntry = () => {
       
       if (itemError) throw itemError;
       
+      // Mark changes and trigger refresh
+      markUserChanges('food');
+      triggerDataRefresh('food');
+      
       toast({
         title: "Food entry added",
         description: "Your food entry has been successfully logged",
@@ -138,6 +143,10 @@ export const useFoodEntry = () => {
         });
       
       if (itemError) throw itemError;
+      
+      // Mark changes and trigger refresh
+      markUserChanges('food');
+      triggerDataRefresh('food');
       
       toast({
         title: "Food saved to diary",

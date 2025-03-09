@@ -15,6 +15,7 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import PatternBackground from "@/components/ui/pattern-background";
 import { supabase } from "@/integrations/supabase/client";
 import { usePets } from "@/hooks/use-pets";
+import { markUserChanges, triggerDataRefresh } from "@/lib/sync-utils";
 
 interface FoodEntry {
   id: string;
@@ -128,9 +129,33 @@ const EditFoodEntry = () => {
         throw error;
       }
       
-      // Update the food item
-      // Note: This is simplified and assumes a single food item per entry
-      // In a real app, you might need to handle multiple food items
+      // Get the food item ID
+      const { data: foodItemData, error: foodItemError } = await supabase
+        .from("food_items")
+        .select("id")
+        .eq("entry_id", id)
+        .single();
+      
+      if (foodItemError && foodItemError.code !== "PGRST116") {
+        throw foodItemError;
+      }
+      
+      if (foodItemData) {
+        // Update the food item
+        const { error: updateError } = await supabase
+          .from("food_items")
+          .update({
+            name: foodName,
+            type: foodType,
+          })
+          .eq("id", foodItemData.id);
+          
+        if (updateError) throw updateError;
+      }
+      
+      // Mark changes and trigger refresh
+      markUserChanges('food');
+      triggerDataRefresh('food');
       
       toast({
         title: "Success",
