@@ -1,9 +1,16 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Pet, Reminder } from "@/lib/types";
-import { markUserChanges, hasChanges, resetChangesFlag } from "@/lib/sync-utils";
+import { 
+  markUserChanges, 
+  hasChanges, 
+  resetChangesFlag, 
+  isInitialLoadCompleted,
+  markInitialLoadCompleted 
+} from "@/lib/sync-utils";
 
 // Track when the last sync was registered to prevent duplicate registrations
 let lastSyncRegistered = 0;
@@ -31,7 +38,7 @@ export const useRemindersData = () => {
     const handleOnline = () => {
       setIsOffline(false);
       // Trigger a refresh when coming back online
-      fetchData();
+      fetchData(true);
     };
 
     const handleOffline = () => {
@@ -71,7 +78,7 @@ export const useRemindersData = () => {
         
         // Create new timeout for debouncing
         syncTimeout = window.setTimeout(() => {
-          fetchData().finally(() => {
+          fetchData(true).finally(() => {
             // Reset after a delay to prevent rapid successive events
             setTimeout(() => {
               syncInProgress = false;
@@ -101,15 +108,18 @@ export const useRemindersData = () => {
       return;
     }
 
-    // Only proceed with sync if user has made changes or it's forced
-    if (!forceRefresh && !hasChanges() && !isOffline) {
-      console.log('Skipping reminders fetch - no user changes detected');
+    // IMPORTANT: Changed this condition to ensure initial data loads
+    // Only skip if no changes AND initial load completed AND not forced AND not offline
+    if (!forceRefresh && !hasChanges() && isInitialLoadCompleted() && !isOffline) {
+      console.log('Skipping reminders fetch - no user changes detected and initial load completed');
       return;
     }
 
     try {
       setIsSyncing(true);
       setLoading(true);
+      
+      console.log('Fetching reminders data...');
       
       // If offline, log but still try to fetch (service worker will handle caching)
       if (isOffline) {
@@ -164,8 +174,9 @@ export const useRemindersData = () => {
       
       console.log(`Fetched ${formattedReminders.length} reminders at ${timestamp}`);
       
-      // After successful fetch, reset the changes flag
+      // After successful fetch, reset the changes flag and mark initial load complete
       resetChangesFlag();
+      markInitialLoadCompleted();
       
       // If we're in a PWA, register for background sync
       const currentTime = Date.now();
@@ -213,7 +224,7 @@ export const useRemindersData = () => {
       initialLoadDone.current = true;
       // Small delay to prevent overlap with other loading processes
       setTimeout(() => {
-        fetchData();
+        fetchData(true); // Force fetch on initial load
       }, 200);
     }
   }, [user, fetchData]);

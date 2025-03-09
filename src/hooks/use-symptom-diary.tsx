@@ -1,9 +1,16 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SymptomEntry } from "@/lib/types";
-import { markUserChanges, hasChanges, resetChangesFlag } from "@/lib/sync-utils";
+import { 
+  markUserChanges, 
+  hasChanges, 
+  resetChangesFlag, 
+  isInitialLoadCompleted,
+  markInitialLoadCompleted 
+} from "@/lib/sync-utils";
 
 // Track when the last sync was registered to prevent duplicate registrations
 let lastSyncRegistered = 0;
@@ -24,7 +31,7 @@ export const useSymptomDiary = () => {
     const handleOnline = () => {
       setIsOffline(false);
       // Trigger a refresh when coming back online
-      fetchEntries();
+      fetchEntries(true);
       toast({
         title: "You're back online",
         description: "Syncing your symptom diary",
@@ -73,7 +80,7 @@ export const useSymptomDiary = () => {
         
         // Create new timeout for debouncing
         syncTimeout = window.setTimeout(() => {
-          fetchEntries().finally(() => {
+          fetchEntries(true).finally(() => {
             // Reset after a delay to prevent rapid successive events
             setTimeout(() => {
               syncInProgress = false;
@@ -103,15 +110,22 @@ export const useSymptomDiary = () => {
       return;
     }
 
-    // Only proceed with sync if user has made changes or it's forced
-    if (!forceRefresh && !hasChanges() && !isOffline) {
-      console.log('Skipping symptom fetch - no user changes detected');
+    // IMPORTANT: Changed this condition to always fetch on initial load
+    // Only skip sync if all these conditions are met:
+    // 1. Not a forced refresh
+    // 2. No user changes detected
+    // 3. Already completed initial load
+    // 4. Not offline
+    if (!forceRefresh && !hasChanges() && isInitialLoadCompleted() && !isOffline) {
+      console.log('Skipping symptom fetch - no user changes detected and initial load completed');
       return;
     }
 
     try {
       setIsSyncing(true);
       setLoading(true);
+      
+      console.log('Fetching symptom entries...');
       
       // If offline, show debug message but still try to fetch (from cache via service worker)
       if (isOffline) {
@@ -167,9 +181,11 @@ export const useSymptomDiary = () => {
       }));
       
       setEntries(formattedEntries);
+      console.log(`Loaded ${formattedEntries.length} symptom entries`);
 
-      // After successful fetch, reset the changes flag
+      // After successful fetch, reset the changes flag and mark initial load as complete
       resetChangesFlag();
+      markInitialLoadCompleted();
       
       // Register for background sync, but throttle it to prevent infinite loops
       const currentTime = Date.now();
@@ -258,7 +274,7 @@ export const useSymptomDiary = () => {
       initialLoadDone.current = true;
       // Small delay to prevent overlap with other loading processes
       setTimeout(() => {
-        fetchEntries();
+        fetchEntries(true); // Force refresh on initial load
       }, 150);
     }
   }, [user, fetchEntries]);

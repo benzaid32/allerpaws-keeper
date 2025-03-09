@@ -36,26 +36,26 @@ const BackgroundSyncManager: React.FC<BackgroundSyncManagerProps> = ({ children 
               
               // Stagger registrations to avoid overwhelming the system
               setTimeout(() => {
-                registration.sync.register('sync-pets').catch(err => {
+                registration.sync.register('pets').catch(err => {
                   // Log but don't rethrow - this prevents app from breaking
                   console.error('Error registering pets sync:', err);
                 });
               }, 0);
               
               setTimeout(() => {
-                registration.sync.register('sync-symptoms').catch(err => {
+                registration.sync.register('symptoms').catch(err => {
                   console.error('Error registering symptoms sync:', err);
                 });
               }, 1000);
               
               setTimeout(() => {
-                registration.sync.register('sync-food').catch(err => {
+                registration.sync.register('food').catch(err => {
                   console.error('Error registering food sync:', err);
                 });
               }, 2000);
               
               setTimeout(() => {
-                registration.sync.register('sync-reminders').catch(err => {
+                registration.sync.register('reminders').catch(err => {
                   console.error('Error registering reminders sync:', err);
                 });
               }, 3000);

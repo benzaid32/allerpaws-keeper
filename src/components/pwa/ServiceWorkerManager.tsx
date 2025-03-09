@@ -65,20 +65,29 @@ const ServiceWorkerManager: React.FC<ServiceWorkerManagerProps> = ({ children })
               
               // Handle sync complete messages - but don't show notifications for them
               if (event.data && event.data.type === 'SYNC_COMPLETE') {
+                // Map shorter tag names back to their full versions for event dispatching
+                let fullTagName = event.data.tag;
+                
+                // Convert short tag names to the longer versions used in data hooks
+                if (event.data.tag === 'pets') fullTagName = 'sync-pets';
+                if (event.data.tag === 'symptoms') fullTagName = 'sync-symptoms';
+                if (event.data.tag === 'food') fullTagName = 'sync-food';
+                if (event.data.tag === 'reminders') fullTagName = 'sync-reminders';
+                
                 // We'll still dispatch the event so data refreshes can happen
                 // But we'll only trigger refresh if there have been user changes
                 if (hasChanges()) {
                   window.dispatchEvent(new CustomEvent('data-sync-complete', { 
-                    detail: { tag: event.data.tag }
+                    detail: { tag: fullTagName }
                   }));
                   
                   // Reset changes flag after sync is complete
                   resetChangesFlag();
                   
                   // Log the sync for debugging but don't show toast
-                  console.log(`Sync complete with user changes: ${event.data.tag}`);
+                  console.log(`Sync complete with user changes: ${fullTagName}`);
                 } else {
-                  console.log(`Skipping sync notification (no changes): ${event.data.tag}`);
+                  console.log(`Skipping sync notification (no changes): ${fullTagName}`);
                 }
               }
             });
