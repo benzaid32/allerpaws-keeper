@@ -5,7 +5,15 @@ import { useToast } from "@/hooks/use-toast";
 import { Reminder } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
 
-export const useReminderOperations = () => {
+// Define props for hook to match expected usage in components
+interface UseReminderOperationsProps {
+  fetchData: () => Promise<void>;
+  setReminders: React.Dispatch<React.SetStateAction<Reminder[]>>;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setSubmitting: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export const useReminderOperations = (props?: UseReminderOperationsProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
@@ -119,11 +127,75 @@ export const useReminderOperations = () => {
     }
   };
 
+  // Add the handler methods expected by components
+  const handleSubmit = async (e: React.FormEvent, formData: any, isEditing: boolean) => {
+    e.preventDefault();
+    
+    if (!props) return;
+    
+    props.setSubmitting(true);
+    
+    try {
+      // If we're editing an existing reminder
+      if (isEditing && formData.id) {
+        await updateReminder(formData.id, formData);
+      } else {
+        // Creating a new reminder
+        await addReminder(formData as Reminder);
+      }
+      
+      // Refresh the reminders list
+      await props.fetchData();
+      
+      // Close the form
+      props.setOpen(false);
+    } catch (error) {
+      console.error("Error submitting reminder:", error);
+    } finally {
+      props.setSubmitting(false);
+    }
+  };
+  
+  const handleToggleActive = async (reminder: Reminder) => {
+    if (!props) return;
+    
+    try {
+      // Toggle the active state
+      await updateReminder(reminder.id, { 
+        active: !reminder.active 
+      });
+      
+      // Update the reminders list with the toggled value
+      props.setReminders(prev => 
+        prev.map(r => r.id === reminder.id ? { ...r, active: !r.active } : r)
+      );
+    } catch (error) {
+      console.error("Error toggling reminder:", error);
+    }
+  };
+  
+  const handleDelete = async (reminder: Reminder) => {
+    if (!props) return;
+    
+    try {
+      await deleteReminder(reminder.id);
+      
+      // Remove the deleted reminder from the list
+      props.setReminders(prev => prev.filter(r => r.id !== reminder.id));
+    } catch (error) {
+      console.error("Error deleting reminder:", error);
+    }
+  };
+
   return {
     fetchReminders,
     addReminder,
     updateReminder,
     deleteReminder,
     loading,
+    // Add the handler methods to the return object
+    handleSubmit,
+    handleToggleActive,
+    handleDelete
   };
 };
