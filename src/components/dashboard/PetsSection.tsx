@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Pet } from "@/lib/types";
-import { PawPrint, Grid, List, PlusCircle } from "lucide-react";
+import { PawPrint, Grid, List, PlusCircle, Camera } from "lucide-react";
 import { PetsList } from "@/components/pets/PetsList";
 import AddPetCard from "./AddPetCard";
 import { EmptyPetsList } from "@/components/pets/EmptyPetsList";
@@ -63,8 +63,19 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
   // Show quick add button directly in header when no pets exist
   const showQuickAddButton = pets.length === 0;
 
+  // Animation variants for staggered children
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
   return (
-    <Card className="bg-white/80 border shadow-sm hover:shadow-md transition-all p-4 mb-6">
+    <Card className="bg-white/80 border shadow-sm hover:shadow-md transition-all p-4 mb-6 overflow-hidden">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -111,46 +122,53 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
         </div>
 
         {pets && pets.length > 0 ? (
-          <div className={viewMode === "grid" ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3" : "space-y-3"}>
-            {viewMode === "grid" ? (
-              <>
-                <PetsList 
-                  pets={pets}
-                  onViewPet={handleViewPet}
-                  onEditPet={handleEditPet}
-                  onDeletePet={handleDeletePet}
-                  onAddPet={handleAddPet}
-                  isDeleting={isDeleting}
-                  deletingPetId={deletingPetId}
-                  displayMode={viewMode}
-                />
-                {pets.length < 3 && <AddPetCard />}
-              </>
-            ) : (
-              <>
-                <PetsList 
-                  pets={pets}
-                  onViewPet={handleViewPet}
-                  onEditPet={handleEditPet}
-                  onDeletePet={handleDeletePet}
-                  onAddPet={handleAddPet}
-                  isDeleting={isDeleting}
-                  deletingPetId={deletingPetId}
-                  displayMode={viewMode}
-                />
-                <Button 
-                  onClick={handleAddPet}
-                  variant="outline" 
-                  className="w-full flex items-center justify-center gap-2 py-3 border-dashed"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  Add Another Pet
-                </Button>
-              </>
+          <motion.div 
+            className={viewMode === "grid" ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3" : "space-y-3"}
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+          >
+            <PetsList 
+              pets={pets}
+              onViewPet={handleViewPet}
+              onEditPet={handleEditPet}
+              onDeletePet={handleDeletePet}
+              onAddPet={handleAddPet}
+              isDeleting={isDeleting}
+              deletingPetId={deletingPetId}
+              displayMode={viewMode}
+            />
+            
+            {viewMode === "grid" && pets.length < 3 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <AddPetCard />
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         ) : (
           <EmptyPetsList onAddPet={handleAddPet} />
+        )}
+        
+        {viewMode === "list" && pets.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-3"
+          >
+            <Button 
+              onClick={handleAddPet}
+              variant="outline" 
+              className="w-full flex items-center justify-center gap-2 py-3 border-dashed"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add Another Pet
+            </Button>
+          </motion.div>
         )}
       </motion.div>
     </Card>
