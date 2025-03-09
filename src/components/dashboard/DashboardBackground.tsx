@@ -10,14 +10,16 @@ interface DashboardBackgroundProps {
 const DashboardBackground: React.FC<DashboardBackgroundProps> = ({ children }) => {
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Main background image - using the uploaded image */}
+      {/* Main background image - use an absolute path rather than lovable-uploads */}
       <div 
         className="fixed inset-0 bg-cover bg-center"
         style={{ 
-          backgroundImage: `url('/lovable-uploads/9575c134-213b-4839-b573-65f38dc28955.png')`,
-          backgroundSize: 'cover',
+          backgroundColor: "#f5f7fb", // Fallback color in case image doesn't load
+          backgroundImage: `url('/icons/icon-512x512.png')`,
+          backgroundSize: '30%',
           backgroundPosition: 'center center',
-          opacity: 0.85
+          backgroundRepeat: 'no-repeat',
+          opacity: 0.1
         }}
       />
       
