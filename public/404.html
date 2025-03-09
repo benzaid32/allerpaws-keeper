@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,34 +55,32 @@
     }
   </style>
   <script>
-    // Redirect to the homepage after a short delay
+    // Script to handle SPA routing during page refresh
     window.onload = function() {
       // Store the current URL path to redirect back after going to the homepage
       const currentPath = window.location.pathname;
       
       // Set a timeout to redirect
       setTimeout(function() {
-        // First redirect to the root to ensure the app loads properly
-        window.location.href = '/';
-        
-        // After the app loads, we'll redirect back to the original path
-        // This is handled by the app's router
+        // Store the path we want to redirect to
         localStorage.setItem('redirectAfterLoad', currentPath);
-      }, 3000);
+        // Redirect to the root to let the app handle routing
+        window.location.href = '/';
+      }, 1500);
       
       // Update countdown
-      let seconds = 3;
+      let seconds = 1.5;
       const countdownElement = document.getElementById('countdown');
       
       const interval = setInterval(function() {
-        seconds--;
+        seconds -= 0.1;
         if (countdownElement) {
-          countdownElement.textContent = seconds;
+          countdownElement.textContent = seconds.toFixed(0);
         }
         if (seconds <= 0) {
           clearInterval(interval);
         }
-      }, 1000);
+      }, 100);
     };
   </script>
 </head>
@@ -91,7 +90,7 @@
     <h1>Page Not Found</h1>
     <p>The page you're looking for doesn't exist or has been moved.</p>
     <a href="/" class="button">Go to Homepage</a>
-    <p class="redirect-message">You will be automatically redirected in <span id="countdown">3</span> seconds...</p>
+    <p class="redirect-message">You will be automatically redirected in <span id="countdown">1</span> second...</p>
   </div>
 </body>
-</html> 
+</html>

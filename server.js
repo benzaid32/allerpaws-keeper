@@ -1,3 +1,4 @@
+
 const express = require('express');
 const path = require('path');
 const compression = require('compression');
@@ -12,10 +13,11 @@ app.use(express.static(path.join(__dirname, 'dist')));
 
 // Handle SPA routing - serve index.html for all routes
 app.get('*', (req, res) => {
+  // Always serve the index.html for any request that doesn't match a static file
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-}); 
+});

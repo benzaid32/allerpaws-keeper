@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { HelmetProvider } from "react-helmet-async";
@@ -34,6 +34,7 @@ import Help from './pages/Help';
 import Blog from './pages/Blog';
 import Careers from './pages/Careers';
 import Landing from './pages/Landing';
+import NotFound from './pages/NotFound';
 
 import FoodDetailsPage from './pages/FoodDetailsPage';
 import FoodDiary from './pages/FoodDiary';
@@ -53,6 +54,7 @@ const PublicPageLayout = ({ children }) => {
 // Component to handle redirects from 404 page
 const RedirectHandler = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
     // Check if there's a redirect path stored in localStorage
@@ -65,13 +67,10 @@ const RedirectHandler = () => {
       console.log('Redirecting to:', redirectPath);
       navigate(redirectPath);
     }
-  }, [navigate]);
+  }, [navigate, location]);
   
   return null;
 };
-
-// Import useNavigate at the top level
-import { useNavigate } from 'react-router-dom';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -171,6 +170,7 @@ function App() {
           <BrowserRouter>
             <AuthProvider>
               <SubscriptionProvider>
+                <RedirectHandler />
                 <Toaster />
                 <InstallBanner />
                 <Routes>
@@ -214,6 +214,9 @@ function App() {
                   <Route path="/help" element={<Help />} />
                   <Route path="/blog" element={<Blog />} />
                   <Route path="/careers" element={<Careers />} />
+                  
+                  {/* 404 Not Found - must be last */}
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </SubscriptionProvider>
             </AuthProvider>

@@ -16,10 +16,10 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
         <img 
-          src="/lovable-uploads/ac2e5c6c-4c6f-43e5-826f-709eba1f1a9d.png" 
+          src="/icons/icon-192x192.png" 
           alt="AllerPaws Logo" 
           className="w-24 h-24 mx-auto mb-4"
         />
