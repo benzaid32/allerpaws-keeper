@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ui/theme-provider";
@@ -15,7 +14,6 @@ import './App.css';
 import { initializeLocalStorage } from '@/lib/local-storage-utils';
 
 function App() {
-  const location = useLocation();
   const [isAnimating, setIsAnimating] = useState(false);
 
   // Initialize local storage on app startup
@@ -23,11 +21,8 @@ function App() {
     initializeLocalStorage();
   }, []);
 
-  useEffect(() => {
-    setIsAnimating(true);
-    const timer = setTimeout(() => setIsAnimating(false), 500);
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
+  // We'll handle location changes inside AppRoutes component instead
+  // This eliminates the error from using useLocation outside Router context
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="allerpaws-theme">
@@ -38,7 +33,7 @@ function App() {
               <NotificationPermissionManager>
                 <BackgroundSyncManager>
                   <div className={`app-container ${isAnimating ? 'animating' : ''}`}>
-                    <AppRoutes />
+                    <AppRoutes setIsAnimating={setIsAnimating} />
                   </div>
                   <Toaster />
                   <SonnerToaster position="top-center" />
