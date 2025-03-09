@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -35,9 +35,9 @@ function App() {
         <SubscriptionProvider>
           <DataSyncProvider>
             <ServiceWorkerManager>
-              {children => (
+              {(serviceWorkerChildren: ReactNode) => (
                 <NotificationPermissionManager>
-                  {children => (
+                  {(notificationChildren: ReactNode) => (
                     <BackgroundSyncManager>
                       <div className={`app-container ${isAnimating ? 'animating' : ''}`}>
                         <AppRoutes />

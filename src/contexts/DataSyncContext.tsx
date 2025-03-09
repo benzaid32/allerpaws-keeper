@@ -5,16 +5,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getSyncSettings, updateSyncSettings, recordSync } from "@/lib/local-storage-utils";
 import { setSyncToServer, getSyncToServer } from "@/lib/sync-utils";
 
-type SyncFrequency = 'weekly' | 'monthly' | 'manual' | 'never';
+type SyncFrequency = 'weekly' | 'monthly' | 'manual' | 'daily' | 'never';
+type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
 
 interface DataSyncContextType {
   isOnlineOnly: boolean;
   toggleOnlineMode: () => void;
+  syncEnabled: boolean;
+  toggleSyncEnabled: () => void;
   syncFrequency: SyncFrequency;
   setSyncFrequency: (frequency: SyncFrequency) => void;
+  changeSyncFrequency: (frequency: SyncFrequency) => void;
   lastSyncTime: Date | null;
   syncNow: () => Promise<boolean>;
   isSyncing: boolean;
+  syncStatus: SyncStatus;
 }
 
 const DataSyncContext = createContext<DataSyncContextType | undefined>(undefined);
@@ -35,12 +40,14 @@ export const DataSyncProvider: React.FC<DataSyncProviderProps> = ({ children }) 
   const { toast } = useToast();
   const { user } = useAuth();
   const [isOnlineOnly, setIsOnlineOnly] = useState<boolean>(() => getSyncToServer());
+  const [syncEnabled, setSyncEnabled] = useState<boolean>(true);
   const [syncFrequency, setSyncFrequency] = useState<SyncFrequency>(() => getSyncSettings().frequency);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(() => {
     const lastSync = getSyncSettings().lastSync;
     return lastSync ? new Date(lastSync) : null;
   });
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
 
   // Initialize from localStorage on mount
   useEffect(() => {
@@ -63,6 +70,18 @@ export const DataSyncProvider: React.FC<DataSyncProviderProps> = ({ children }) 
     });
   };
 
+  const toggleSyncEnabled = () => {
+    const newValue = !syncEnabled;
+    setSyncEnabled(newValue);
+    
+    toast({
+      title: newValue ? "Sync Enabled" : "Sync Disabled",
+      description: newValue 
+        ? "Your data will be synchronized based on your settings" 
+        : "Your data will remain on your device only",
+    });
+  };
+
   const updateFrequency = (frequency: SyncFrequency) => {
     setSyncFrequency(frequency);
     updateSyncSettings(frequency);
@@ -77,6 +96,9 @@ export const DataSyncProvider: React.FC<DataSyncProviderProps> = ({ children }) 
     });
   };
 
+  // Alias for updateFrequency to match component requirements
+  const changeSyncFrequency = updateFrequency;
+
   // Function to manually trigger sync
   const syncNow = async (): Promise<boolean> => {
     if (!user) {
@@ -89,6 +111,7 @@ export const DataSyncProvider: React.FC<DataSyncProviderProps> = ({ children }) 
     }
     
     setIsSyncing(true);
+    setSyncStatus('syncing');
     
     try {
       // This would trigger the actual sync process
@@ -100,6 +123,8 @@ export const DataSyncProvider: React.FC<DataSyncProviderProps> = ({ children }) 
       const now = new Date();
       setLastSyncTime(now);
       
+      setSyncStatus('success');
+      
       toast({
         title: "Sync Complete",
         description: `All data synced at ${now.toLocaleTimeString()}`,
@@ -108,6 +133,8 @@ export const DataSyncProvider: React.FC<DataSyncProviderProps> = ({ children }) 
       return true;
     } catch (error) {
       console.error("Sync error:", error);
+      setSyncStatus('error');
+      
       toast({
         title: "Sync Failed",
         description: "There was an error syncing your data",
@@ -116,6 +143,10 @@ export const DataSyncProvider: React.FC<DataSyncProviderProps> = ({ children }) 
       return false;
     } finally {
       setIsSyncing(false);
+      // Reset status after a delay
+      setTimeout(() => {
+        setSyncStatus('idle');
+      }, 5000);
     }
   };
 
@@ -124,11 +155,15 @@ export const DataSyncProvider: React.FC<DataSyncProviderProps> = ({ children }) 
       value={{
         isOnlineOnly,
         toggleOnlineMode,
+        syncEnabled,
+        toggleSyncEnabled,
         syncFrequency,
         setSyncFrequency: updateFrequency,
+        changeSyncFrequency,
         lastSyncTime,
         syncNow,
-        isSyncing
+        isSyncing,
+        syncStatus
       }}
     >
       {children}
