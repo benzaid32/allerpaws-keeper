@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useRouteError } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -78,18 +77,16 @@ function App() {
             navigator.serviceWorker.addEventListener('message', (event) => {
               console.log('Message from service worker:', event.data);
               
-              // Handle sync complete messages
+              // Handle sync complete messages - but don't show notifications for them
               if (event.data && event.data.type === 'SYNC_COMPLETE') {
-                toast({
-                  title: "Sync Complete",
-                  description: `${event.data.tag.replace('sync-', '').toUpperCase()} data has been synchronized`,
-                  duration: 3000
-                });
-                
-                // Trigger a refresh of relevant data
+                // We'll still dispatch the event so data refreshes can happen
+                // But we won't show the toast notification
                 window.dispatchEvent(new CustomEvent('data-sync-complete', { 
                   detail: { tag: event.data.tag }
                 }));
+                
+                // Log the sync for debugging but don't show toast
+                console.log(`Sync complete: ${event.data.tag}`);
               }
             });
           }
