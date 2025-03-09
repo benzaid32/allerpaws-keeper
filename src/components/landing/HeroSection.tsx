@@ -18,7 +18,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="h-[450px] md:h-[500px] w-full rounded-2xl overflow-hidden">
+            <div className="h-[450px] md:h-[550px] w-full rounded-2xl overflow-hidden">
               <BeforeAfterComparison 
                 beforeImage="/lovable-uploads/5b876602-f6d7-4fd7-9097-960a81032ab4.png"
                 afterImage="/lovable-uploads/0c91b822-a92b-4c7d-87ed-299db532b2c0.png"

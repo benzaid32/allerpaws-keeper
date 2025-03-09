@@ -106,7 +106,7 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({
         <img 
           src={beforeImage} 
           alt="Before using AllerPaws" 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center"
         />
         <div className="absolute top-6 left-6 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-lg font-bold text-xl md:text-2xl text-[#033b5c]">
           {beforeLabel}
@@ -124,9 +124,9 @@ const BeforeAfterComparison: React.FC<BeforeAfterComparisonProps> = ({
         <img 
           src={afterImage} 
           alt="After using AllerPaws" 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center"
         />
-        <div className="absolute top-6 left-6 bg-gradient-to-r from-[#33c1db] to-[#1a8a9e] text-white px-4 py-2 rounded-lg font-bold text-xl md:text-2xl">
+        <div className="absolute top-6 right-6 bg-gradient-to-r from-[#33c1db] to-[#1a8a9e] text-white px-4 py-2 rounded-lg font-bold text-xl md:text-2xl">
           {afterLabel}
         </div>
       </div>
