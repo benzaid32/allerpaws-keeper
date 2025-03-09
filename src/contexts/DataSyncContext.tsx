@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getSyncSettings, updateSyncSettings, recordSync } from "@/lib/local-storage-utils";
 import { setSyncToServer, getSyncToServer } from "@/lib/sync-utils";
 
-type SyncFrequency = 'weekly' | 'monthly' | 'manual' | 'daily' | 'never';
+type SyncFrequency = 'daily' | 'weekly' | 'monthly' | 'manual' | 'never';
 type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
 
 interface DataSyncContextType {

@@ -1,4 +1,3 @@
-
 import { Pet, Symptom, SymptomEntry, Reminder, FoodEntry } from "@/lib/types";
 
 // Define types for the data we'll store
@@ -9,7 +8,7 @@ interface LocalStorageData {
   reminders: Reminder[];
   foodEntries: FoodEntry[];
   lastSyncTime: number | null;
-  syncFrequency: 'weekly' | 'monthly' | 'manual' | 'never';
+  syncFrequency: 'daily' | 'weekly' | 'monthly' | 'manual' | 'never';
 }
 
 // Initialize default local storage structure
@@ -67,8 +66,8 @@ const clearFromLocalStorage = (key: keyof LocalStorageData): void => {
   }
 };
 
-// Update sync settings
-const updateSyncSettings = (frequency: 'weekly' | 'monthly' | 'manual' | 'never'): void => {
+// Update sync settings - Updated to include 'daily' in the type
+const updateSyncSettings = (frequency: 'daily' | 'weekly' | 'monthly' | 'manual' | 'never'): void => {
   try {
     localStorage.setItem('allerpaws_syncFrequency', frequency);
     console.log(`Sync frequency updated to: ${frequency}`);
@@ -77,15 +76,15 @@ const updateSyncSettings = (frequency: 'weekly' | 'monthly' | 'manual' | 'never'
   }
 };
 
-// Get sync settings
-const getSyncSettings = (): { lastSync: number | null; frequency: 'weekly' | 'monthly' | 'manual' | 'never' } => {
+// Get sync settings - Updated return type to include 'daily'
+const getSyncSettings = (): { lastSync: number | null; frequency: 'daily' | 'weekly' | 'monthly' | 'manual' | 'never' } => {
   try {
     const lastSync = localStorage.getItem('allerpaws_lastSyncTime');
     const frequency = localStorage.getItem('allerpaws_syncFrequency') || 'manual';
     
     return {
       lastSync: lastSync ? parseInt(lastSync, 10) : null,
-      frequency: frequency as 'weekly' | 'monthly' | 'manual' | 'never'
+      frequency: frequency as 'daily' | 'weekly' | 'monthly' | 'manual' | 'never'
     };
   } catch (error) {
     console.error('Error getting sync settings:', error);
@@ -116,7 +115,9 @@ const isSyncDue = (): boolean => {
   const elapsed = now - lastSync;
   
   // Check based on frequency
-  if (frequency === 'weekly') {
+  if (frequency === 'daily') {
+    return elapsed > 24 * 60 * 60 * 1000; // 1 day
+  } else if (frequency === 'weekly') {
     return elapsed > 7 * 24 * 60 * 60 * 1000; // 7 days
   } else if (frequency === 'monthly') {
     return elapsed > 30 * 24 * 60 * 60 * 1000; // ~30 days
