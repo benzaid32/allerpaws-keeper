@@ -41,7 +41,7 @@ export const DataSyncProvider: React.FC<DataSyncProviderProps> = ({ children }) 
   const { user } = useAuth();
   const [isOnlineOnly, setIsOnlineOnly] = useState<boolean>(() => getSyncToServer());
   const [syncEnabled, setSyncEnabled] = useState<boolean>(true);
-  const [syncFrequency, setSyncFrequency] = useState<SyncFrequency>(() => getSyncSettings().frequency);
+  const [syncFrequency, setSyncFrequency] = useState<SyncFrequency>(() => getSyncSettings().frequency as SyncFrequency);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(() => {
     const lastSync = getSyncSettings().lastSync;
     return lastSync ? new Date(lastSync) : null;
@@ -52,7 +52,7 @@ export const DataSyncProvider: React.FC<DataSyncProviderProps> = ({ children }) 
   // Initialize from localStorage on mount
   useEffect(() => {
     const settings = getSyncSettings();
-    setSyncFrequency(settings.frequency);
+    setSyncFrequency(settings.frequency as SyncFrequency);
     setLastSyncTime(settings.lastSync ? new Date(settings.lastSync) : null);
     setIsOnlineOnly(getSyncToServer());
   }, []);

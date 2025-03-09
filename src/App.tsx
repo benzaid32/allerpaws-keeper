@@ -35,19 +35,15 @@ function App() {
         <SubscriptionProvider>
           <DataSyncProvider>
             <ServiceWorkerManager>
-              {(serviceWorkerChildren: ReactNode) => (
-                <NotificationPermissionManager>
-                  {(notificationChildren: ReactNode) => (
-                    <BackgroundSyncManager>
-                      <div className={`app-container ${isAnimating ? 'animating' : ''}`}>
-                        <AppRoutes />
-                      </div>
-                      <Toaster />
-                      <SonnerToaster position="top-center" />
-                    </BackgroundSyncManager>
-                  )}
-                </NotificationPermissionManager>
-              )}
+              <NotificationPermissionManager>
+                <BackgroundSyncManager>
+                  <div className={`app-container ${isAnimating ? 'animating' : ''}`}>
+                    <AppRoutes />
+                  </div>
+                  <Toaster />
+                  <SonnerToaster position="top-center" />
+                </BackgroundSyncManager>
+              </NotificationPermissionManager>
             </ServiceWorkerManager>
           </DataSyncProvider>
         </SubscriptionProvider>
