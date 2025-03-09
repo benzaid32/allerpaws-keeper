@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +10,8 @@ import AddPetCard from "./AddPetCard";
 import { EmptyPetsList } from "@/components/pets/EmptyPetsList";
 import { Card } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { usePets } from "@/hooks/use-pets";
+import { useToast } from "@/hooks/use-toast";
 
 interface PetsSectionProps {
   pets: Pet[];
@@ -17,6 +20,10 @@ interface PetsSectionProps {
 const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const { deletePet } = usePets();
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingPetId, setDeletingPetId] = useState<string | null>(null);
   
   // Add handlers for pet actions
   const handleViewPet = (petId: string) => {
@@ -27,8 +34,26 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
     navigate(`/edit-pet/${petId}`);
   };
 
-  const handleDeletePet = (petId: string) => {
-    console.log("Delete pet not implemented in dashboard view");
+  const handleDeletePet = async (petId: string) => {
+    try {
+      setDeletingPetId(petId);
+      setIsDeleting(true);
+      await deletePet(petId);
+      toast({
+        title: "Success",
+        description: "Pet has been deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting pet:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete pet",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingPetId(null);
+      setIsDeleting(false);
+    }
   };
 
   const handleAddPet = () => {
@@ -95,8 +120,8 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
                   onEditPet={handleEditPet}
                   onDeletePet={handleDeletePet}
                   onAddPet={handleAddPet}
-                  isDeleting={false}
-                  deletingPetId={null}
+                  isDeleting={isDeleting}
+                  deletingPetId={deletingPetId}
                   displayMode={viewMode}
                 />
                 {pets.length < 3 && <AddPetCard />}
@@ -109,8 +134,8 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
                   onEditPet={handleEditPet}
                   onDeletePet={handleDeletePet}
                   onAddPet={handleAddPet}
-                  isDeleting={false}
-                  deletingPetId={null}
+                  isDeleting={isDeleting}
+                  deletingPetId={deletingPetId}
                   displayMode={viewMode}
                 />
                 <Button 
