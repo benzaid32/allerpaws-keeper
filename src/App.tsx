@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useRouteError } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -9,6 +10,10 @@ import { routes, RedirectHandler } from './lib/routes';
 import { LoadingSpinner } from './components/ui/loading-spinner';
 import { useToast } from './hooks/use-toast';
 import InstallBanner from './components/pwa/InstallBanner';
+
+// Track when the last sync was registered to prevent duplicate registrations
+let backgroundSyncRegistered = false;
+const SYNC_REGISTRATION_DELAY = 5000; // Delay initial sync registration
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -145,6 +150,42 @@ function App() {
     
     requestNotificationPermissions();
   }, []);
+
+  // Setup background sync with throttling
+  useEffect(() => {
+    const setupBackgroundSync = async () => {
+      if ('serviceWorker' in navigator && 'SyncManager' in window && !backgroundSyncRegistered) {
+        try {
+          // Delay registration to prevent immediate syncing when app starts
+          setTimeout(async () => {
+            const registration = await navigator.serviceWorker.ready;
+            
+            // Check if sync is available on the registration
+            if ('sync' in registration) {
+              // Register sync for different data types
+              await registration.sync.register('sync-pets');
+              await registration.sync.register('sync-symptoms');
+              await registration.sync.register('sync-food');
+              
+              backgroundSyncRegistered = true;
+              console.log('Background sync registered successfully with delay');
+            } else {
+              console.log('Background sync API not available on this browser');
+            }
+          }, SYNC_REGISTRATION_DELAY);
+        } catch (error) {
+          console.error('Error setting up background sync:', error);
+        }
+      } else {
+        console.log('Background sync not supported by browser or already registered');
+      }
+    };
+    
+    // Only set up background sync if the app is fully loaded
+    if (!isLoading) {
+      setupBackgroundSync();
+    }
+  }, [isLoading]);
 
   // Initialize the app with cache-clearing for PWA data
   useEffect(() => {

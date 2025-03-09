@@ -4,12 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SymptomEntry } from "@/lib/types";
 
+// Track when the last sync was registered to prevent duplicate registrations
+let lastSyncRegistered = 0;
+const SYNC_THROTTLE_MS = 60000; // Only register sync once per minute
+
 export const useSymptomDiary = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [entries, setEntries] = useState<SymptomEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Update online/offline status
   useEffect(() => {
@@ -43,11 +48,21 @@ export const useSymptomDiary = () => {
 
   // Listen for sync complete events from service worker
   useEffect(() => {
+    let syncInProgress = false;
     const handleSyncComplete = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.tag === 'sync-symptoms') {
+        // Prevent duplicate refreshes for the same sync event
+        if (syncInProgress) return;
+        
+        syncInProgress = true;
         console.log('Symptom data sync completed, refreshing data');
-        fetchEntries();
+        fetchEntries().finally(() => {
+          // Reset after a delay to prevent rapid successive events
+          setTimeout(() => {
+            syncInProgress = false;
+          }, 1000);
+        });
       }
     };
 
@@ -60,8 +75,15 @@ export const useSymptomDiary = () => {
 
   const fetchEntries = useCallback(async () => {
     if (!user) return;
+    
+    // Don't fetch again if we're already syncing
+    if (isSyncing) {
+      console.log('Skipping duplicate symptom fetch - sync already in progress');
+      return;
+    }
 
     try {
+      setIsSyncing(true);
       setLoading(true);
       
       // If offline, show debug message but still try to fetch (from cache via service worker)
@@ -130,6 +152,25 @@ export const useSymptomDiary = () => {
           }
         });
       }
+      
+      // Register for background sync, but throttle it to prevent infinite loops
+      const currentTime = Date.now();
+      if ('serviceWorker' in navigator && 'SyncManager' in window && 
+          navigator.serviceWorker.controller && 
+          (currentTime - lastSyncRegistered > SYNC_THROTTLE_MS)) {
+        
+        navigator.serviceWorker.ready.then(registration => {
+          // Check if sync is available on the registration
+          if ('sync' in registration) {
+            registration.sync.register('sync-symptoms').then(() => {
+              lastSyncRegistered = currentTime;
+              console.log('Background sync for symptoms registered at', new Date(currentTime).toISOString());
+            }).catch(err => {
+              console.error('Failed to register background sync for symptoms:', err);
+            });
+          }
+        });
+      }
     } catch (error: any) {
       console.error("Error fetching symptom entries:", error.message);
       
@@ -149,8 +190,9 @@ export const useSymptomDiary = () => {
       }
     } finally {
       setLoading(false);
+      setIsSyncing(false);
     }
-  }, [user, toast, isOffline]);
+  }, [user, toast, isOffline, isSyncing]);
 
   // Function to delete a symptom entry
   const deleteEntry = async (entryId: string) => {
