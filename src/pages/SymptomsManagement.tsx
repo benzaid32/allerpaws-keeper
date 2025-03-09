@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import BottomNavigation from "@/components/BottomNavigation";
+import MobileLayout from "@/components/layout/MobileLayout";
 import { Symptom } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +19,6 @@ const SymptomsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
 
@@ -85,105 +83,108 @@ const SymptomsManagement = () => {
     return symptom.isCustom && symptom.created_by_user_id === user?.id;
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-blue-50/50 dark:from-background dark:to-blue-950/20">
-      <div className="container relative pb-20 pt-4 z-10">
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="mb-6"
+  // Custom header content with gradient title and add button
+  const headerContent = (
+    <div className="flex flex-col space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
+          Symptoms Management
+        </h1>
+        <Button 
+          onClick={() => setIsAddDialogOpen(true)}
+          size="sm"
+          className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate(-1)} 
-                className="mr-2 text-purple-700 dark:text-purple-400 hover:bg-purple-100/50 dark:hover:bg-purple-900/20"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                Symptoms Management
-              </h1>
-            </div>
-            <Button 
-              onClick={() => setIsAddDialogOpen(true)}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-            >
-              <PlusCircle className="h-5 w-5 mr-2" />
-              Add Symptom
-            </Button>
-          </div>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <Card className="border border-purple-100/50 dark:border-purple-900/20 shadow-sm mb-6">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl text-purple-900 dark:text-purple-300">
-                Manage Symptoms
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="all">All Symptoms</TabsTrigger>
-                  <TabsTrigger value="custom">My Custom Symptoms</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="all" className="mt-2">
-                  {loading ? (
-                    <div className="flex justify-center items-center py-10">
-                      <Loader2 className="h-10 w-10 animate-spin text-purple-500" />
-                    </div>
-                  ) : (
-                    <SymptomsListView 
-                      symptoms={allSymptoms}
-                      onRefresh={fetchSymptoms}
-                      canDelete={canDeleteSymptom}
-                    />
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="custom" className="mt-2">
-                  {loading ? (
-                    <div className="flex justify-center items-center py-10">
-                      <Loader2 className="h-10 w-10 animate-spin text-purple-500" />
-                    </div>
-                  ) : customSymptoms.length > 0 ? (
-                    <SymptomsListView 
-                      symptoms={customSymptoms}
-                      onRefresh={fetchSymptoms}
-                      canDelete={canDeleteSymptom}
-                    />
-                  ) : (
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground mb-4">You haven't created any custom symptoms yet.</p>
-                      <Button onClick={() => setIsAddDialogOpen(true)}>
-                        <PlusCircle className="h-5 w-5 mr-2" />
-                        Add Your First Symptom
-                      </Button>
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </motion.div>
+          <PlusCircle className="h-4 w-4 mr-1" />
+          Add
+        </Button>
       </div>
+      <p className="text-sm text-muted-foreground">
+        Manage your symptom library and create custom symptoms for tracking
+      </p>
+    </div>
+  );
+
+  return (
+    <MobileLayout headerContent={headerContent} className="bg-gradient-to-br from-white to-blue-50/50 dark:from-background dark:to-blue-950/20">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="space-y-4"
+      >
+        <Card className="border border-purple-100/50 dark:border-purple-900/20 shadow-sm overflow-hidden">
+          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="w-full grid grid-cols-2 rounded-none bg-muted/50">
+              <TabsTrigger 
+                value="all"
+                className="data-[state=active]:bg-background data-[state=active]:text-purple-700 dark:data-[state=active]:text-purple-400"
+              >
+                All Symptoms
+              </TabsTrigger>
+              <TabsTrigger 
+                value="custom"
+                className="data-[state=active]:bg-background data-[state=active]:text-purple-700 dark:data-[state=active]:text-purple-400"
+              >
+                My Custom
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all" className="p-4">
+              {loading ? (
+                <div className="flex justify-center items-center py-10">
+                  <Loader2 className="h-10 w-10 animate-spin text-purple-500" />
+                </div>
+              ) : (
+                <SymptomsListView 
+                  symptoms={allSymptoms}
+                  onRefresh={fetchSymptoms}
+                  canDelete={canDeleteSymptom}
+                />
+              )}
+            </TabsContent>
+            
+            <TabsContent value="custom" className="p-4">
+              {loading ? (
+                <div className="flex justify-center items-center py-10">
+                  <Loader2 className="h-10 w-10 animate-spin text-purple-500" />
+                </div>
+              ) : customSymptoms.length > 0 ? (
+                <SymptomsListView 
+                  symptoms={customSymptoms}
+                  onRefresh={fetchSymptoms}
+                  canDelete={canDeleteSymptom}
+                />
+              ) : (
+                <div className="text-center py-8 px-4">
+                  <div className="rounded-full bg-purple-100 dark:bg-purple-900/20 p-3 w-14 h-14 mx-auto mb-4 flex items-center justify-center">
+                    <PlusCircle className="h-7 w-7 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No custom symptoms</h3>
+                  <p className="text-muted-foreground mb-4 text-sm">
+                    Create your own symptom definitions to better track your health
+                  </p>
+                  <Button 
+                    onClick={() => setIsAddDialogOpen(true)}
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Add Your First Symptom
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </Card>
+      </motion.div>
       
       <CustomSymptomDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onSymptomCreated={handleSymptomCreated}
       />
-      
-      <BottomNavigation />
-    </div>
+    </MobileLayout>
   );
 };
 

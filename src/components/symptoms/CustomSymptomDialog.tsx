@@ -1,21 +1,51 @@
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import React, { useState } from 'react';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Loader2, Plus, X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from "uuid";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Symptom name must be at least 2 characters.",
+  }).max(50, {
+    message: "Symptom name cannot exceed 50 characters."
+  }),
+  description: z.string().max(200, {
+    message: "Description cannot exceed 200 characters."
+  }).optional(),
+  severity_options: z.array(z.string()).min(1, {
+    message: "Please add at least one severity level."
+  }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+const defaultSeverityOptions = ["Mild", "Moderate", "Severe"];
 
 interface CustomSymptomDialogProps {
   open: boolean;
@@ -28,144 +58,229 @@ const CustomSymptomDialog: React.FC<CustomSymptomDialogProps> = ({
   onOpenChange,
   onSymptomCreated,
 }) => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [severityOptions, setSeverityOptions] = useState<string[]>(["mild", "moderate", "severe"]);
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newSeverity, setNewSeverity] = useState("");
   const { user } = useAuth();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!name.trim()) {
-      toast({
-        title: "Name required",
-        description: "Please enter a name for the symptom",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+  const { toast } = useToast();
+  
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      severity_options: [...defaultSeverityOptions],
+    },
+  });
+  
+  const onSubmit = async (values: FormValues) => {
     if (!user) {
       toast({
-        title: "Authentication required",
-        description: "You must be logged in to create custom symptoms",
+        title: "Authentication Error",
+        description: "You must be logged in to create a symptom.",
         variant: "destructive",
       });
       return;
     }
     
-    setLoading(true);
+    setIsSubmitting(true);
     
     try {
-      console.log("Creating custom symptom with user ID:", user.id);
-      // Ensure all required fields are explicitly provided
-      const symptomData = {
-        name: name.trim(),
-        description: description.trim() || null,
-        severity_options: severityOptions,
-        is_custom: true, // Make sure this is explicitly set to true
-        created_by_user_id: user.id
-      };
+      const symptomId = uuidv4();
       
-      console.log("Symptom data to insert:", symptomData);
-      
-      // Insert the new custom symptom
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("symptoms")
-        .insert(symptomData)
-        .select("id, name")
-        .single();
+        .insert({
+          id: symptomId,
+          name: values.name,
+          description: values.description || null,
+          severity_options: values.severity_options,
+          is_custom: true,
+          created_by_user_id: user.id,
+        });
         
-      if (error) {
-        console.error("Supabase error details:", error);
-        throw error;
-      }
+      if (error) throw error;
       
-      toast({
-        title: "Symptom created",
-        description: `"${name}" has been added to your symptoms list.`,
-      });
+      // Call the callback with the new symptom ID and name
+      onSymptomCreated(symptomId, values.name);
       
-      // Reset form
-      setName("");
-      setDescription("");
-      setSeverityOptions(["mild", "moderate", "severe"]);
-      
-      // Call the callback with the new symptom ID
-      if (data) {
-        onSymptomCreated(data.id, data.name);
-      }
-      
-      // Close the dialog
+      // Reset form and close dialog
+      form.reset();
       onOpenChange(false);
+      
     } catch (error: any) {
       console.error("Error creating custom symptom:", error.message);
       toast({
         title: "Error",
-        description: "Failed to create custom symptom. Please try again.",
+        description: "Failed to create the custom symptom. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
+  const handleAddSeverity = () => {
+    if (!newSeverity || newSeverity.trim() === "") return;
+    
+    const currentSeverities = form.getValues().severity_options || [];
+    
+    // Check if already exists (case insensitive)
+    if (currentSeverities.some(s => s.toLowerCase() === newSeverity.toLowerCase())) {
+      toast({
+        title: "Duplicate Severity",
+        description: "This severity level already exists.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    form.setValue("severity_options", [...currentSeverities, newSeverity.trim()]);
+    setNewSeverity("");
+  };
+
+  const handleRemoveSeverity = (severityToRemove: string) => {
+    const currentSeverities = form.getValues().severity_options || [];
+    form.setValue(
+      "severity_options", 
+      currentSeverities.filter(s => s !== severityToRemove)
+    );
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddSeverity();
+    }
+  };
+
+  const severityOptions = form.watch("severity_options");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Custom Symptom</DialogTitle>
-          <DialogDescription>
-            Create a new symptom that isn't in the predefined list.
+          <DialogTitle className="text-center text-xl mb-1">Add Custom Symptom</DialogTitle>
+          <DialogDescription className="text-center">
+            Create a personalized symptom to track in your health diary
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <Label htmlFor="symptom-name">Symptom Name</Label>
-            <Input
-              id="symptom-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Head Shaking, Sneezing"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="symptom-description">Description (Optional)</Label>
-            <Textarea
-              id="symptom-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Any additional details about this symptom"
-              className="resize-none"
-            />
-          </div>
-          
-          <DialogFooter className="pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                "Create Symptom"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground">Symptom Name</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter symptom name" 
+                      {...field} 
+                      className="border-purple-100 dark:border-purple-900/40 focus-visible:ring-purple-500"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </Button>
-          </DialogFooter>
-        </form>
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground">Description (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Brief description of the symptom" 
+                      className="resize-none border-purple-100 dark:border-purple-900/40 focus-visible:ring-purple-500"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="severity_options"
+              render={() => (
+                <FormItem>
+                  <FormLabel className="text-foreground">Severity Levels</FormLabel>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input
+                          placeholder="Add severity level"
+                          value={newSeverity}
+                          onChange={(e) => setNewSeverity(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          className="border-purple-100 dark:border-purple-900/40 focus-visible:ring-purple-500"
+                        />
+                      </FormControl>
+                      <Button 
+                        type="button" 
+                        onClick={handleAddSeverity}
+                        variant="outline"
+                        size="icon"
+                        className="border-purple-200 dark:border-purple-800"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {severityOptions.map((severity, index) => (
+                        <Badge 
+                          key={index} 
+                          className="bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50"
+                        >
+                          {severity}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSeverity(severity)}
+                            className="ml-1 text-purple-800 dark:text-purple-300 hover:text-purple-900 dark:hover:text-purple-200"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="w-full sm:w-auto"
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Symptom"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
