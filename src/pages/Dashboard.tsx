@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sparkles, PlusCircle, ArrowRight, Bell, RefreshCw, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { forceNextSync } from "@/lib/sync-utils";
+import { forceNextSync, logSyncState } from "@/lib/sync-utils";
 import { useRemindersData } from "@/hooks/reminders/use-reminders-data";
 
 // Import refactored components
@@ -28,10 +28,11 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { pets, loading, fetchPets, isOffline } = usePets();
   const { recentActivity, symptomsThisWeek, loading: statsLoading } = useDashboardStats();
-  const { reminders, loading: reminderLoading } = useRemindersData();
+  const { reminders, loading: reminderLoading, fetchData: fetchReminders } = useRemindersData();
   const { hasPremiumAccess } = useUserSubscription();
   const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [isRefreshingReminders, setIsRefreshingReminders] = useState<boolean>(false);
   const userName = user?.user_metadata?.full_name || "Pet Parent";
   const firstName = userName.split(' ')[0];
   const isPremium = hasPremiumAccess;
@@ -45,6 +46,9 @@ const Dashboard = () => {
       
       // Force sync for initial load
       forceNextSync();
+      
+      // Log the current sync state for debugging
+      logSyncState();
       
       // Small timeout to prevent overlap with other initialization
       setTimeout(() => {
@@ -68,6 +72,25 @@ const Dashboard = () => {
       // Add delay to prevent quick re-clicks
       setTimeout(() => {
         setIsRefreshing(false);
+      }, 500);
+    }
+  };
+  
+  // Handle reminders refresh
+  const handleRefreshReminders = async () => {
+    if (isRefreshingReminders) return;
+    
+    setIsRefreshingReminders(true);
+    forceNextSync('reminders'); // Mark reminders for sync
+    
+    try {
+      await fetchReminders(true);
+    } catch (error) {
+      console.error("Error refreshing reminders:", error);
+    } finally {
+      // Add delay to prevent quick re-clicks
+      setTimeout(() => {
+        setIsRefreshingReminders(false);
       }, 500);
     }
   };
@@ -150,10 +173,27 @@ const Dashboard = () => {
                   <Bell className="h-5 w-5 text-primary mr-2" />
                   Upcoming Reminders
                 </h3>
-                <Button variant="outline" size="sm" className="text-primary border-primary/30 h-8 px-3 hover:bg-primary/10" onClick={() => navigate('/reminders')}>
-                  View All
-                  <ArrowRight className="ml-1 h-3 w-3" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRefreshReminders}
+                    disabled={isRefreshingReminders}
+                    className="h-8 w-8 p-0"
+                    title="Refresh reminders"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${isRefreshingReminders ? 'animate-spin' : ''}`} />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-primary border-primary/30 h-8 px-3 hover:bg-primary/10" 
+                    onClick={() => navigate('/reminders')}
+                  >
+                    View All
+                    <ArrowRight className="ml-1 h-3 w-3" />
+                  </Button>
+                </div>
               </div>
               
               {upcomingReminders.length > 0 ? (
@@ -235,7 +275,7 @@ const Dashboard = () => {
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh data'}
+            {isRefreshing ? 'Refreshing...' : 'Refresh all data'}
           </Button>
         </div>
       </div>

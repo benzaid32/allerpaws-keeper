@@ -67,22 +67,42 @@ const ServiceWorkerManager: React.FC<ServiceWorkerManagerProps> = ({ children })
               if (event.data && event.data.type === 'SYNC_COMPLETE') {
                 // Map shorter tag names back to their full versions for event dispatching
                 let fullTagName = event.data.tag;
+                let dataType: 'pets' | 'symptoms' | 'food' | 'reminders' | undefined;
                 
                 // Convert short tag names to the longer versions used in data hooks
-                if (event.data.tag === 'pets') fullTagName = 'sync-pets';
-                if (event.data.tag === 'symptoms') fullTagName = 'sync-symptoms';
-                if (event.data.tag === 'food') fullTagName = 'sync-food';
-                if (event.data.tag === 'reminders') fullTagName = 'sync-reminders';
+                if (event.data.tag === 'pets') {
+                  fullTagName = 'sync-pets';
+                  dataType = 'pets';
+                }
+                if (event.data.tag === 'symptoms') {
+                  fullTagName = 'sync-symptoms';
+                  dataType = 'symptoms';
+                }
+                if (event.data.tag === 'food') {
+                  fullTagName = 'sync-food';
+                  dataType = 'food';
+                }
+                if (event.data.tag === 'reminders') {
+                  fullTagName = 'sync-reminders';
+                  dataType = 'reminders';
+                }
+                
+                // Check if there have been user changes for this specific data type
+                const hasSpecificChanges = dataType ? hasChanges(dataType) : hasChanges();
                 
                 // We'll still dispatch the event so data refreshes can happen
                 // But we'll only trigger refresh if there have been user changes
-                if (hasChanges()) {
+                if (hasSpecificChanges) {
                   window.dispatchEvent(new CustomEvent('data-sync-complete', { 
-                    detail: { tag: fullTagName }
+                    detail: { tag: fullTagName, dataType }
                   }));
                   
                   // Reset changes flag after sync is complete
-                  resetChangesFlag();
+                  if (dataType) {
+                    resetChangesFlag(dataType);
+                  } else {
+                    resetChangesFlag();
+                  }
                   
                   // Log the sync for debugging but don't show toast
                   console.log(`Sync complete with user changes: ${fullTagName}`);

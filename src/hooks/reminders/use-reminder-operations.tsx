@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +6,7 @@ import { Reminder } from "@/lib/types";
 import { ReminderFormData } from "@/hooks/reminders/use-reminder-form";
 import { useNotifications } from "@/hooks/use-notifications";
 import { v4 as uuidv4 } from "uuid";
+import { markUserChanges } from "@/lib/sync-utils";
 
 interface UseReminderOperationsProps {
   fetchData: () => Promise<void>;
@@ -169,6 +169,9 @@ export const useReminderOperations = ({
           
         if (error) throw error;
         
+        // Mark changes for sync
+        markUserChanges('reminders');
+        
         toast({
           title: "Reminder updated",
           description: "Your reminder has been updated successfully",
@@ -185,6 +188,9 @@ export const useReminderOperations = ({
           });
           
         if (error) throw error;
+        
+        // Mark changes for sync
+        markUserChanges('reminders');
         
         toast({
           title: "Reminder created",
@@ -237,6 +243,9 @@ export const useReminderOperations = ({
         
       if (error) throw error;
       
+      // Mark changes for sync
+      markUserChanges('reminders');
+      
       // Update local state for immediate UI feedback
       setReminders(prev =>
         prev.map(r =>
@@ -285,6 +294,9 @@ export const useReminderOperations = ({
         .eq("id", reminder.id);
         
       if (error) throw error;
+      
+      // Mark changes for sync
+      markUserChanges('reminders');
       
       // Update local state for immediate UI feedback
       setReminders(prev => prev.filter(r => r.id !== reminder.id));

@@ -9,7 +9,8 @@ import {
   hasChanges, 
   resetChangesFlag, 
   isInitialLoadCompleted,
-  markInitialLoadCompleted 
+  markInitialLoadCompleted,
+  forceNextSync
 } from "@/lib/sync-utils";
 
 // Track when the last sync was registered to prevent duplicate registrations
@@ -38,6 +39,8 @@ export const useRemindersData = () => {
     const handleOnline = () => {
       setIsOffline(false);
       // Trigger a refresh when coming back online
+      console.log("Device came online, forcing refresh of reminders");
+      forceNextSync('reminders');
       fetchData(true);
     };
 
@@ -64,7 +67,8 @@ export const useRemindersData = () => {
     
     const handleSyncComplete = (event: Event) => {
       const customEvent = event as CustomEvent;
-      if (customEvent.detail?.tag === 'sync-reminders') {
+      if (customEvent.detail?.tag === 'sync-reminders' || 
+          (customEvent.detail?.dataType === 'reminders')) {
         // Prevent duplicate refreshes for the same sync event
         if (syncInProgress) return;
         
@@ -108,10 +112,15 @@ export const useRemindersData = () => {
       return;
     }
 
-    // IMPORTANT: Changed this condition to ensure initial data loads
-    // Only skip if no changes AND initial load completed AND not forced AND not offline
-    if (!forceRefresh && !hasChanges() && isInitialLoadCompleted() && !isOffline) {
-      console.log('Skipping reminders fetch - no user changes detected and initial load completed');
+    // Check if we should skip this fetch
+    const hasRemindersChanges = hasChanges('reminders');
+    const initialLoadCompleted = isInitialLoadCompleted();
+    
+    console.log(`Reminders fetch check - Force: ${forceRefresh}, Changes: ${hasRemindersChanges}, Initial load: ${initialLoadCompleted}, Offline: ${isOffline}`);
+    
+    // Skip if no changes AND initial load completed AND not forced AND not offline
+    if (!forceRefresh && !hasRemindersChanges && initialLoadCompleted && !isOffline) {
+      console.log('Skipping reminders fetch - no changes detected and initial load completed');
       return;
     }
 
@@ -175,7 +184,7 @@ export const useRemindersData = () => {
       console.log(`Fetched ${formattedReminders.length} reminders at ${timestamp}`);
       
       // After successful fetch, reset the changes flag and mark initial load complete
-      resetChangesFlag();
+      resetChangesFlag('reminders');
       markInitialLoadCompleted();
       
       // If we're in a PWA, register for background sync
@@ -187,7 +196,8 @@ export const useRemindersData = () => {
         navigator.serviceWorker.ready.then(registration => {
           // Check if sync is available on the registration
           if ('sync' in registration) {
-            registration.sync.register('sync-reminders').then(() => {
+            // Use shorter tag name to avoid InvalidAccessError
+            registration.sync.register('reminders').then(() => {
               lastSyncRegistered = currentTime;
               console.log('Background sync for reminders registered at', new Date(currentTime).toISOString());
             }).catch(err => {
@@ -222,6 +232,9 @@ export const useRemindersData = () => {
   useEffect(() => {
     if (user && !initialLoadDone.current) {
       initialLoadDone.current = true;
+      console.log("Initial reminders load starting");
+      // Force a refresh for initial load
+      forceNextSync('reminders');
       // Small delay to prevent overlap with other loading processes
       setTimeout(() => {
         fetchData(true); // Force fetch on initial load
