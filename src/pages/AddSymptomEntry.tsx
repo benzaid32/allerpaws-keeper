@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,48 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, PawPrint } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import SymptomEntryForm from "@/components/SymptomEntryForm";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const AddSymptomEntry = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [selectedPet, setSelectedPet] = useState<string>("");
+  const [pets, setPets] = useState<{id: string, name: string}[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchPets = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("pets")
+          .select("id, name")
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          setPets(data);
+          setSelectedPet(data[0].id); // Select first pet by default
+        }
+      } catch (error: any) {
+        console.error("Error fetching pets:", error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPets();
+  }, [user]);
+
+  const handleSuccess = () => {
+    navigate("/symptom-diary");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-blue-50/50 dark:from-background dark:to-blue-950/20">
@@ -76,7 +115,38 @@ const AddSymptomEntry = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <NewSymptomEntry />
+              {!loading && (
+                <>
+                  {pets.length > 0 ? (
+                    <>
+                      <div className="mb-4">
+                        <Label htmlFor="pet-select">Select Pet</Label>
+                        <Select
+                          value={selectedPet}
+                          onValueChange={setSelectedPet}
+                        >
+                          <SelectTrigger id="pet-select" className="mt-1">
+                            <SelectValue placeholder="Select a pet" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {pets.map(pet => (
+                              <SelectItem key={pet.id} value={pet.id}>
+                                {pet.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {selectedPet && <SymptomEntryForm petId={selectedPet} onSuccess={handleSuccess} />}
+                    </>
+                  ) : (
+                    <div className="text-center py-6">
+                      <p className="text-muted-foreground mb-4">You need to add a pet first before logging symptoms.</p>
+                      <Button onClick={() => navigate('/add-pet')}>Add a Pet</Button>
+                    </div>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -84,10 +154,6 @@ const AddSymptomEntry = () => {
       <BottomNavigation />
     </div>
   );
-};
-
-const NewSymptomEntry = () => {
-  return <SymptomEntryForm />;
 };
 
 export default AddSymptomEntry;
