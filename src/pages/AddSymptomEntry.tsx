@@ -18,6 +18,7 @@ const AddSymptomEntry = () => {
   const [selectedPet, setSelectedPet] = useState<string>("");
   const [pets, setPets] = useState<{id: string, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bgImageUrl, setBgImageUrl] = useState("/lovable-uploads/bfe8fffa-8ddd-4e75-83bb-d78b9fc09201.png");
 
   useEffect(() => {
     if (!user) return;
@@ -53,7 +54,7 @@ const AddSymptomEntry = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-blue-50/50 dark:from-background dark:to-blue-950/20">
       {/* Background elements */}
-      <div className="absolute top-0 right-0 w-full h-64 bg-[url('/lovable-uploads/9575c134-213b-4839-b573-65f38dc28955.png')] bg-no-repeat bg-right-top bg-contain opacity-10 dark:opacity-5 z-0"></div>
+      <div className="absolute top-0 right-0 w-full h-64 bg-[url('/lovable-uploads/bfe8fffa-8ddd-4e75-83bb-d78b9fc09201.png')] bg-no-repeat bg-right-top bg-contain opacity-10 dark:opacity-5 z-0"></div>
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         {[...Array(5)].map((_, i) => (
           <motion.div
