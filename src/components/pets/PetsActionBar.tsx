@@ -1,38 +1,45 @@
 
 import React from "react";
+import { PlusCircle, Grid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, RefreshCw } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface PetsActionBarProps {
   onAddPet: () => void;
-  onRefresh: () => void;
-  isRefreshing: boolean;
+  displayMode: "grid" | "list";
+  setDisplayMode: (mode: "grid" | "list") => void;
+  petCount: number;
 }
 
 export const PetsActionBar: React.FC<PetsActionBarProps> = ({
   onAddPet,
-  onRefresh,
-  isRefreshing,
+  displayMode,
+  setDisplayMode,
+  petCount,
 }) => {
   return (
-    <div className="flex gap-2">
-      <Button 
-        onClick={onAddPet} 
-        className="flex-1"
-      >
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Add New Pet
-      </Button>
+    <div className="flex items-center justify-between bg-white/70 p-3 rounded-lg shadow-sm border">
+      <div className="text-sm text-muted-foreground">
+        {petCount} {petCount === 1 ? "pet" : "pets"}
+      </div>
       
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={onRefresh}
-        disabled={isRefreshing}
-        className="w-10 h-10"
-      >
-        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-      </Button>
+      <div className="flex items-center gap-2">
+        {petCount > 0 && (
+          <ToggleGroup type="single" value={displayMode} onValueChange={(val) => val && setDisplayMode(val as "grid" | "list")}>
+            <ToggleGroupItem value="grid" size="sm" aria-label="Grid view">
+              <Grid className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="list" size="sm" aria-label="List view">
+              <List className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        )}
+        
+        <Button size="sm" onClick={onAddPet} className="bg-primary text-white">
+          <PlusCircle className="h-4 w-4 mr-1" />
+          Add Pet
+        </Button>
+      </div>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import React, { Suspense } from 'react';
 import { RouteType } from './types';
 import { Navigate, useLocation } from 'react-router-dom';
@@ -35,14 +36,17 @@ const NewSymptomEntry = React.lazy(() => import('@/pages/NewSymptomEntry'));
 const EditSymptomEntry = React.lazy(() => import('@/pages/EditSymptomEntry'));
 const SymptomsManagement = React.lazy(() => import('@/pages/SymptomsManagement'));
 const FoodDiary = React.lazy(() => import('@/pages/FoodDiary'));
-const AddFoodEntry = React.lazy(() => import('@/pages/AddFoodEntry')); // Fixed import
+const AddFoodEntry = React.lazy(() => import('@/pages/AddFoodEntry')); 
 const EditFoodEntry = React.lazy(() => import('@/pages/EditFoodEntry'));
 const FoodDatabase = React.lazy(() => import('@/pages/FoodDatabase'));
-const FoodDetailsPage = React.lazy(() => import('@/pages/FoodDetailsPage')); // Fixed import
-const Settings = React.lazy(() => import('@/pages/Settings')); // Fixed import
-const Reminders = React.lazy(() => import('@/pages/Reminders')); // Fixed import
-const Auth = React.lazy(() => import('@/pages/Auth')); // Added for onboarding
+const FoodDetailsPage = React.lazy(() => import('@/pages/FoodDetailsPage')); 
+const Settings = React.lazy(() => import('@/pages/Settings')); 
+const Reminders = React.lazy(() => import('@/pages/Reminders')); 
+const Auth = React.lazy(() => import('@/pages/Auth')); 
 const EliminationDiet = React.lazy(() => import('@/pages/EliminationDiet'));
+const PetsPage = React.lazy(() => import('@/pages/PetsPage')); // Add the new pets page
+const AddPet = React.lazy(() => import('@/pages/AddPet'));
+const EditPet = React.lazy(() => import('@/pages/EditPet'));
 
 // Define routes
 export const routes: RouteType[] = [
@@ -156,4 +160,36 @@ export const routes: RouteType[] = [
       </ProtectedRoute>
     ),
   },
+  // Add the new routes for pet management
+  {
+    path: '/pets',
+    element: (
+      <ProtectedRoute>
+        <Suspense fallback={<LoadingSpinner size="lg" />}>
+          <PetsPage />
+        </Suspense>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/add-pet',
+    element: (
+      <ProtectedRoute>
+        <Suspense fallback={<LoadingSpinner size="lg" />}>
+          <AddPet />
+        </Suspense>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/edit-pet/:id',
+    element: (
+      <ProtectedRoute>
+        <Suspense fallback={<LoadingSpinner size="lg" />}>
+          <EditPet />
+        </Suspense>
+      </ProtectedRoute>
+    ),
+  },
 ];
+
