@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Symptom } from "@/lib/types";
@@ -12,21 +12,32 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import SymptomsListView from '@/components/symptoms/SymptomsListView';
 import CustomSymptomDialog from '@/components/symptoms/CustomSymptomDialog';
+import { forceNextSync } from '@/lib/sync-utils';
 
 const SymptomsManagement = () => {
   const [allSymptoms, setAllSymptoms] = useState<Symptom[]>([]);
   const [customSymptoms, setCustomSymptoms] = useState<Symptom[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
 
-  const fetchSymptoms = async () => {
+  const fetchSymptoms = useCallback(async (forceRefresh = false) => {
     if (!user) return;
     
     try {
-      setLoading(true);
+      if (forceRefresh) {
+        setIsRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      
+      console.log('Fetching symptoms data...');
+      
+      // Add random cache busting parameter to prevent caching
+      const cacheBuster = `?cache=${Date.now()}`;
       
       // Fetch all symptoms
       const { data: symptomData, error } = await supabase
@@ -36,6 +47,8 @@ const SymptomsManagement = () => {
         
       if (error) throw error;
 
+      console.log(`Loaded ${symptomData?.length || 0} symptoms`);
+      
       // Map database results to Symptom type
       const mappedSymptoms: Symptom[] = (symptomData || []).map(item => ({
         id: item.id,
@@ -54,6 +67,13 @@ const SymptomsManagement = () => {
       setCustomSymptoms(mappedSymptoms.filter(
         symptom => symptom.isCustom && symptom.created_by_user_id === user.id
       ));
+      
+      if (forceRefresh) {
+        toast({
+          title: "Refreshed",
+          description: "Symptom list has been updated.",
+        });
+      }
     } catch (error: any) {
       console.error("Error fetching symptoms:", error.message);
       toast({
@@ -63,19 +83,49 @@ const SymptomsManagement = () => {
       });
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, [user, toast]);
 
   useEffect(() => {
     fetchSymptoms();
-  }, [user]);
+    
+    // Set up event listeners for data changes
+    const handleDataChange = () => {
+      console.log('Symptoms data changed event detected');
+      fetchSymptoms(true);
+    };
+    
+    // Listen for both storage events (cross-tab) and custom events (same-tab)
+    window.addEventListener('symptoms-data-changed', handleDataChange);
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'symptoms_updated') {
+        console.log('Storage change detected for symptoms');
+        fetchSymptoms(true);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('symptoms-data-changed', handleDataChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [fetchSymptoms]);
 
   const handleSymptomCreated = (symptomId: string, symptomName: string) => {
     toast({
       title: "Symptom Added",
       description: `"${symptomName}" has been added to the symptoms list.`,
     });
-    fetchSymptoms(); // Refresh the list
+    fetchSymptoms(true); // Force refresh the list
+  };
+  
+  const handleRefresh = () => {
+    // Force a complete refresh
+    forceNextSync('symptoms');
+    fetchSymptoms(true);
   };
 
   const canDeleteSymptom = (symptom: Symptom) => {
@@ -90,14 +140,26 @@ const SymptomsManagement = () => {
         <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
           Symptoms Management
         </h1>
-        <Button 
-          onClick={() => setIsAddDialogOpen(true)}
-          size="sm"
-          className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md"
-        >
-          <PlusCircle className="h-4 w-4 mr-1" />
-          Add
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleRefresh}
+            size="sm"
+            variant="outline"
+            disabled={isRefreshing}
+            className="text-purple-600 border-purple-200 hover:bg-purple-50 dark:text-purple-400 dark:border-purple-800/50 dark:hover:bg-purple-900/20"
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <Button 
+            onClick={() => setIsAddDialogOpen(true)}
+            size="sm"
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md"
+          >
+            <PlusCircle className="h-4 w-4 mr-1" />
+            Add
+          </Button>
+        </div>
       </div>
       <p className="text-sm text-muted-foreground">
         Manage your symptom library and create custom symptoms for tracking
@@ -138,7 +200,7 @@ const SymptomsManagement = () => {
               ) : (
                 <SymptomsListView 
                   symptoms={allSymptoms}
-                  onRefresh={fetchSymptoms}
+                  onRefresh={() => fetchSymptoms(true)}
                   canDelete={canDeleteSymptom}
                 />
               )}
@@ -152,7 +214,7 @@ const SymptomsManagement = () => {
               ) : customSymptoms.length > 0 ? (
                 <SymptomsListView 
                   symptoms={customSymptoms}
-                  onRefresh={fetchSymptoms}
+                  onRefresh={() => fetchSymptoms(true)}
                   canDelete={canDeleteSymptom}
                 />
               ) : (

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { triggerDataRefresh } from "@/lib/sync-utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,12 +83,16 @@ const SymptomsListView: React.FC<SymptomsListViewProps> = ({
         
       if (error) throw error;
       
+      // Trigger a complete sync refresh for all symptom data
+      triggerDataRefresh('symptoms');
+      
       toast({
         title: "Symptom Deleted",
         description: "The symptom has been removed successfully.",
       });
       
-      onRefresh(); // Refresh the list
+      // Force immediate refresh of the symptoms list
+      onRefresh();
     } catch (error: any) {
       console.error("Error deleting symptom:", error.message);
       toast({

@@ -113,6 +113,10 @@ export function logSyncState() {
 export function triggerDataRefresh(dataType: 'pets' | 'symptoms' | 'food' | 'reminders') {
   console.log(`Triggering refresh for ${dataType}`);
   
+  // Force a full refresh by marking as changed
+  changedDataTypes[dataType] = true;
+  hasUserMadeChanges = true;
+  
   // Dispatch event for same-tab updates
   window.dispatchEvent(new Event(`${dataType}-data-changed`));
   
