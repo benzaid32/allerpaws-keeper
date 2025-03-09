@@ -2,7 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Activity, BarChart2, AlertTriangle, CheckCircle } from "lucide-react";
+import { Activity, BarChart2, AlertTriangle, CheckCircle, TrendingUp, Clock } from "lucide-react";
 
 interface StatsCardsProps {
   recentActivity: number;
@@ -17,34 +17,39 @@ const StatsCards: React.FC<StatsCardsProps> = ({ recentActivity, symptomsThisWee
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
     >
-      <Card className="hover:shadow-md transition-all bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-primary/10">
-        <CardHeader className="pb-2">
+      <Card className="hover:shadow-md transition-all bg-gradient-to-br from-white to-blue-50 backdrop-blur-sm border border-primary/10 overflow-hidden relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 z-0"></div>
+        <CardHeader className="pb-2 relative z-10">
           <CardTitle className="text-sm font-medium flex items-center">
             <Activity className="mr-2 h-4 w-4 text-primary" />
             Recent Activity
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{recentActivity}</div>
+        <CardContent className="relative z-10">
+          <div className="text-2xl font-bold flex items-center">
+            {recentActivity}
+            <Clock className="ml-2 h-4 w-4 text-primary/70" />
+          </div>
           <p className="text-xs text-muted-foreground">
             Entries in the last 7 days
           </p>
         </CardContent>
       </Card>
       
-      <Card className="hover:shadow-md transition-all bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-primary/10">
-        <CardHeader className="pb-2">
+      <Card className="hover:shadow-md transition-all bg-gradient-to-br from-white to-blue-50 backdrop-blur-sm border border-primary/10 overflow-hidden relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 z-0"></div>
+        <CardHeader className="pb-2 relative z-10">
           <CardTitle className="text-sm font-medium flex items-center">
             <BarChart2 className="mr-2 h-4 w-4 text-primary" />
             Symptom Trend
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="relative z-10">
           <div className="text-2xl font-bold flex items-center">
             {symptomsThisWeek > 0 ? (
               <>
                 {symptomsThisWeek}
-                <AlertTriangle className="ml-2 h-4 w-4 text-yellow-500" />
+                <TrendingUp className="ml-2 h-4 w-4 text-yellow-500" />
               </>
             ) : (
               <>
