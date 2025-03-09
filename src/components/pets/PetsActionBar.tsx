@@ -1,21 +1,25 @@
 
 import React from "react";
-import { PlusCircle, Grid, List } from "lucide-react";
+import { PlusCircle, Grid, List, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface PetsActionBarProps {
   onAddPet: () => void;
-  displayMode: "grid" | "list";
-  setDisplayMode: (mode: "grid" | "list") => void;
-  petCount: number;
+  displayMode?: "grid" | "list";
+  setDisplayMode?: (mode: "grid" | "list") => void;
+  petCount?: number;
+  onRefresh?: () => Promise<void> | void;
+  isRefreshing?: boolean;
 }
 
 export const PetsActionBar: React.FC<PetsActionBarProps> = ({
   onAddPet,
-  displayMode,
+  displayMode = "grid",
   setDisplayMode,
-  petCount,
+  petCount = 0,
+  onRefresh,
+  isRefreshing = false,
 }) => {
   return (
     <div className="flex items-center justify-between bg-white/70 p-3 rounded-lg shadow-sm border">
@@ -24,7 +28,7 @@ export const PetsActionBar: React.FC<PetsActionBarProps> = ({
       </div>
       
       <div className="flex items-center gap-2">
-        {petCount > 0 && (
+        {petCount > 0 && setDisplayMode && (
           <ToggleGroup type="single" value={displayMode} onValueChange={(val) => val && setDisplayMode(val as "grid" | "list")}>
             <ToggleGroupItem value="grid" size="sm" aria-label="Grid view">
               <Grid className="h-4 w-4" />
@@ -33,6 +37,18 @@ export const PetsActionBar: React.FC<PetsActionBarProps> = ({
               <List className="h-4 w-4" />
             </ToggleGroupItem>
           </ToggleGroup>
+        )}
+        
+        {onRefresh && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={onRefresh} 
+            disabled={isRefreshing}
+            className="text-muted-foreground"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
         )}
         
         <Button size="sm" onClick={onAddPet} className="bg-primary text-white">
