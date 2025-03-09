@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sparkles, PlusCircle, ArrowRight, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Import refactored components
 import DashboardBackground from "@/components/dashboard/DashboardBackground";
@@ -21,6 +22,7 @@ import SignOutOverlay from "@/components/dashboard/SignOutOverlay";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { pets, loading, fetchPets } = usePets();
   const { recentActivity, symptomsThisWeek, loading: statsLoading } = useDashboardStats();
@@ -45,6 +47,14 @@ const Dashboard = () => {
     return <DashboardLoading />;
   }
 
+  const handleLogSymptom = () => {
+    navigate('/add-symptom');
+  };
+
+  const handleLogFood = () => {
+    navigate('/add-food-entry');
+  };
+
   return (
     <DashboardBackground>
       <DashboardHeader 
@@ -55,7 +65,7 @@ const Dashboard = () => {
         isSigningOut={isSigningOut}
       />
       
-      {/* Welcome banner with improved mobile styling */}
+      {/* Welcome banner with improved mobile styling - removed duplicate header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -83,7 +93,7 @@ const Dashboard = () => {
         symptomsThisWeek={symptomsThisWeek} 
       />
       
-      {/* Quick Actions - more mobile friendly */}
+      {/* Quick Actions - more mobile friendly with fixed navigation */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -91,14 +101,14 @@ const Dashboard = () => {
         className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3"
       >
         <Button 
-          onClick={() => window.location.href = '/add-symptom'}
+          onClick={handleLogSymptom}
           className="bg-gradient-to-r from-blue-500 to-blue-600 text-white h-auto py-3 shadow-md"
         >
           <PlusCircle className="mr-2 h-4 w-4" /> 
           Log Symptom
         </Button>
         <Button 
-          onClick={() => window.location.href = '/add-food-entry'}
+          onClick={handleLogFood}
           className="bg-gradient-to-r from-green-500 to-green-600 text-white h-auto py-3 shadow-md"
         >
           <PlusCircle className="mr-2 h-4 w-4" /> 
@@ -124,7 +134,7 @@ const Dashboard = () => {
                 <Bell className="h-4 w-4 text-primary mr-2" />
                 Upcoming Reminders
               </h3>
-              <Button variant="ghost" size="sm" className="text-primary h-8 px-2" onClick={() => window.location.href = '/reminders'}>
+              <Button variant="ghost" size="sm" className="text-primary h-8 px-2" onClick={() => navigate('/reminders')}>
                 View All
                 <ArrowRight className="ml-1 h-3 w-3" />
               </Button>
