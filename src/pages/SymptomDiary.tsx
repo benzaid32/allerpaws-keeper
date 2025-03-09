@@ -1,7 +1,8 @@
+
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNavigation from "@/components/BottomNavigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,12 +14,15 @@ import {
   Calendar, 
   Plus, 
   Clock, 
-  Bookmark,
   CalendarClock,
+  PawPrint,
   AlertCircle
 } from "lucide-react";
 import { useSymptomDiary } from "@/hooks/use-symptom-diary";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import SymptomEntryCard from "@/components/symptoms/SymptomEntryCard";
+import SymptomDiaryHeader from "@/components/symptoms/SymptomDiaryHeader";
+import SymptomEmptyState from "@/components/symptoms/SymptomEmptyState";
 
 const SymptomDiary = () => {
   const navigate = useNavigate();
@@ -26,12 +30,6 @@ const SymptomDiary = () => {
   const [activeTab, setActiveTab] = useState("all");
   const { entries, loading } = useSymptomDiary();
   
-  const severityColors = {
-    mild: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-    moderate: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-    severe: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-  };
-
   const filteredEntries = useMemo(() => {
     return entries
       .filter(entry => {
@@ -57,29 +55,39 @@ const SymptomDiary = () => {
   }, [entries, searchTerm, activeTab]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-blue-50 dark:from-background dark:to-blue-950/20">
-      <div className="absolute top-0 right-0 w-full h-64 bg-[url('https://images.unsplash.com/photo-1494947665470-20322015e3a8?auto=format&fit=crop&w=800&q=80')] bg-no-repeat bg-right-top bg-contain opacity-10 dark:opacity-5 z-0"></div>
+    <div className="min-h-screen bg-gradient-to-br from-white to-blue-50/50 dark:from-background dark:to-blue-950/20">
+      {/* Background elements */}
+      <div className="absolute top-0 right-0 w-full h-64 bg-[url('/lovable-uploads/9575c134-213b-4839-b573-65f38dc28955.png')] bg-no-repeat bg-right-top bg-contain opacity-10 dark:opacity-5 z-0"></div>
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        {[...Array(5)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute text-purple-400/10 dark:text-purple-400/5"
+            initial={{ 
+              x: Math.random() * window.innerWidth, 
+              y: -20, 
+              opacity: 0,
+              rotate: Math.random() * 180 - 90
+            }}
+            animate={{ 
+              y: window.innerHeight + 50,
+              opacity: [0, 0.6, 0],
+              rotate: Math.random() * 360 - 180
+            }}
+            transition={{ 
+              repeat: Infinity, 
+              duration: 25 + Math.random() * 20,
+              delay: Math.random() * 15,
+              ease: "linear"
+            }}
+          >
+            <PawPrint size={20 + Math.random() * 30} />
+          </motion.div>
+        ))}
+      </div>
       
-      <div className="container relative pb-20 pt-4">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="mr-2" 
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold flex-1">Symptom Diary</h1>
-          <Button 
-            onClick={() => navigate("/add-symptom")} 
-            size="sm" 
-            className="gap-1"
-          >
-            <Plus className="h-4 w-4" />
-            New Entry
-          </Button>
-        </div>
+      <div className="container relative pb-20 pt-4 z-10">
+        <SymptomDiaryHeader />
 
         <motion.div 
           initial={{ y: 10, opacity: 0 }}
@@ -93,13 +101,13 @@ const SymptomDiary = () => {
               placeholder="Search by pet, symptom, or notes..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-card/80 backdrop-blur-sm"
+              className="pl-10 bg-white/90 dark:bg-card/80 backdrop-blur-sm border-purple-100 dark:border-purple-900/20"
             />
           </div>
         </motion.div>
 
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid grid-cols-4 bg-muted/50">
+          <TabsList className="grid grid-cols-4 bg-white/50 dark:bg-muted/30 backdrop-blur-sm">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="mild" className="text-green-600 dark:text-green-400">Mild</TabsTrigger>
             <TabsTrigger value="moderate" className="text-yellow-600 dark:text-yellow-400">Moderate</TabsTrigger>
@@ -115,75 +123,10 @@ const SymptomDiary = () => {
           <div className="space-y-4">
             {filteredEntries.length > 0 ? (
               filteredEntries.map((entry, index) => (
-                <motion.div
-                  key={entry.id}
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  onClick={() => navigate(`/symptom-diary/${entry.id}`)}
-                >
-                  <Card className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow border-none shadow-sm bg-card/80 backdrop-blur-sm">
-                    <CardContent className="p-0">
-                      <div className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-medium">{entry.petName}</h3>
-                            <div className="flex items-center text-xs text-muted-foreground">
-                              <Calendar className="h-3 w-3 mr-1" />
-                              {entry.date}
-                              <Clock className="h-3 w-3 ml-2 mr-1" />
-                              {entry.time}
-                            </div>
-                          </div>
-                          {entry.symptoms.length > 0 && (
-                            <Badge className={severityColors[entry.symptoms.reduce((max, symptom) => {
-                              // Determine highest severity
-                              if (symptom.severity === 'severe') return 'severe';
-                              if (max === 'moderate' || symptom.severity === 'moderate') return 'moderate';
-                              return 'mild';
-                            }, 'mild' as 'mild' | 'moderate' | 'severe')]}>
-                              {entry.symptoms.reduce((max, symptom) => {
-                                // Determine highest severity
-                                if (symptom.severity === 'severe') return 'severe';
-                                if (max === 'moderate' || symptom.severity === 'moderate') return 'moderate';
-                                return 'mild';
-                              }, 'mild' as 'mild' | 'moderate' | 'severe')}
-                            </Badge>
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-1 mt-3">
-                          {entry.symptoms.map((symptom, i) => (
-                            <span key={i} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                              {symptom.name || "Unknown"}
-                            </span>
-                          ))}
-                        </div>
-                        
-                        {entry.notes && (
-                          <div className="mt-3 text-sm text-muted-foreground">
-                            {entry.notes}
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                <SymptomEntryCard key={entry.id} entry={entry} index={index} />
               ))
             ) : (
-              <div className="text-center py-12 bg-muted/30 rounded-lg">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
-                  <CalendarClock className="h-6 w-6 text-primary" />
-                </div>
-                <p className="text-lg font-medium mb-1">No symptom logs found</p>
-                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Start tracking your pet's symptoms to identify potential food allergies.
-                </p>
-                <Button onClick={() => navigate("/add-symptom")}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create First Entry
-                </Button>
-              </div>
+              <SymptomEmptyState />
             )}
           </div>
         )}
