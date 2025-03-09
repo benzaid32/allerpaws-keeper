@@ -51,7 +51,7 @@ export const PetCard: React.FC<PetCardProps> = ({
   return (
     <MobileCard
       key={pet.id}
-      onClick={handleCardClick}
+      onClick={() => onViewPet(pet.id)}
       className={`hover:border-primary/30 transition-all overflow-visible ${compact ? 'py-2 px-3' : ''}`}
     >
       <div className="flex items-center justify-between relative">

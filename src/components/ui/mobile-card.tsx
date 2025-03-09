@@ -97,4 +97,4 @@ const MobileCard: React.FC<MobileCardProps> = ({
   );
 };
 
-export default MobileCard; 
+export default MobileCard;
