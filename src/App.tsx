@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useRouteError } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -63,7 +62,12 @@ function App() {
     const initializeApp = async () => {
       try {
         console.log("App initialized");
-        setIsLoading(false);
+        
+        // Add a small delay to ensure all components are properly loaded
+        // This helps with refresh issues on dashboard pages
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 300);
       } catch (error) {
         console.error('Service worker error:', error);
         setIsLoading(false);
@@ -71,6 +75,17 @@ function App() {
     };
 
     initializeApp();
+
+    // Handle browser refresh for route preservation
+    const handleBeforeUnload = () => {
+      const currentPath = window.location.pathname;
+      // Store current route in localStorage if it's a route that needs preservation
+      if (currentPath !== '/' && !currentPath.includes('.')) {
+        localStorage.setItem('redirectAfterLoad', currentPath);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     // Add error handling for uncaught errors
     const handleUnhandledError = (event) => {
@@ -86,6 +101,7 @@ function App() {
     window.addEventListener('unhandledrejection', handleUnhandledError);
 
     return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('error', handleUnhandledError);
       window.removeEventListener('unhandledrejection', handleUnhandledError);
     };

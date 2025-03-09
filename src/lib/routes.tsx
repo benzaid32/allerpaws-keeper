@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { RouteObject } from 'react-router-dom';
 import Auth from '@/pages/Auth';
@@ -103,6 +102,7 @@ export const RedirectHandler = () => {
   useEffect(() => {
     // Check if there's a redirect path stored in localStorage
     const redirectPath = localStorage.getItem('redirectAfterLoad');
+    
     if (redirectPath) {
       // Clear the stored path to prevent future redirects
       localStorage.removeItem('redirectAfterLoad');
@@ -110,7 +110,12 @@ export const RedirectHandler = () => {
       // Only navigate if we're not already on the correct path
       if (location.pathname !== redirectPath) {
         console.log('Redirecting to stored path:', redirectPath);
-        navigate(redirectPath, { replace: true });
+        
+        // Add a small delay to ensure React Router is fully initialized
+        // This helps prevent navigation issues after a page refresh
+        setTimeout(() => {
+          navigate(redirectPath, { replace: true });
+        }, 100);
       }
     }
   }, [navigate, location.pathname]);

@@ -1,4 +1,3 @@
-
 const express = require('express');
 const path = require('path');
 const compression = require('compression');
@@ -19,13 +18,23 @@ app.use(express.static(path.join(__dirname, 'dist')));
 
 // Handle SPA routing - all routes that don't match a file should serve index.html
 app.get('*', (req, res, next) => {
-  // Check if the request is for a file (has extension)
-  if (req.url.indexOf('.') !== -1 && !req.url.includes('index.html')) {
+  // Check if the request is for a static file with an extension
+  const fileExtensionRegex = /\.\w+$/;
+  if (fileExtensionRegex.test(req.url) && !req.url.includes('index.html')) {
     console.log(`Static file request: ${req.url}`);
     return next(); // Let express.static handle it
   }
   
+  // For all other routes (including /dashboard, /settings, etc.), serve the index.html
   console.log(`SPA route detected: ${req.url}, serving index.html`);
+  
+  // Set cache headers to prevent caching for the index.html for SPA routes
+  res.set({
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  });
+  
   // Always serve the index.html for routes that don't match a static file
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
