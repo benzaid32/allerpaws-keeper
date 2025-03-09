@@ -1,9 +1,9 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SymptomEntry } from "@/lib/types";
+import { markUserChanges, hasChanges, resetChangesFlag } from "@/lib/sync-utils";
 
 // Track when the last sync was registered to prevent duplicate registrations
 let lastSyncRegistered = 0;
@@ -94,12 +94,18 @@ export const useSymptomDiary = () => {
     };
   }, []);
 
-  const fetchEntries = useCallback(async () => {
+  const fetchEntries = useCallback(async (forceRefresh = false) => {
     if (!user) return;
     
     // Don't fetch again if we're already syncing
     if (isSyncing) {
       console.log('Skipping duplicate symptom fetch - sync already in progress');
+      return;
+    }
+
+    // Only proceed with sync if user has made changes or it's forced
+    if (!forceRefresh && !hasChanges() && !isOffline) {
+      console.log('Skipping symptom fetch - no user changes detected');
       return;
     }
 
@@ -161,6 +167,9 @@ export const useSymptomDiary = () => {
       }));
       
       setEntries(formattedEntries);
+
+      // After successful fetch, reset the changes flag
+      resetChangesFlag();
       
       // Register for background sync, but throttle it to prevent infinite loops
       const currentTime = Date.now();
@@ -224,6 +233,9 @@ export const useSymptomDiary = () => {
 
       if (entryError) throw entryError;
 
+      // Mark that user has made changes
+      markUserChanges();
+      
       // Update local state by removing the deleted entry
       setEntries(entries.filter(entry => entry.id !== entryId));
 

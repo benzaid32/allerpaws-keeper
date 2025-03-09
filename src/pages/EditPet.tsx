@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +12,7 @@ import PetAllergyEditor from "@/components/pet/PetAllergyEditor";
 import PetFormNavigation from "@/components/pet/PetFormNavigation";
 import PetFormProgress from "@/components/pet/PetFormProgress";
 import { usePets } from "@/hooks/use-pets";
+import { markUserChanges } from "@/lib/sync-utils";
 
 interface PetFormData {
   name: string;
@@ -266,8 +266,11 @@ const EditPet = () => {
         }
       }
 
+      // Mark that user has made changes to trigger refresh
+      markUserChanges();
+      
       // Make sure to refresh the pets data in the hook
-      await fetchPets();
+      await fetchPets(true);
 
       toast({
         title: "Success",

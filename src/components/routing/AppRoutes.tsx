@@ -25,7 +25,7 @@ const pageTransition = {
 
 const LoadingFallback = () => (
   <div className="h-screen w-full flex items-center justify-center">
-    <LoadingSpinner size="lg" />
+    <LoadingSpinner className="h-12 w-12" />
   </div>
 );
 

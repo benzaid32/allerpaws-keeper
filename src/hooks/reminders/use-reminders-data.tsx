@@ -1,9 +1,9 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Pet, Reminder } from "@/lib/types";
+import { markUserChanges, hasChanges, resetChangesFlag } from "@/lib/sync-utils";
 
 // Track when the last sync was registered to prevent duplicate registrations
 let lastSyncRegistered = 0;
@@ -92,12 +92,18 @@ export const useRemindersData = () => {
     };
   }, []);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
     if (!user) return;
     
     // Don't fetch again if we're already syncing
     if (isSyncing) {
       console.log('Skipping duplicate reminders fetch - sync already in progress');
+      return;
+    }
+
+    // Only proceed with sync if user has made changes or it's forced
+    if (!forceRefresh && !hasChanges() && !isOffline) {
+      console.log('Skipping reminders fetch - no user changes detected');
       return;
     }
 
@@ -157,6 +163,9 @@ export const useRemindersData = () => {
       setReminders(formattedReminders);
       
       console.log(`Fetched ${formattedReminders.length} reminders at ${timestamp}`);
+      
+      // After successful fetch, reset the changes flag
+      resetChangesFlag();
       
       // If we're in a PWA, register for background sync
       const currentTime = Date.now();

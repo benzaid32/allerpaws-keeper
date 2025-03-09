@@ -1,6 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { hasChanges } from '@/lib/sync-utils';
 
 interface ServiceWorkerManagerProps {
   children: React.ReactNode;
@@ -65,13 +65,17 @@ const ServiceWorkerManager: React.FC<ServiceWorkerManagerProps> = ({ children })
               // Handle sync complete messages - but don't show notifications for them
               if (event.data && event.data.type === 'SYNC_COMPLETE') {
                 // We'll still dispatch the event so data refreshes can happen
-                // But we won't show the toast notification
-                window.dispatchEvent(new CustomEvent('data-sync-complete', { 
-                  detail: { tag: event.data.tag }
-                }));
-                
-                // Log the sync for debugging but don't show toast
-                console.log(`Sync complete: ${event.data.tag}`);
+                // But we'll only trigger refresh if there have been user changes
+                if (hasChanges()) {
+                  window.dispatchEvent(new CustomEvent('data-sync-complete', { 
+                    detail: { tag: event.data.tag }
+                  }));
+                  
+                  // Log the sync for debugging but don't show toast
+                  console.log(`Sync complete with user changes: ${event.data.tag}`);
+                } else {
+                  console.log(`Skipping sync notification (no changes): ${event.data.tag}`);
+                }
               }
             });
           }

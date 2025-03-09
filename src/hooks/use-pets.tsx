@@ -1,9 +1,9 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Pet } from "@/lib/types";
+import { markUserChanges, hasChanges, resetChangesFlag } from "@/lib/sync-utils";
 
 // Track when the last sync was registered to prevent duplicate registrations
 let lastSyncRegistered = 0;
@@ -96,10 +96,16 @@ export function usePets() {
   }, []);
 
   // Fetch pets function that can be called whenever we need fresh data
-  const fetchPets = useCallback(async () => {
+  const fetchPets = useCallback(async (forceRefresh = false) => {
     // Don't fetch again if we're already syncing
     if (isSyncing) {
       console.log('Skipping duplicate fetch - sync already in progress');
+      return;
+    }
+    
+    // Only proceed with sync if user has made changes or it's forced
+    if (!forceRefresh && !hasChanges() && !isOffline) {
+      console.log('Skipping fetch - no user changes detected');
       return;
     }
     
@@ -198,6 +204,9 @@ export function usePets() {
         }
       }
 
+      // After successful fetch, reset the changes flag
+      resetChangesFlag();
+
       // Register for background sync, but throttle it to prevent infinite loops
       const currentTime = Date.now();
       if ('serviceWorker' in navigator && 'SyncManager' in window && 
@@ -239,38 +248,7 @@ export function usePets() {
     }
   }, [toast, petId, isOffline, isSyncing]);
 
-  // Initialize by fetching pets on component mount or when dependencies change
-  useEffect(() => {
-    if (initialLoadDone.current) return;
-    
-    initialLoadDone.current = true;
-    console.log("usePets: Initial data load");
-    
-    // Small delay to prevent cascade of fetches
-    setTimeout(() => {
-      fetchPets();
-    }, 50);
-    
-    // Set up an event listener to refresh data when the app comes back into focus
-    // This is important to catch updates made in other tabs or after returning to the app
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log('App came back into focus, refreshing pets data');
-        fetchPets();
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [fetchPets]);
-
-  const clearSelectedPet = () => {
-    setSelectedPet(null);
-  };
-
+  // Modified delete function to mark changes
   const deletePet = async (petId: string) => {
     try {
       // First delete allergies associated with the pet
@@ -293,8 +271,11 @@ export function usePets() {
         throw petError;
       }
       
+      // Mark that user has made changes
+      markUserChanges();
+      
       // Update local state by fetching fresh data
-      await fetchPets();
+      await fetchPets(true);
       
       toast({
         title: "Success",
@@ -310,6 +291,10 @@ export function usePets() {
       });
       throw error;
     }
+  };
+
+  const clearSelectedPet = () => {
+    setSelectedPet(null);
   };
 
   return {
