@@ -36,25 +36,38 @@ export const PetsList: React.FC<PetsListProps> = ({
       opacity: 1,
       y: 0,
       transition: {
-        delay: custom * 0.1,
+        delay: custom * 0.05, // Reduced delay for faster appearance
       },
     }),
   };
 
+  // Show loading state
   if (isLoading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <LoadingSpinner size="lg" />
+        <p className="mt-4 text-muted-foreground">Loading your pets...</p>
+      </div>
+    );
   }
   
-  // Add debugging logs to help troubleshoot
-  console.log("PetsList - Received pets:", pets);
-  
+  // Show empty state when no pets are available
   if (!pets || pets.length === 0) {
-    console.log("PetsList - No pets found, showing empty state");
     return <EmptyPetsList onAddPet={onAddPet} />;
   }
 
   return (
-    <>
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: {
+          transition: {
+            staggerChildren: 0.05,
+          },
+        },
+      }}
+    >
       {displayMode === "grid" ? (
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {pets.map((pet, index) => (
@@ -62,9 +75,7 @@ export const PetsList: React.FC<PetsListProps> = ({
               key={pet.id}
               custom={index}
               variants={cardVariants}
-              initial="hidden"
-              animate="visible"
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.01 }}
               transition={{ type: "spring", stiffness: 300 }}
               aria-label={`Pet card for ${pet.name}`}
             >
@@ -87,8 +98,6 @@ export const PetsList: React.FC<PetsListProps> = ({
               key={pet.id}
               custom={index}
               variants={cardVariants}
-              initial="hidden"
-              animate="visible"
               whileHover={{ y: -2 }}
               transition={{ type: "spring", stiffness: 500 }}
             >
@@ -105,6 +114,6 @@ export const PetsList: React.FC<PetsListProps> = ({
           ))}
         </div>
       )}
-    </>
+    </motion.div>
   );
 };

@@ -17,12 +17,22 @@ const PetsPage = () => {
   const [deletingPetId, setDeletingPetId] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<"grid" | "list">("grid");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
 
-  // Fetch pets on component mount
+  // Fetch pets on component mount with improved loading state management
   useEffect(() => {
-    console.log("PetsPage: Fetching pets on mount");
-    fetchPets(true);
-  }, [fetchPets]);
+    console.log("PetsPage: Initial mount, loading pets");
+    const loadPets = async () => {
+      try {
+        await fetchPets(true);
+      } finally {
+        // Mark initial load as complete, regardless of result
+        setInitialLoadDone(true);
+      }
+    };
+    
+    loadPets();
+  }, []);
 
   const handleViewPet = (petId: string) => {
     navigate(`/pet/${petId}`);
@@ -59,6 +69,8 @@ const PetsPage = () => {
   };
   
   const handleRefresh = async () => {
+    if (isRefreshing) return; // Prevent multiple refreshes
+    
     try {
       setIsRefreshing(true);
       await fetchPets(true);
@@ -77,6 +89,9 @@ const PetsPage = () => {
       setIsRefreshing(false);
     }
   };
+
+  // Show true loading state only during initial load
+  const isLoading = loading && !initialLoadDone;
 
   return (
     <MobileLayout title="Pet Management">
@@ -98,11 +113,11 @@ const PetsPage = () => {
           onAddPet={handleAddPet}
           isDeleting={isDeleting}
           deletingPetId={deletingPetId}
-          isLoading={loading}
+          isLoading={isLoading}
           displayMode={displayMode}
         />
 
-        {!loading && pets && pets.length > 0 && (
+        {!isLoading && pets && pets.length > 0 && (
           <Button
             onClick={handleAddPet}
             variant="outline"

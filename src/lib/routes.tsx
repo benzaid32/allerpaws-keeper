@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { RouteType } from './types';
 import { Navigate, useLocation } from 'react-router-dom';
@@ -205,6 +204,14 @@ export const routes: RouteType[] = [
         <Suspense fallback={<LoadingSpinner size="lg" />}>
           <PetsPage />
         </Suspense>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/manage-pets',
+    element: (
+      <ProtectedRoute>
+        <Navigate to="/pets" replace />
       </ProtectedRoute>
     ),
   },

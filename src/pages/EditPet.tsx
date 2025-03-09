@@ -104,7 +104,7 @@ const EditPet = () => {
           description: "Failed to load pet information",
           variant: "destructive",
         });
-        navigate("/manage-pets");
+        navigate("/pets");
       } finally {
         setLoading(false);
       }
@@ -188,8 +188,7 @@ const EditPet = () => {
       // Redirect after briefly showing the message
       setRedirecting(true);
       setTimeout(() => {
-        // Redirect to home page instead of manage-pets
-        window.location.href = "/";
+        navigate("/pets");
       }, 800);
       return;
     }
@@ -280,10 +279,9 @@ const EditPet = () => {
       // Show redirecting state before navigation
       setRedirecting(true);
       
-      // IMPORTANT: Force redirect to home page
+      // Navigate to the pets page after a short delay
       setTimeout(() => {
-        // Use window.location for a hard redirect to ensure we navigate correctly
-        window.location.href = "/";
+        navigate("/pets");
       }, 500);
     } catch (error: any) {
       console.error("Error updating pet:", error.message);
@@ -339,7 +337,7 @@ const EditPet = () => {
     <MobileLayout 
       title="Edit Pet" 
       showBackButton={true}
-      onBack={() => navigate("/manage-pets")}
+      onBack={() => navigate("/pets")}
     >
       <div className="space-y-4">
         <PetFormProgress currentStep={currentStep} totalSteps={3} />
@@ -374,7 +372,7 @@ const EditPet = () => {
             submitting={submitting}
             onPrevious={prevStep}
             onNext={nextStep}
-            onCancel={() => navigate("/manage-pets")}
+            onCancel={() => navigate("/pets")}
           />
         </form>
       </div>

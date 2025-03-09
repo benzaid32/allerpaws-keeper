@@ -200,7 +200,7 @@ const AddPet = () => {
         description: "Your pet has been added successfully",
       });
 
-      navigate("/manage-pets");
+      navigate("/pets");
     } catch (error: any) {
       console.error("Error adding pet:", error.message);
       toast({
@@ -425,7 +425,7 @@ const AddPet = () => {
     <MobileLayout 
       title="Add Pet" 
       showBackButton={true}
-      onBack={() => navigate("/manage-pets")}
+      onBack={() => navigate("/pets")}
     >
       <div className="space-y-4">
         {/* Progress indicator */}
@@ -472,7 +472,7 @@ const AddPet = () => {
                 variant="outline" 
                 onClick={(e) => {
                   e.preventDefault();
-                  navigate("/manage-pets");
+                  navigate("/pets");
                 }}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />

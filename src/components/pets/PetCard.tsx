@@ -5,7 +5,7 @@ import MobileCard from "@/components/ui/mobile-card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PetActionMenu } from "./PetActionMenu";
-import { PLACEHOLDER_IMAGES } from "@/lib/image-utils";
+import { DEFAULT_IMAGES } from "@/lib/image-utils";
 import { motion } from "framer-motion";
 
 interface PetCardProps {
@@ -28,52 +28,52 @@ export const PetCard: React.FC<PetCardProps> = ({
   compact = false,
 }) => {
   const [imageError, setImageError] = useState(false);
-  const [imageLoading, setImageLoading] = useState(!!pet.imageUrl);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
-  // Force a unique URL with a cache buster to prevent stale images
-  const getImageUrl = () => {
-    if (!pet.imageUrl || imageError) return null;
-    
-    // Add a timestamp as a query parameter to bust cache
-    const cacheBuster = `?t=${Date.now()}`;
-    
-    // If URL already has query parameters, append the cache buster
-    if (pet.imageUrl.includes('?')) {
-      return `${pet.imageUrl}&cb=${cacheBuster}`;
+  // Get fallback image based on pet species
+  const getFallbackImage = () => {
+    if (pet.species && DEFAULT_IMAGES.pets[pet.species as keyof typeof DEFAULT_IMAGES.pets]) {
+      return DEFAULT_IMAGES.pets[pet.species as keyof typeof DEFAULT_IMAGES.pets];
     }
-    
-    return `${pet.imageUrl}${cacheBuster}`;
+    return null;
+  };
+
+  // Handle card click carefully to prevent events from propagating to action menu
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Only navigate if the click is on the card itself, not on buttons inside it
+    if (e.target === e.currentTarget || 
+        (e.currentTarget as HTMLElement).contains(e.target as HTMLElement) && 
+        !(e.target as HTMLElement).closest('button')) {
+      onViewPet(pet.id);
+    }
   };
 
   return (
     <MobileCard
       key={pet.id}
-      onClick={() => onViewPet(pet.id)}
+      onClick={handleCardClick}
       className={`hover:border-primary/30 transition-all overflow-visible ${compact ? 'py-2 px-3' : ''}`}
     >
       <div className="flex items-center justify-between relative">
         <div className="flex items-center gap-3">
           <div className={`relative ${compact ? 'h-10 w-10' : 'h-14 w-14'}`}>
-            <Avatar className={`${compact ? 'h-10 w-10' : 'h-14 w-14'} border border-muted shadow-sm ${imageLoading ? 'animate-pulse bg-muted' : ''}`}>
+            <Avatar className={`${compact ? 'h-10 w-10' : 'h-14 w-14'} border border-muted shadow-sm`}>
+              {!imageLoaded && (
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                  {pet.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              )}
               {pet.imageUrl && !imageError ? (
-                <>
-                  {imageLoading && (
-                    <AvatarFallback className="absolute inset-0 bg-primary/10">
-                      {pet.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  )}
-                  <AvatarImage 
-                    src={getImageUrl()} 
-                    alt={pet.name} 
-                    onError={(e) => {
-                      console.error("Failed to load pet image:", pet.imageUrl);
-                      setImageError(true);
-                      setImageLoading(false);
-                    }}
-                    onLoad={() => setImageLoading(false)}
-                    className="object-cover"
-                  />
-                </>
+                <AvatarImage 
+                  src={pet.imageUrl}
+                  alt={pet.name} 
+                  onError={() => {
+                    console.error("Failed to load pet image:", pet.imageUrl);
+                    setImageError(true);
+                  }}
+                  onLoad={() => setImageLoaded(true)}
+                  className={`object-cover ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                />
               ) : (
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                   {pet.name.charAt(0).toUpperCase()}
@@ -85,7 +85,7 @@ export const PetCard: React.FC<PetCardProps> = ({
               <motion.div 
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2 }}
+                transition={{ delay: 0.1 }}
                 className={`absolute -bottom-1 -right-1 ${compact ? 'h-4 w-4' : 'h-5 w-5'} rounded-full bg-white shadow-sm border border-muted flex items-center justify-center`}
               >
                 <span className="text-xs" aria-label={`Pet type: ${pet.species}`}>

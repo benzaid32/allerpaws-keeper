@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Pet } from "@/lib/types";
-import { PawPrint, Grid, List, PlusCircle, Camera } from "lucide-react";
+import { PawPrint, Grid, List, PlusCircle } from "lucide-react";
 import { PetsList } from "@/components/pets/PetsList";
 import AddPetCard from "./AddPetCard";
 import { EmptyPetsList } from "@/components/pets/EmptyPetsList";
@@ -27,7 +27,7 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
   
   // Add handlers for pet actions
   const handleViewPet = (petId: string) => {
-    navigate(`/edit-pet/${petId}`);
+    navigate(`/pet/${petId}`);
   };
 
   const handleEditPet = (petId: string) => {
@@ -79,7 +79,7 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
+        transition={{ duration: 0.4 }}
       >
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center">
@@ -123,7 +123,7 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
 
         {pets && pets.length > 0 ? (
           <motion.div 
-            className={viewMode === "grid" ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3" : "space-y-3"}
+            className="pet-list-container"
             variants={containerVariants}
             initial="hidden"
             animate="show"
@@ -141,9 +141,10 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
             
             {viewMode === "grid" && pets.length < 3 && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.2 }}
+                className="mt-4"
               >
                 <AddPetCard />
               </motion.div>
@@ -157,7 +158,7 @@ const PetsSection: React.FC<PetsSectionProps> = ({ pets }) => {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.2 }}
             className="mt-3"
           >
             <Button 
