@@ -61,6 +61,7 @@ const PatternBackground: React.FC<PatternBackgroundProps> = ({
           alt="" 
           className="hidden" 
           onError={handlePatternError}
+          aria-hidden="true"
         />
       </div>
       
@@ -107,4 +108,4 @@ const PatternBackground: React.FC<PatternBackgroundProps> = ({
   );
 };
 
-export default PatternBackground; 
+export default PatternBackground;

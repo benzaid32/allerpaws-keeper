@@ -29,30 +29,47 @@ export async function uploadPatterns(): Promise<void> {
   try {
     console.log("Starting pattern uploads...");
     
-    // Create patterns directory if it doesn't exist
-    const patternsDir = "patterns";
-    
     for (const pattern of PATTERN_SVG_DATA) {
       console.log(`Uploading ${pattern.name}...`);
       
-      // Convert base64 to Blob
-      const blob = await fetch(`data:image/svg+xml;base64,${pattern.data}`).then(r => r.blob());
-      
-      // Create a File from the Blob
-      const file = new File([blob], pattern.name, { type: "image/svg+xml" });
-      
-      // Upload file to Supabase
-      const { data, error } = await supabase.storage
-        .from("app-images")
-        .upload(`${patternsDir}/${pattern.name}`, file, {
-          cacheControl: "31536000", // 1 year cache
-          upsert: true
-        });
-      
-      if (error) {
-        console.error(`Error uploading ${pattern.name}:`, error);
-      } else {
-        console.log(`Successfully uploaded ${pattern.name}`, data);
+      try {
+        // Convert base64 to Blob
+        const base64String = pattern.data;
+        const byteCharacters = atob(base64String);
+        const byteArrays = [];
+        
+        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+          const slice = byteCharacters.slice(offset, offset + 512);
+          
+          const byteNumbers = new Array(slice.length);
+          for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+          }
+          
+          const byteArray = new Uint8Array(byteNumbers);
+          byteArrays.push(byteArray);
+        }
+        
+        const blob = new Blob(byteArrays, { type: "image/svg+xml" });
+        
+        // Create a File from the Blob
+        const file = new File([blob], pattern.name, { type: "image/svg+xml" });
+        
+        // Upload file to Supabase
+        const { data, error } = await supabase.storage
+          .from("app-images")
+          .upload(`patterns/${pattern.name}`, file, {
+            cacheControl: "31536000", // 1 year cache
+            upsert: true
+          });
+        
+        if (error) {
+          console.error(`Error uploading ${pattern.name}:`, error);
+        } else {
+          console.log(`Successfully uploaded ${pattern.name}`, data);
+        }
+      } catch (uploadError) {
+        console.error(`Error processing ${pattern.name}:`, uploadError);
       }
     }
     

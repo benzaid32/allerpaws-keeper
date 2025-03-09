@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Available image categories
@@ -224,16 +223,7 @@ export function getDefaultImage(category: keyof typeof DEFAULT_IMAGES, type: str
 export function getRandomPattern(): string {
   // First try to use the Supabase patterns
   const randomSupabaseIndex = Math.floor(Math.random() * BACKGROUND_PATTERNS.length);
-  const supabasePattern = BACKGROUND_PATTERNS[randomSupabaseIndex];
-  
-  // Check if pattern is available by making a HEAD request
-  const img = new Image();
-  img.onerror = () => {
-    console.warn(`Failed to load pattern from Supabase: ${supabasePattern}, using fallback pattern`);
-    // We'll use the fallback in the src.onerror handler of the component
-  };
-  
-  return supabasePattern;
+  return BACKGROUND_PATTERNS[randomSupabaseIndex];
 }
 
 // Fallback function to get a local pattern when Supabase storage fails
