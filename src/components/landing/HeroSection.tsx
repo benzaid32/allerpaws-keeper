@@ -3,6 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import BeforeAfterComparison from "./BeforeAfterComparison";
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -10,7 +11,21 @@ const HeroSection = () => {
   return (
     <section className="bg-gradient-to-b from-[#a4e1e9] to-[#d4f4f9] pt-8 pb-0 overflow-hidden">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-center">
+        <div className="flex flex-col md:flex-row-reverse items-center">
+          <motion.div 
+            className="w-full md:w-1/2 pt-8 md:pt-12 pb-8 pr-0 md:pr-6"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="h-[450px] md:h-[500px] w-full rounded-2xl overflow-hidden">
+              <BeforeAfterComparison 
+                beforeImage="/lovable-uploads/f2de4c09-3c68-48fd-b08f-d633d17f17cb.png"
+                afterImage="/lovable-uploads/c709b62e-5ef5-4679-8619-68389522dd8f.png"
+              />
+            </div>
+          </motion.div>
+          
           <motion.div 
             className="w-full md:w-1/2 pt-8 md:pt-12 pb-8"
             initial={{ opacity: 0, x: -20 }}
@@ -18,13 +33,13 @@ const HeroSection = () => {
             transition={{ duration: 0.5 }}
           >
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-black mb-4 leading-tight">
-              Track Your Pet's<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#33c1db] to-[#1a8a9e]">Diet & Allergies</span><br />
-              With Smart Tools
+              Transform Your Pet's<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#33c1db] to-[#1a8a9e]">Health & Happiness</span><br />
+              With AllerPaws
             </h1>
             
             <p className="text-gray-700 mb-6 text-lg max-w-md">
-              Monitor food intake, track symptoms, and identify allergies with our easy-to-use pet health tracking app.
+              No more frustration with unknown allergies. Easily track, identify, and manage your pet's food allergies for a happier, healthier companion.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -43,21 +58,43 @@ const HeroSection = () => {
                 Log In
               </Button>
             </div>
-          </motion.div>
-          
-          <motion.div 
-            className="w-full md:w-1/2"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-[#33c1db]/20 to-[#1a8a9e]/20 rounded-full blur-xl opacity-70"></div>
-              <img 
-                src="/lovable-uploads/2d0589e0-c00d-42c9-b1d4-6aadd3755341.png" 
-                alt="Happy dogs" 
-                className="w-full h-auto rounded-tl-3xl md:rounded-bl-none md:rounded-tl-[100px] relative z-10 transform transition-all duration-500 hover:scale-[1.02]"
-              />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center">
+                <div className="h-10 w-10 rounded-full bg-[#33c1db]/20 flex items-center justify-center mr-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#1a8a9e]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-gray-700">Track Symptoms</span>
+              </div>
+              
+              <div className="flex items-center">
+                <div className="h-10 w-10 rounded-full bg-[#33c1db]/20 flex items-center justify-center mr-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#1a8a9e]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-gray-700">Identify Allergens</span>
+              </div>
+              
+              <div className="flex items-center">
+                <div className="h-10 w-10 rounded-full bg-[#33c1db]/20 flex items-center justify-center mr-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#1a8a9e]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-gray-700">Plan Safe Diets</span>
+              </div>
+              
+              <div className="flex items-center">
+                <div className="h-10 w-10 rounded-full bg-[#33c1db]/20 flex items-center justify-center mr-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#1a8a9e]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-gray-700">Boost Happiness</span>
+              </div>
             </div>
           </motion.div>
         </div>
