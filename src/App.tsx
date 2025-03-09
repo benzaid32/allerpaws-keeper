@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ui/theme-provider";
@@ -35,15 +35,19 @@ function App() {
         <SubscriptionProvider>
           <DataSyncProvider>
             <ServiceWorkerManager>
-              <NotificationPermissionManager>
-                <BackgroundSyncManager>
-                  <div className={`app-container ${isAnimating ? 'animating' : ''}`}>
-                    <AppRoutes />
-                  </div>
-                  <Toaster />
-                  <SonnerToaster position="top-center" />
-                </BackgroundSyncManager>
-              </NotificationPermissionManager>
+              {children => (
+                <NotificationPermissionManager>
+                  {children => (
+                    <BackgroundSyncManager>
+                      <div className={`app-container ${isAnimating ? 'animating' : ''}`}>
+                        <AppRoutes />
+                      </div>
+                      <Toaster />
+                      <SonnerToaster position="top-center" />
+                    </BackgroundSyncManager>
+                  )}
+                </NotificationPermissionManager>
+              )}
             </ServiceWorkerManager>
           </DataSyncProvider>
         </SubscriptionProvider>

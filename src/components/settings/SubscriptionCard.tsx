@@ -9,14 +9,14 @@ import { useUserSubscription } from "@/hooks/use-user-subscription";
 
 const SubscriptionCard: React.FC = () => {
   const navigate = useNavigate();
-  const { subscription, isLoading } = useUserSubscription();
+  const { subscription, loading } = useUserSubscription();
   
   return (
     <MobileCard
       icon={<Crown className="h-5 w-5 text-primary" />}
       title="Your Subscription"
     >
-      <CurrentPlan subscription={subscription} isLoading={isLoading} />
+      <CurrentPlan subscription={subscription} isLoading={loading} />
       <div className="mt-4">
         <Button 
           onClick={() => navigate("/pricing")} 

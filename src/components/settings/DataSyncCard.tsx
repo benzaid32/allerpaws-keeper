@@ -1,134 +1,123 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Cloud, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import MobileCard from "@/components/ui/mobile-card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDataSync } from "@/contexts/DataSyncContext";
-import { Loader2, Cloud, CloudOff } from "lucide-react";
 
-export const DataSyncCard = () => {
+const DataSyncCard: React.FC = () => {
   const { 
-    isOnlineOnly, 
-    toggleOnlineMode, 
-    syncFrequency, 
-    setSyncFrequency, 
-    lastSyncTime, 
+    syncEnabled,
+    syncFrequency,
+    lastSyncTime,
+    toggleSyncEnabled,
+    changeSyncFrequency,
     syncNow,
-    isSyncing
+    isSyncing,
+    syncStatus
   } = useDataSync();
-
-  const formatLastSync = () => {
+  
+  const formatLastSyncTime = () => {
     if (!lastSyncTime) return "Never";
     
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (lastSyncTime.toDateString() === today.toDateString()) {
-      return `Today at ${lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    } else if (lastSyncTime.toDateString() === yesterday.toDateString()) {
-      return `Yesterday at ${lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    } else {
-      return lastSyncTime.toLocaleDateString([], { 
-        month: 'short', 
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
+    const date = new Date(lastSyncTime);
+    return date.toLocaleString();
   };
-
+  
   return (
-    <Card className="mb-4">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Data Synchronization</span>
-          {isOnlineOnly ? (
-            <Cloud className="h-5 w-5 text-primary" />
-          ) : (
-            <CloudOff className="h-5 w-5 text-muted-foreground" />
-          )}
-        </CardTitle>
-        <CardDescription>
-          Control how your data is stored and synced
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <h3 className="text-sm font-medium">Cloud Synchronization</h3>
-            <p className="text-xs text-muted-foreground">
-              {isOnlineOnly
-                ? "Your data is stored in the cloud and synced across devices"
-                : "Your data is stored on this device only"}
+    <MobileCard
+      icon={<Cloud className="h-5 w-5 text-primary" />}
+      title="Data Synchronization"
+    >
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="space-y-1">
+            <Label htmlFor="sync-toggle" className="text-base font-normal">
+              Sync with Cloud
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              Backup your data to your account
             </p>
           </div>
           <Switch
-            checked={isOnlineOnly}
-            onCheckedChange={toggleOnlineMode}
+            id="sync-toggle"
+            checked={syncEnabled}
+            onCheckedChange={toggleSyncEnabled}
           />
         </div>
         
-        {isOnlineOnly && (
+        {syncEnabled && (
           <>
-            <div className="pt-2">
-              <h3 className="text-sm font-medium mb-2">Sync Frequency</h3>
-              <Select
-                value={syncFrequency}
-                onValueChange={(value) => setSyncFrequency(value as 'weekly' | 'monthly' | 'manual' | 'never')}
-                disabled={!isOnlineOnly}
+            <div className="space-y-2">
+              <Label htmlFor="sync-frequency">Sync Frequency</Label>
+              <Select 
+                value={syncFrequency} 
+                onValueChange={changeSyncFrequency}
+                disabled={isSyncing}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="sync-frequency" className="w-full">
                   <SelectValue placeholder="Select frequency" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="manual">Manual Only</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
                   <SelectItem value="weekly">Weekly</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="manual">Manual only</SelectItem>
-                  <SelectItem value="never">Never (local only)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="flex items-center justify-between pt-2">
-              <div className="space-y-0.5">
-                <h3 className="text-sm font-medium">Last Synced</h3>
-                <p className="text-xs text-muted-foreground">
-                  {formatLastSync()}
-                </p>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Last synced: {formatLastSyncTime()}</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={syncNow}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? "Syncing..." : "Sync Now"}
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={syncNow}
-                disabled={isSyncing}
-              >
-                {isSyncing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Syncing...
-                  </>
-                ) : (
-                  <>
-                    <Cloud className="mr-2 h-4 w-4" />
-                    Sync Now
-                  </>
-                )}
-              </Button>
             </div>
+            
+            {syncStatus === "success" && (
+              <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900/30">
+                <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <AlertTitle className="text-green-800 dark:text-green-400">Sync Successful</AlertTitle>
+                <AlertDescription className="text-green-700 dark:text-green-500">
+                  All your data is backed up to the cloud.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {syncStatus === "error" && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Sync Failed</AlertTitle>
+                <AlertDescription>
+                  Could not sync your data. Please try again later.
+                </AlertDescription>
+              </Alert>
+            )}
           </>
         )}
-      </CardContent>
-      
-      <CardFooter className="text-xs text-muted-foreground border-t pt-4">
-        {isOnlineOnly
-          ? "Your data is securely stored and accessible from any device."
-          : "Warning: If you lose this device, your data cannot be recovered."}
-      </CardFooter>
-    </Card>
+        
+        {!syncEnabled && (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>Local Storage Only</AlertTitle>
+            <AlertDescription>
+              Your data is only stored on this device and will be lost if you clear your browser data or uninstall the app.
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
+    </MobileCard>
   );
 };
 

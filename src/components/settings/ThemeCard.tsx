@@ -20,7 +20,11 @@ const ThemeCard: React.FC = () => {
           <ToggleGroup 
             type="single" 
             value={theme} 
-            onValueChange={(value) => value && setTheme(value)}
+            onValueChange={(value) => {
+              if (value === "light" || value === "dark" || value === "system") {
+                setTheme(value);
+              }
+            }}
             className="justify-start"
           >
             <ToggleGroupItem value="light" aria-label="Light mode">

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "./use-toast";
 import { isPlatform } from "@/lib/utils";
@@ -25,11 +24,23 @@ export const useNotifications = () => {
   const [isNotificationsSupported, setIsNotificationsSupported] = useState(false);
   const [isSystemBlocked, setIsSystemBlocked] = useState(false);
   const [hasTestedPermissions, setHasTestedPermissions] = useState(false);
+  const [notifications, setNotifications] = useState(false);
   const { toast } = useToast();
 
   // Force check permissions on mount and when component updates
   useEffect(() => {
     checkPermissions();
+    
+    // Load notification settings from localStorage
+    const storedSettings = localStorage.getItem('notification-settings');
+    if (storedSettings) {
+      try {
+        const settings = JSON.parse(storedSettings);
+        setNotifications(settings.enabled || false);
+      } catch (e) {
+        console.error("Error parsing notification settings:", e);
+      }
+    }
   }, []);
 
   // Separate function to check permissions that can be called directly
@@ -115,6 +126,15 @@ export const useNotifications = () => {
       });
       return false;
     }
+  };
+
+  const updateNotifications = (enabled: boolean) => {
+    // Save notification preference to local storage
+    localStorage.setItem('notification-settings', JSON.stringify({
+      enabled,
+      lastUpdated: new Date().toISOString()
+    }));
+    setNotifications(enabled);
   };
 
   const scheduleNotification = async (
@@ -221,6 +241,8 @@ export const useNotifications = () => {
     isNotificationsSupported,
     permissionState,
     isSystemBlocked,
+    notifications,
+    updateNotifications,
     requestPermission,
     checkPermissions,
     scheduleNotification,
