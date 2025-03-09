@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { RouteType } from './types';
 import { Navigate, useLocation } from 'react-router-dom';
@@ -43,6 +42,7 @@ const FoodDetailsPage = React.lazy(() => import('@/pages/FoodDetailsPage')); // 
 const Settings = React.lazy(() => import('@/pages/Settings')); // Fixed import
 const Reminders = React.lazy(() => import('@/pages/Reminders')); // Fixed import
 const Auth = React.lazy(() => import('@/pages/Auth')); // Added for onboarding
+const EliminationDiet = React.lazy(() => import('@/pages/EliminationDiet'));
 
 // Define routes
 export const routes: RouteType[] = [
@@ -127,6 +127,16 @@ export const routes: RouteType[] = [
     element: (
       <ProtectedRoute>
         <FoodDetailsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/elimination-diet',
+    element: (
+      <ProtectedRoute>
+        <Suspense fallback={<LoadingSpinner size="lg" />}>
+          <EliminationDiet />
+        </Suspense>
       </ProtectedRoute>
     ),
   },
