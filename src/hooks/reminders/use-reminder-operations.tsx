@@ -1,11 +1,14 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Reminder } from "@/lib/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const useReminderOperations = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
   const fetchReminders = async () => {
     setLoading(true);
@@ -33,9 +36,15 @@ export const useReminderOperations = () => {
   const addReminder = async (reminder: Reminder) => {
     setLoading(true);
     try {
+      // Make sure the reminder has the user_id from the authenticated user
+      const reminderWithUserId = {
+        ...reminder,
+        user_id: user?.id
+      };
+      
       const { data, error } = await supabase
         .from("reminders")
-        .insert(reminder)
+        .insert(reminderWithUserId)
         .select("*");
 
       if (error) throw error;

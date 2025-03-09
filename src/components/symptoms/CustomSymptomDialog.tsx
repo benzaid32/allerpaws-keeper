@@ -47,23 +47,41 @@ const CustomSymptomDialog: React.FC<CustomSymptomDialogProps> = ({
       return;
     }
     
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in to create custom symptoms",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
     
     try {
+      console.log("Creating custom symptom with user ID:", user.id);
+      // Ensure all required fields are explicitly provided
+      const symptomData = {
+        name: name.trim(),
+        description: description.trim() || null,
+        severity_options: severityOptions,
+        is_custom: true,
+        created_by_user_id: user.id
+      };
+      
+      console.log("Symptom data to insert:", symptomData);
+      
       // Insert the new custom symptom
       const { data, error } = await supabase
         .from("symptoms")
-        .insert({
-          name: name.trim(),
-          description: description.trim() || null,
-          severity_options: severityOptions,
-          is_custom: true,
-          created_by_user_id: user?.id
-        })
+        .insert(symptomData)
         .select("id, name")
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error details:", error);
+        throw error;
+      }
       
       toast({
         title: "Symptom created",
