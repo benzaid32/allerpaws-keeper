@@ -25,7 +25,7 @@ const SymptomEmptyState = () => {
         Start tracking your pet's symptoms to identify potential food allergies and health issues.
       </p>
       <Button 
-        onClick={() => navigate("/add-symptom")}
+        onClick={() => navigate("/symptom-diary/new")}
         className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
       >
         <Plus className="h-4 w-4 mr-2" />
