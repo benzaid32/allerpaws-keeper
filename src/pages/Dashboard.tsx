@@ -104,12 +104,13 @@ const Dashboard = () => {
     return <DashboardLoading />;
   }
 
+  // Updated handlers to use correct route paths
   const handleLogSymptom = () => {
-    navigate('/add-symptom');
+    navigate('/symptom-diary/new');
   };
 
   const handleLogFood = () => {
-    navigate('/add-food-entry');
+    navigate('/food-diary/new');
   };
 
   // Format time for reminders

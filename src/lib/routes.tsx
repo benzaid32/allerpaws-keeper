@@ -44,9 +44,10 @@ const Settings = React.lazy(() => import('@/pages/Settings'));
 const Reminders = React.lazy(() => import('@/pages/Reminders')); 
 const Auth = React.lazy(() => import('@/pages/Auth')); 
 const EliminationDiet = React.lazy(() => import('@/pages/EliminationDiet'));
-const PetsPage = React.lazy(() => import('@/pages/PetsPage')); // Add the new pets page
+const PetsPage = React.lazy(() => import('@/pages/PetsPage')); // Pet management page
 const AddPet = React.lazy(() => import('@/pages/AddPet'));
 const EditPet = React.lazy(() => import('@/pages/EditPet'));
+const AddSymptomEntry = React.lazy(() => import('@/pages/AddSymptomEntry')); // Add route for symptom entry
 
 // Define routes
 export const routes: RouteType[] = [
@@ -87,6 +88,14 @@ export const routes: RouteType[] = [
     ),
   },
   {
+    path: '/add-symptom',
+    element: (
+      <ProtectedRoute>
+        <AddSymptomEntry />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: '/symptom-diary/:id',
     element: (
       <ProtectedRoute>
@@ -104,6 +113,14 @@ export const routes: RouteType[] = [
   },
   {
     path: '/food-diary/new',
+    element: (
+      <ProtectedRoute>
+        <AddFoodEntry />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/add-food-entry',
     element: (
       <ProtectedRoute>
         <AddFoodEntry />
@@ -160,7 +177,7 @@ export const routes: RouteType[] = [
       </ProtectedRoute>
     ),
   },
-  // Add the new routes for pet management
+  // Pet management routes
   {
     path: '/pets',
     element: (
@@ -192,4 +209,3 @@ export const routes: RouteType[] = [
     ),
   },
 ];
-
