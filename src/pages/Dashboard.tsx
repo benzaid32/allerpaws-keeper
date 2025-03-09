@@ -9,8 +9,9 @@ import { useUserSubscription } from "@/hooks/use-user-subscription";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, PlusCircle, ArrowRight, Bell } from "lucide-react";
+import { Sparkles, PlusCircle, ArrowRight, Bell, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { forceNextSync } from "@/lib/sync-utils";
 
 // Import refactored components
 import DashboardBackground from "@/components/dashboard/DashboardBackground";
@@ -24,26 +25,50 @@ import DashboardLoading from "@/components/dashboard/DashboardLoading";
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { pets, loading, fetchPets } = usePets();
+  const { pets, loading, fetchPets, isOffline } = usePets();
   const { recentActivity, symptomsThisWeek, loading: statsLoading } = useDashboardStats();
   const { hasPremiumAccess } = useUserSubscription();
   const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const userName = user?.user_metadata?.full_name || "Pet Parent";
   const firstName = userName.split(' ')[0];
   const isPremium = hasPremiumAccess;
   const initialFetchDone = useRef(false);
 
-  // Fetch data only once when the dashboard is loaded and not on every render
+  // Fetch data when dashboard is loaded
   useEffect(() => {
     if (!initialFetchDone.current) {
       console.log("Dashboard mounted - fetching data once");
       initialFetchDone.current = true;
+      
+      // Force sync for initial load
+      forceNextSync();
+      
       // Small timeout to prevent overlap with other initialization
       setTimeout(() => {
-        fetchPets();
+        fetchPets(true); // Force refresh on initial load
       }, 100);
     }
   }, [fetchPets]);
+
+  // Handle manual refresh
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    
+    setIsRefreshing(true);
+    forceNextSync(); // Mark for sync regardless of changes
+    
+    try {
+      await fetchPets(true);
+    } catch (error) {
+      console.error("Error refreshing dashboard:", error);
+    } finally {
+      // Add delay to prevent quick re-clicks
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 500);
+    }
+  };
 
   // If signing out, show a full-screen loading indicator
   if (isSigningOut) {
@@ -73,6 +98,26 @@ const Dashboard = () => {
       />
       
       <div className="space-y-5">
+        {/* Status indicator for offline mode */}
+        {isOffline && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-amber-100 text-amber-800 px-3 py-2 rounded-md text-sm flex items-center justify-between mb-2"
+          >
+            <span>You're currently offline</span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="h-8 px-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          </motion.div>
+        )}
+        
         <StatsCards 
           recentActivity={recentActivity} 
           symptomsThisWeek={symptomsThisWeek} 
@@ -127,6 +172,20 @@ const Dashboard = () => {
             </div>
           </Card>
         </motion.div>
+        
+        {/* Manual refresh button for when user wants to force update */}
+        <div className="flex justify-center pt-2 pb-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh data'}
+          </Button>
+        </div>
       </div>
 
       <motion.div

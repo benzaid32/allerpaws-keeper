@@ -1,326 +1,310 @@
-
-// Cache names
-const STATIC_CACHE_NAME = 'allerpaws-static-v1';
-const DYNAMIC_CACHE_NAME = 'allerpaws-dynamic-v1';
-const DATA_CACHE_NAME = 'allerpaws-api-v1';
-
-// Assets to cache immediately
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icons/favicon.ico',
-  '/icons/icon-72x72.png',
-  '/icons/icon-96x96.png',
-  '/icons/icon-128x128.png',
-  '/icons/icon-144x144.png',
-  '/icons/icon-152x152.png',
-  '/icons/icon-192x192.png',
-  '/icons/icon-384x384.png',
-  '/icons/icon-512x512.png',
-  '/icons/maskable-icon.png',
-  '/icons/apple-icon-152.png',
-  '/icons/apple-icon-167.png',
-  '/icons/apple-icon-180.png'
-];
-
-// Install event - cache static assets
+// This is the service worker script, install event listener
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing Service Worker...');
-  
+  console.log('[Service Worker] Installing Service Worker ...', event);
+  // Perform install steps
   event.waitUntil(
-    caches.open(STATIC_CACHE_NAME)
-      .then(cache => {
-        console.log('[Service Worker] Pre-caching static assets');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => {
-        console.log('[Service Worker] Successfully installed and cached static assets');
-        return self.skipWaiting(); // Ensure the new service worker activates immediately
-      })
-      .catch(error => {
-        console.error('[Service Worker] Failed to pre-cache assets:', error);
-      })
+    caches.open('allerpaws-static-v1').then((cache) => {
+      console.log('[Service Worker] Precaching App shell');
+      cache.addAll([
+        '/',
+        '/index.html',
+        '/offline.html',
+        '/fallback.svg',
+        '/icon-192x192.png',
+        '/icon-512x512.png',
+        '/vite.svg'
+      ]);
+    })
   );
+  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// Activate event listener
 self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating Service Worker...');
-  
+  console.log('[Service Worker] Activating Service Worker ....', event);
   event.waitUntil(
-    caches.keys()
-      .then(keyList => {
-        return Promise.all(keyList.map(key => {
-          if (key !== STATIC_CACHE_NAME && 
-              key !== DYNAMIC_CACHE_NAME &&
-              key !== DATA_CACHE_NAME) {
-            console.log('[Service Worker] Removing old cache:', key);
+    caches.keys().then((keyList) => {
+      return Promise.all(
+        keyList.map((key) => {
+          if (key !== 'allerpaws-static-v1' && key !== 'allerpaws-dynamic-v1' && key !== 'allerpaws-api-v1') {
+            console.log('[Service Worker] Removing old cache.', key);
             return caches.delete(key);
           }
-        }));
-      })
-      .then(() => {
-        console.log('[Service Worker] Claiming clients');
-        return self.clients.claim(); // Take control of all clients
-      })
+        })
+      );
+    })
   );
+  return self.clients.claim();
 });
 
-// Helper function to determine if a request is for API data
-const isApiRequest = (url) => {
-  const parsedUrl = new URL(url);
-  return (
-    parsedUrl.pathname.includes('/rest/v1') || 
-    parsedUrl.pathname.includes('/auth/v1') ||
-    parsedUrl.hostname.includes('supabase')
-  );
-};
-
-// Helper function to determine if a request is a navigation request
-const isNavigationRequest = (request) => {
-  return (
-    request.mode === 'navigate' ||
-    (request.method === 'GET' &&
-      request.headers.get('accept').includes('text/html'))
-  );
-};
-
-// Fetch event - handle network requests with appropriate strategies
+// Intercept fetch requests
 self.addEventListener('fetch', (event) => {
-  const request = event.request;
-  const url = new URL(request.url);
-  
-  // Skip cross-origin requests
-  if (url.origin !== self.location.origin && !url.hostname.includes('supabase')) {
-    return;
-  }
+  const url = new URL(event.request.url);
 
-  // Special handling for API requests - Network first, fallback to cache
-  if (isApiRequest(request.url)) {
+  // API request handling
+  if (url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(request)
-        .then(response => {
-          // Clone the response to store in cache and return the original
-          const clonedResponse = response.clone();
-          
-          caches.open(DATA_CACHE_NAME)
-            .then(cache => {
-              // Only cache successful responses
-              if (response.status === 200) {
-                cache.put(request, clonedResponse);
-              }
-            });
-          
-          return response;
-        })
-        .catch(() => {
-          // If network fails, try to get from cache
-          return caches.match(request)
-            .then(cachedResponse => {
-              if (cachedResponse) {
-                return cachedResponse;
-              }
-              // If not in cache, return a basic offline response for API requests
-              return new Response(
-                JSON.stringify({ error: 'You are offline' }), 
-                { 
-                  status: 503,
-                  headers: { 'Content-Type': 'application/json' } 
-                }
-              );
-            });
-        })
-    );
-    return;
-  }
-
-  // For navigation requests (HTML pages) - Network first, fallback to cache
-  if (isNavigationRequest(request)) {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          // Clone the response to store in cache
-          const clonedResponse = response.clone();
-          caches.open(DYNAMIC_CACHE_NAME)
-            .then(cache => cache.put(request, clonedResponse));
-          return response;
-        })
-        .catch(() => {
-          // If network fails, try to get from cache
-          return caches.match(request)
-            .then(cachedResponse => {
-              if (cachedResponse) {
-                return cachedResponse;
-              }
-              // Fallback to index.html for SPA routes
-              return caches.match('/index.html');
-            });
-        })
-    );
-    return;
-  }
-
-  // For all other requests - Cache first, fallback to network
-  event.respondWith(
-    caches.match(request)
-      .then(cachedResponse => {
-        if (cachedResponse) {
-          // Return cache but update cache in background
-          const fetchPromise = fetch(request)
-            .then(networkResponse => {
-              caches.open(DYNAMIC_CACHE_NAME)
-                .then(cache => {
-                  cache.put(request, networkResponse.clone());
-                });
-              return networkResponse;
-            })
-            .catch(() => cachedResponse);
-          
-          return cachedResponse;
-        }
-        
-        // If not in cache, fetch from network and cache
-        return fetch(request)
-          .then(response => {
-            const clonedResponse = response.clone();
-            caches.open(DYNAMIC_CACHE_NAME)
-              .then(cache => {
-                cache.put(request, clonedResponse);
-              });
-            return response;
+      fetch(event.request)
+        .then((res) => {
+          const clonedRes = res.clone();
+          return caches.open('allerpaws-api-v1').then((cache) => {
+            cache.put(event.request, clonedRes);
+            return res;
           });
-      })
-  );
-});
-
-// Push notification event handler
-self.addEventListener('push', (event) => {
-  console.log('[Service Worker] Push notification received:', event);
-  
-  if (!event.data) {
-    console.log('[Service Worker] No data received with push event');
+        })
+        .catch(() => {
+          return caches.match(event.request).then((response) => {
+            if (response) {
+              return response;
+            }
+            // If the request is not in the API cache, return an offline response
+            return new Response(null, {
+              status: 404,
+              statusText: 'Offline'
+            });
+          });
+        })
+    );
     return;
   }
-  
-  try {
-    const data = event.data.json();
-    
-    const options = {
-      body: data.body || 'New notification from AllerPaws',
-      icon: '/icons/icon-192x192.png',
-      badge: '/icons/maskable-icon.png',
-      data: {
-        url: data.url || '/'
-      },
-      vibrate: [100, 50, 100],
-      actions: data.actions || []
-    };
-    
-    event.waitUntil(
-      self.registration.showNotification(data.title || 'AllerPaws Notification', options)
-    );
-  } catch (error) {
-    console.error('[Service Worker] Error processing push notification:', error);
-  }
-});
 
-// Notification click event handler
-self.addEventListener('notificationclick', (event) => {
-  console.log('[Service Worker] Notification clicked:', event);
-  
-  event.notification.close();
-  
-  const urlToOpen = event.notification.data?.url || '/';
-  
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(windowClients => {
-        // Check if there is already a window/tab open with the target URL
-        for (let client of windowClients) {
-          if (client.url.includes(urlToOpen) && 'focus' in client) {
-            return client.focus();
+  // Cache-first strategy for static assets
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      if (response) {
+        return response;
+      }
+      return fetch(event.request)
+        .then((res) => {
+          // Handle dynamic content caching
+          if (res.status === 200 && event.request.method === 'GET') {
+            return caches.open('allerpaws-dynamic-v1').then((cache) => {
+              cache.put(event.request.url, res.clone());
+              return res;
+            });
+          } else {
+            return res;
           }
-        }
-        // If no window/tab is open or available, open a new one
-        if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
-        }
-      })
+        })
+        .catch((err) => {
+          // Fallback for static assets
+          return caches.open('allerpaws-static-v1').then((cache) => {
+            if (event.request.headers.get('accept').includes('text/html')) {
+              return cache.match('/offline.html');
+            } else if (event.request.headers.get('accept').includes('image/*')) {
+              return cache.match('/fallback.svg');
+            }
+          });
+        });
+    })
   );
 });
 
-// Sync event handler for background sync
-self.addEventListener('sync', (event) => {
-  console.log('[Service Worker] Background sync event:', event);
-  
-  if (event.tag === 'sync-pets') {
-    console.log('[Service Worker] Syncing pets data');
-    event.waitUntil(syncPets());
-  } else if (event.tag === 'sync-symptoms') {
-    console.log('[Service Worker] Syncing symptom entries');
-    event.waitUntil(syncSymptoms());
-  } else if (event.tag === 'sync-food') {
-    console.log('[Service Worker] Syncing food entries');
-    event.waitUntil(syncFood());
-  }
-});
-
-// Helper function to synchronize pets data
-const syncPets = async () => {
+// Function to sync pets data
+async function syncPets() {
   try {
-    // Force fetch fresh data from server
-    const response = await fetch('/api/sync/pets', {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
+    console.log('[Service Worker] Syncing pets data');
     
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
+    // Fetch the pets data to refresh cache
+    const cache = await caches.open('allerpaws-api-v1');
     
-    // Update clients that this data has been synced
-    const clients = await self.clients.matchAll();
-    clients.forEach(client => {
-      client.postMessage({
-        type: 'SYNC_COMPLETE',
-        tag: 'sync-pets'
+    // Create cache-busting URL to ensure fresh data
+    const timestamp = new Date().getTime();
+    const petsUrl = '/api/pets?t=' + timestamp;
+    
+    // Try to fetch fresh data and update cache
+    try {
+      const response = await fetch(petsUrl, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       });
-    });
+      
+      // If successful, update cache and send message to client
+      if (response.ok) {
+        await cache.put(petsUrl, response.clone());
+        
+        // Notify clients that sync is complete
+        const clients = await self.clients.matchAll();
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SYNC_COMPLETE',
+            tag: 'sync-pets'
+          });
+        });
+      }
+    } catch (error) {
+      console.error('[Service Worker] Error syncing pets:', error);
+    }
     
     return true;
   } catch (error) {
-    console.error('[Service Worker] Sync failed:', error);
+    console.error('[Service Worker] Error in syncPets:', error);
     return false;
   }
-};
+}
 
-// Helper functions for syncing other data types
-const syncSymptoms = async () => {
-  // Similar implementation to syncPets
-  console.log('[Service Worker] syncSymptoms called but not implemented');
-  return true;
-};
+// Function to sync symptoms data
+async function syncSymptoms() {
+  try {
+    console.log('[Service Worker] Syncing symptoms data');
+    
+    // Fetch the symptoms data to refresh cache
+    const cache = await caches.open('allerpaws-api-v1');
+    
+    // Create cache-busting URL to ensure fresh data
+    const timestamp = new Date().getTime();
+    const symptomsUrl = '/api/symptoms?t=' + timestamp;
+    
+    // Try to fetch fresh data and update cache
+    try {
+      const response = await fetch(symptomsUrl, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      // If successful, update cache and send message to client
+      if (response.ok) {
+        await cache.put(symptomsUrl, response.clone());
+        
+        // Notify clients that sync is complete
+        const clients = await self.clients.matchAll();
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SYNC_COMPLETE',
+            tag: 'sync-symptoms'
+          });
+        });
+      }
+    } catch (error) {
+      console.error('[Service Worker] Error syncing symptoms:', error);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('[Service Worker] Error in syncSymptoms:', error);
+    return false;
+  }
+}
 
-const syncFood = async () => {
-  // Similar implementation to syncPets
-  console.log('[Service Worker] syncFood called but not implemented');
-  return true;
-};
+// Function to sync food entries
+async function syncFood() {
+  try {
+    console.log('[Service Worker] Syncing food entries data');
+    
+    // Fetch the food entries data to refresh cache
+    const cache = await caches.open('allerpaws-api-v1');
+    
+    // Create cache-busting URL to ensure fresh data
+    const timestamp = new Date().getTime();
+    const foodUrl = '/api/food-entries?t=' + timestamp;
+    
+    // Try to fetch fresh data and update cache
+    try {
+      const response = await fetch(foodUrl, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      // If successful, update cache and send message to client
+      if (response.ok) {
+        await cache.put(foodUrl, response.clone());
+        
+        // Notify clients that sync is complete
+        const clients = await self.clients.matchAll();
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SYNC_COMPLETE',
+            tag: 'sync-food'
+          });
+        });
+      }
+    } catch (error) {
+      console.error('[Service Worker] Error syncing food entries:', error);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('[Service Worker] Error in syncFood:', error);
+    return false;
+  }
+}
 
-// Periodically check for updates (every 15 minutes)
+// Add the sync handler code or update it if it exists:
+self.addEventListener('sync', event => {
+  console.log('[Service Worker] Background sync event:', event);
+  
+  if (event.tag === 'sync-pets') {
+    console.log('[Service Worker] Syncing pets');
+    event.waitUntil(syncPets());
+  }
+  else if (event.tag === 'sync-symptoms') {
+    console.log('[Service Worker] Syncing symptoms');
+    event.waitUntil(syncSymptoms());
+  }
+  else if (event.tag === 'sync-food') {
+    console.log('[Service Worker] Syncing food entries');
+    event.waitUntil(syncFood());
+  }
+  else if (event.tag === 'sync-reminders') {
+    console.log('[Service Worker] Syncing reminders');
+    event.waitUntil(syncReminders());
+  }
+});
+
+// Function to sync reminders
+async function syncReminders() {
+  try {
+    console.log('[Service Worker] Syncing reminders data');
+    
+    // Fetch the reminders data to refresh cache
+    const cache = await caches.open('allerpaws-api-v1');
+    
+    // Create cache-busting URL to ensure fresh data
+    const timestamp = new Date().getTime();
+    const remindersUrl = '/api/reminders?t=' + timestamp;
+    
+    // Try to fetch fresh data and update cache
+    try {
+      const response = await fetch(remindersUrl, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      // If successful, update cache and send message to client
+      if (response.ok) {
+        await cache.put(remindersUrl, response.clone());
+        
+        // Notify clients that sync is complete
+        const clients = await self.clients.matchAll();
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SYNC_COMPLETE',
+            tag: 'sync-reminders'
+          });
+        });
+      }
+    } catch (error) {
+      console.error('[Service Worker] Error syncing reminders:', error);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('[Service Worker] Error in syncReminders:', error);
+    return false;
+  }
+}
+
+// Listen for skip waiting messages
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
-
-// Log any errors
-self.addEventListener('error', (event) => {
-  console.error('[Service Worker] Error:', event.message, event.filename, event.lineno);
-});
-
-console.log('[Service Worker] Service worker registered successfully');

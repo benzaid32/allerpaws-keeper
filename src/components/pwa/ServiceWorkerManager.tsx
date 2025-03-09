@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { hasChanges } from '@/lib/sync-utils';
+import { hasChanges, resetChangesFlag } from '@/lib/sync-utils';
 
 interface ServiceWorkerManagerProps {
   children: React.ReactNode;
@@ -70,6 +71,9 @@ const ServiceWorkerManager: React.FC<ServiceWorkerManagerProps> = ({ children })
                   window.dispatchEvent(new CustomEvent('data-sync-complete', { 
                     detail: { tag: event.data.tag }
                   }));
+                  
+                  // Reset changes flag after sync is complete
+                  resetChangesFlag();
                   
                   // Log the sync for debugging but don't show toast
                   console.log(`Sync complete with user changes: ${event.data.tag}`);

@@ -31,9 +31,13 @@ const BackgroundSyncManager: React.FC<BackgroundSyncManagerProps> = ({ children 
             
             // Check if sync is available on the registration
             if ('sync' in registration) {
+              // Use shorter tag names to avoid InvalidAccessError
+              // The error occurs when tag names are too long
+              
               // Stagger registrations to avoid overwhelming the system
               setTimeout(() => {
                 registration.sync.register('sync-pets').catch(err => {
+                  // Log but don't rethrow - this prevents app from breaking
                   console.error('Error registering pets sync:', err);
                 });
               }, 0);
@@ -49,6 +53,12 @@ const BackgroundSyncManager: React.FC<BackgroundSyncManagerProps> = ({ children 
                   console.error('Error registering food sync:', err);
                 });
               }, 2000);
+              
+              setTimeout(() => {
+                registration.sync.register('sync-reminders').catch(err => {
+                  console.error('Error registering reminders sync:', err);
+                });
+              }, 3000);
               
               backgroundSyncRegistered = true;
               console.log('Background syncs registered with staggered timing');
