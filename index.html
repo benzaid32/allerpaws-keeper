@@ -25,7 +25,7 @@
     <meta http-equiv="Expires" content="0" />
     
     <!-- Content Security Policy - Updated to fix resource loading issues -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co; connect-src 'self' https://*.supabase.co https://*.supabase.in blob: data:; object-src 'none'; img-src 'self' data: https: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src 'self'; base-uri 'self'; form-action 'self'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co; connect-src 'self' https://*.supabase.co https://*.supabase.in blob: data: wss: https://cdn.gpteng.co; object-src 'none'; img-src 'self' data: https: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src 'self'; base-uri 'self'; form-action 'self'" />
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#ffffff" />
@@ -90,6 +90,17 @@
         "ratingCount": "125"
       }
     }
+    </script>
+    <!-- Base href for client-side routing -->
+    <script>
+      // Handle client-side routing on page refresh
+      (function() {
+        // If this is a direct visit to a route, make sure React Router can handle it
+        if (window.location.pathname !== '/' && !window.location.pathname.includes('.')) {
+          // Store the current path to redirect after the app loads
+          localStorage.setItem('redirectAfterLoad', window.location.pathname);
+        }
+      })();
     </script>
   </body>
 </html>

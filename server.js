@@ -11,10 +11,24 @@ app.use(compression());
 // Serve static files from the dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Handle SPA routing - serve index.html for all routes
+// Log all requests for debugging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
+// Handle SPA routing - serve index.html for all routes except files with extensions
 app.get('*', (req, res) => {
-  // Always serve the index.html for any request that doesn't match a static file
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  // Check if the request is for a file (has extension)
+  if (req.url.includes('.') && !req.url.includes('index.html')) {
+    console.log(`File request detected: ${req.url}`);
+    // Let express.static handle it
+    next();
+  } else {
+    console.log(`SPA route detected: ${req.url}, serving index.html`);
+    // Always serve the index.html for routes that don't match a static file
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  }
 });
 
 // Start the server

@@ -15,4 +15,11 @@ if (typeof window !== 'undefined') {
   }
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Mount the app
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error('Failed to find the root element');
+
+createRoot(rootElement).render(<App />);
+
+// Log that the app has loaded
+console.log('App loaded successfully');
