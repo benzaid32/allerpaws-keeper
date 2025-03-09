@@ -10,19 +10,19 @@ interface DashboardBackgroundProps {
 const DashboardBackground: React.FC<DashboardBackgroundProps> = ({ children }) => {
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Main background image - using the new uploaded image */}
+      {/* Main background image - using the uploaded image */}
       <div 
         className="fixed inset-0 bg-cover bg-center"
         style={{ 
-          backgroundImage: `url('/lovable-uploads/d5670c0d-efef-4a21-a284-ca4c32e06716.png')`,
+          backgroundImage: `url('/lovable-uploads/9575c134-213b-4839-b573-65f38dc28955.png')`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center top',
-          opacity: 0.9
+          backgroundPosition: 'center center',
+          opacity: 0.85
         }}
       />
       
       {/* Soft overlay to ensure content readability */}
-      <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]"></div>
+      <div className="absolute inset-0 bg-background/60 backdrop-blur-[1px]"></div>
       
       {/* Floating paw prints animation */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
@@ -53,9 +53,9 @@ const DashboardBackground: React.FC<DashboardBackgroundProps> = ({ children }) =
         ))}
       </div>
       
-      {/* Animated gradient orbs */}
+      {/* Animated gradient orbs with reduced opacity to better complement the background */}
       <motion.div 
-        className="absolute top-1/4 right-1/4 w-72 h-72 rounded-full bg-gradient-to-r from-blue-400/10 to-primary/10 blur-3xl -z-10"
+        className="absolute top-1/4 right-1/4 w-72 h-72 rounded-full bg-gradient-to-r from-blue-400/5 to-primary/5 blur-3xl -z-10"
         animate={{
           x: [0, 50, 0],
           y: [0, 30, 0],
@@ -82,8 +82,8 @@ const DashboardBackground: React.FC<DashboardBackgroundProps> = ({ children }) =
         }}
       />
       
-      {/* Main content */}
-      <div className="relative z-10 container mx-auto px-4 py-8 pb-20">
+      {/* Main content with improved mobile padding */}
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-6 pb-20">
         {children}
       </div>
     </div>

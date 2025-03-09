@@ -55,7 +55,7 @@ const Dashboard = () => {
         isSigningOut={isSigningOut}
       />
       
-      {/* Welcome banner */}
+      {/* Welcome banner with improved mobile styling */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -63,13 +63,13 @@ const Dashboard = () => {
         className="mb-6"
       >
         <Card className="bg-gradient-to-r from-primary/90 to-primary/70 border-none shadow-lg text-white p-4">
-          <div className="flex justify-between items-center">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+            <div className="mb-2 sm:mb-0">
               <h2 className="text-xl font-bold mb-1">Welcome back, {firstName}!</h2>
               <p className="text-white/90 text-sm">Track your pet's health journey with AllerPaws</p>
             </div>
             {isPremium && (
-              <Badge className="bg-yellow-400/90 text-primary-foreground flex items-center gap-1 px-3 py-1">
+              <Badge className="bg-yellow-400/90 text-primary-foreground flex items-center gap-1 px-3 py-1 self-start sm:self-auto">
                 <Sparkles className="h-3 w-3" />
                 PREMIUM
               </Badge>
@@ -83,12 +83,12 @@ const Dashboard = () => {
         symptomsThisWeek={symptomsThisWeek} 
       />
       
-      {/* Quick Actions */}
+      {/* Quick Actions - more mobile friendly */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="mb-6 grid grid-cols-2 gap-3"
+        className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3"
       >
         <Button 
           onClick={() => window.location.href = '/add-symptom'}
@@ -117,7 +117,7 @@ const Dashboard = () => {
         transition={{ duration: 0.5, delay: 0.7 }}
         className="mb-8"
       >
-        <Card className="bg-white/90 shadow-sm border border-primary/10 hover:shadow-md transition-all">
+        <Card className="bg-white/80 shadow-sm border border-primary/10 hover:shadow-md transition-all">
           <div className="p-4">
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-medium flex items-center">

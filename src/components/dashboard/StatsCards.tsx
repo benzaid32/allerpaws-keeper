@@ -2,7 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Activity, BarChart2, AlertTriangle, CheckCircle, TrendingUp, Clock } from "lucide-react";
+import { Activity, BarChart2, CheckCircle, TrendingUp, Clock } from "lucide-react";
 
 interface StatsCardsProps {
   recentActivity: number;
@@ -12,12 +12,12 @@ interface StatsCardsProps {
 const StatsCards: React.FC<StatsCardsProps> = ({ recentActivity, symptomsThisWeek }) => {
   return (
     <motion.div 
-      className="grid grid-cols-2 gap-4 mb-6"
+      className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
     >
-      <Card className="hover:shadow-md transition-all bg-gradient-to-br from-white to-blue-50 backdrop-blur-sm border border-primary/10 overflow-hidden relative">
+      <Card className="hover:shadow-md transition-all bg-white/90 backdrop-blur-sm border border-primary/10 overflow-hidden relative">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 z-0"></div>
         <CardHeader className="pb-2 relative z-10">
           <CardTitle className="text-sm font-medium flex items-center">
@@ -36,7 +36,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ recentActivity, symptomsThisWee
         </CardContent>
       </Card>
       
-      <Card className="hover:shadow-md transition-all bg-gradient-to-br from-white to-blue-50 backdrop-blur-sm border border-primary/10 overflow-hidden relative">
+      <Card className="hover:shadow-md transition-all bg-white/90 backdrop-blur-sm border border-primary/10 overflow-hidden relative">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 z-0"></div>
         <CardHeader className="pb-2 relative z-10">
           <CardTitle className="text-sm font-medium flex items-center">
